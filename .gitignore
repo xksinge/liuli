@@ -1,0 +1,19 @@
+# 构建产物与运行时数据
+bin/
+data/
+shots/
+spike/
+
+# 编译中间物
+*.exe
+*.pdb
+*.dll
+*.obj
+*.res
+
+# 编辑器 / 本地配置
+.vs/
+.idea/
+*.user
+*.suo
+*.log

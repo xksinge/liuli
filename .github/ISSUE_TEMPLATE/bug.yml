@@ -1,0 +1,35 @@
+name: Bug 报告
+description: 崩溃、显示异常、性能回退
+labels: [bug]
+body:
+  - type: textarea
+    attributes:
+      label: 现象
+      description: 实际发生了什么
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: 复现步骤
+      value: |
+        1.
+        2.
+        3.
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: 期望结果
+    validations:
+      required: true
+  - type: input
+    attributes:
+      label: 环境
+      description: 系统版本 / 屏幕与缩放 / 显卡 / Liuli 版本
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: 日志
+      description: data\logs\liuli.log 相关片段
+      render: text
