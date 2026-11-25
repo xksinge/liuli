@@ -22,6 +22,7 @@ namespace Liuli
         bool dragging;
         Point dragOff;
         string result;
+        bool saved;
 
         public static string AskText(Form owner, string title, string initial, bool multiline)
         {
@@ -79,8 +80,11 @@ namespace Liuli
             Shown += delegate
             {
                 try { SetForegroundWindow(Handle); } catch { }
-                tb.Focus();
-                tb.SelectionStart = tb.TextLength;
+                Activate();
+                BeginInvoke((MethodInvoker)delegate
+                {
+                    try { tb.Focus(); tb.SelectionStart = tb.TextLength; } catch { }
+                });
             };
             KeyDown += delegate (object s, KeyEventArgs e)
             {
@@ -218,7 +222,10 @@ namespace Liuli
 
         void Save()
         {
+            if (saved) return;
+            saved = true;
             result = tb.Text;
+            Log.Info("editor", "save len=" + (result == null ? -1 : result.Length));
             Close();
         }
 
