@@ -112,12 +112,12 @@ namespace Liuli
                         using (Pen pen = new Pen(Color.FromArgb(110, Theme.TextSub), 1f * s)) g.DrawPath(pen, p);
                     }
                 }
-                hits.Add(new Zone(box, "check", i));
-
                 Rectangle tr = new Rectangle(box.Right + Util.RoundI(9 * s), row.Y, row.Width - check - Util.RoundI(14 * s), rowH);
                 Color tc = it.Done ? Theme.TextFaint : Theme.TextMain;
                 Theme.TextMiddle(g, it.Text, it.Done ? fs : f, tc, tr, StringAlignment.Near);
+                // 行命中区先入栈、勾选框后入栈：倒序命中时勾选框优先，否则勾选框会被整行吃掉
                 hits.Add(new Zone(row, "item", i));
+                hits.Add(new Zone(box, "check", i));
             }
 
             int addY = contentRect.Y + rows * rowH - Util.RoundI(scrollPx);
