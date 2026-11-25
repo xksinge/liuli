@@ -17,3 +17,5 @@ spike/
 *.user
 *.suo
 *.log
+
+dist/
