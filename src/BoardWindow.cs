@@ -523,8 +523,17 @@ namespace Liuli
             pressedTag = tag;
 
             long now = Environment.TickCount;
-            bool dbl = now - lastClickTick < 320 && Math.Abs(e.X - lastClickPos.X) < 6 && Math.Abs(e.Y - lastClickPos.Y) < 6;
-            lastClickTick = now; lastClickPos = e.Location;
+            Point sp = PointToScreen(e.Location);
+            bool dbl = now - lastClickTick < 400 && Math.Abs(sp.X - lastClickPos.X) < 8 && Math.Abs(sp.Y - lastClickPos.Y) < 8;
+            lastClickTick = now; lastClickPos = sp;
+            if (dbl && tag != "close" && tag != "more" && tag != "pin")
+            {
+                lastClickTick = 0;
+                if (tag == "title") { Rename(); return; }
+                if (B.Kind == BoardKind.Note && (tag == "content" || tag == "body")) { EditNote(); return; }
+                if (B.Kind == BoardKind.Todo && (tag == "item" || tag == "check")) { EditItem(pressedIndex); return; }
+                if (B.Kind == BoardKind.Status && tag == "city") { EditCity(); return; }
+            }
 
             if (tag == "collapse")
             {
@@ -600,6 +609,7 @@ namespace Liuli
             int dx = cur.X - dragStartCursor.X;
             int dy = cur.Y - dragStartCursor.Y;
             if (!dragMoved && (Math.Abs(dx) > 3 || Math.Abs(dy) > 3)) dragMoved = true;
+            if (!dragMoved) return;
 
             if (drag == DragMode.Move)
             {
@@ -703,15 +713,8 @@ namespace Liuli
 
         protected override void OnMouseDoubleClick(MouseEventArgs e)
         {
+            // 双击已在 OnMouseDown 里按时间窗自行判定，这里只吞掉原生事件避免二次触发
             base.OnMouseDoubleClick(e);
-            UpdateHover(e.Location);
-            string tag = "";
-            for (int i = hits.Count - 1; i >= 0; i--) if (hits[i].R.Contains(e.Location)) { tag = hits[i].Tag; pressedIndex = hits[i].Index; break; }
-            if (tag == "title") Rename();
-            else if (tag == "collapse") AnimateCollapse(!B.Collapsed);
-            else if (B.Kind == BoardKind.Note && (tag == "content" || tag == "body")) EditNote();
-            else if (B.Kind == BoardKind.Todo && (tag == "item" || tag == "check")) EditItem(pressedIndex);
-            else if (B.Kind == BoardKind.Status && tag == "city") EditCity();
         }
 
         // ---------- 右键菜单 ----------
@@ -789,7 +792,8 @@ namespace Liuli
         void EditNote()
         {
             string v = EditorForm.AskText(this, "便签内容", B.Text, true);
-            if (v != null) { B.Text = v; dirty = true; App.Save(); }
+            Log.Info("board", "edit note result=" + (v == null ? "null" : v.Length.ToString()) + " old=" + B.Text.Length);
+            if (v != null) { B.Text = v; dirty = true; App.Save(); Log.Info("board", "note now=" + B.Text.Length + " id=" + B.Id); }
         }
 
         void EditItem(int idx)
