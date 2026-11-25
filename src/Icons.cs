@@ -245,6 +245,7 @@ namespace Liuli
                 created++;
             }
             App.Save();
+            Log.Info("icons", "整理 " + items.Count + " 个图标，新建 " + created + " 块文件看板");
             return created;
         }
     }
