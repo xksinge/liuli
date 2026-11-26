@@ -19,6 +19,7 @@ namespace Liuli
         public static ShellConfig Config;
         public static DockForm Dock;
         public static IslandForm Island;
+        public static readonly List<PanelForm> Panels = new List<PanelForm>();
         public static V2Host Host;
         public static WeatherService Weather;
         public static StatsNow Stats = new StatsNow();
@@ -57,6 +58,12 @@ namespace Liuli
             {
                 Island = new IslandForm();
                 Island.Show();
+            }
+            for (int i = 0; i < Config.Panels.Count; i++)
+            {
+                PanelForm pf = new PanelForm(Config.Panels[i]);
+                Panels.Add(pf);
+                pf.Show();
             }
 
             statsTimer = new Timer();
@@ -113,10 +120,11 @@ namespace Liuli
             tray.Icon = MakeIcon();
             tray.Visible = true;
             ContextMenuStrip menu = new ContextMenuStrip();
-            menu.Items.Add("显示/隐藏 Dock 与灵动岛", null, delegate { ToggleAll(); });
+            menu.Items.Add("显示/隐藏桌面层", null, delegate { ToggleAll(); });
             menu.Items.Add("Dock 自动隐藏：开/关", null, delegate { ToggleDockAutoHide(); });
             menu.Items.Add("Dock 尺寸：小/标准/大（点击切换）", null, delegate { CycleDockPreset(); });
             menu.Items.Add("灵动岛设置", null, delegate { OpenIslandSettingsLater(Cursor.Position); });
+            menu.Items.Add("新建面板", null, delegate { AddPanel(); });
             menu.Items.Add("任务栏自动隐藏：开/关", null, delegate { ToggleTaskbarAutoHide(); });
             menu.Items.Add("恢复系统任务栏", null, delegate { RestoreTaskbar(); });
             menu.Items.Add("重载 Dock 默认组合", null, delegate { ResetDock(); });
@@ -162,10 +170,11 @@ namespace Liuli
         public static void ShowMenu(Point screen)
         {
             List<MenuForm.Item> items = new List<MenuForm.Item>();
-            items.Add(new MenuForm.Item("显示/隐藏 Dock 与灵动岛", delegate { ToggleAll(); }));
+            items.Add(new MenuForm.Item("显示/隐藏桌面层", delegate { ToggleAll(); }));
             items.Add(new MenuForm.Item("Dock 自动隐藏：开/关", delegate { ToggleDockAutoHide(); }, Glyph.Gear));
             items.Add(new MenuForm.Item("Dock 尺寸：" + DockPresetLabel(Config == null ? "standard" : Config.DockPreset) + "（点击切换）", delegate { CycleDockPreset(); }, Glyph.Gear));
             items.Add(new MenuForm.Item("灵动岛设置", delegate { OpenIslandSettingsLater(screen); }, Glyph.Gear));
+            items.Add(new MenuForm.Item("新建面板", delegate { AddPanel(); }, Glyph.Plus));
             items.Add(new MenuForm.Item("任务栏自动隐藏：开/关", delegate { ToggleTaskbarAutoHide(); }, Glyph.Gear));
             items.Add(new MenuForm.Item("恢复系统任务栏", delegate { RestoreTaskbar(); }, Glyph.Restore));
             items.Add(new MenuForm.Item("重载 Dock 默认组合", delegate { ResetDock(); }, Glyph.Restore));
@@ -194,6 +203,12 @@ namespace Liuli
                 if (Island == null) { Island = new IslandForm(); Island.Show(); }
                 else { Island.Show(); Island.RefreshIsland(); }
             }
+            for (int i = 0; i < Panels.Count; i++)
+            {
+                if (Panels[i] == null) continue;
+                Panels[i].Show();
+                Panels[i].ApplyBounds();
+            }
         }
 
         public static void HideAll()
@@ -201,6 +216,8 @@ namespace Liuli
             allHidden = true;
             if (Dock != null) Dock.Hide();
             if (Island != null) Island.Hide();
+            for (int i = 0; i < Panels.Count; i++)
+                if (Panels[i] != null) Panels[i].Hide();
         }
 
         public static void ToggleDockAutoHide()
@@ -324,6 +341,49 @@ namespace Liuli
             Toast("灵动岛已恢复默认");
         }
 
+        public static PanelForm AddPanel()
+        {
+            if (Config == null) return null;
+            if (Config.Panels.Count >= 6)
+            {
+                Toast("面板最多 6 个");
+                return null;
+            }
+            PanelConfig cfg = Config.NewPanel(Config.Panels.Count);
+            Config.Panels.Add(cfg);
+            Config.Save();
+            PanelForm pf = new PanelForm(cfg);
+            Panels.Add(pf);
+            pf.Show();
+            if (allHidden) pf.Hide();
+            Toast("已新建面板，右键可切换内容");
+            return pf;
+        }
+
+        public static void RemovePanel(PanelForm panel)
+        {
+            if (Config == null || panel == null || panel.Cfg == null) return;
+            Panels.Remove(panel);
+            Config.Panels.Remove(panel.Cfg);
+            Config.Save();
+            try { panel.Close(); } catch { }
+            Toast("面板已删除");
+        }
+
+        public static void SavePanels()
+        {
+            if (Config == null) return;
+            Config.Save();
+        }
+
+        public static void RefreshPanels()
+        {
+            for (int i = 0; i < Panels.Count; i++)
+            {
+                if (Panels[i] != null && Panels[i].Visible) Panels[i].Render();
+            }
+        }
+
         public static void ToggleTaskbarAutoHide()
         {
             bool on = !Taskbar.AutoHide();
@@ -353,6 +413,7 @@ namespace Liuli
                 Config.ApplyTheme();
                 if (Dock != null) Dock.RelayoutPublic();
                 if (Island != null) Island.RefreshIsland();
+                RefreshPanels();
                 Toast("已按当前壁纸重新取色");
             }
             catch (Exception ex) { Log.Warn("wall", ex.Message); Toast("取色失败，已保留原配色"); }
@@ -464,6 +525,7 @@ namespace Liuli
             try { if (wallTimer != null) wallTimer.Stop(); } catch { }
             try { if (Dock != null) Dock.Close(); } catch { }
             try { if (Island != null) Island.Close(); } catch { }
+            for (int i = 0; i < Panels.Count; i++) { try { if (Panels[i] != null) Panels[i].Close(); } catch { } }
             try { if (Host != null) Host.Close(); } catch { }
             Application.Exit();
         }
@@ -474,6 +536,8 @@ namespace Liuli
             {
                 if (Dock != null) Dock.ApplyPosition();
                 if (Island != null) Island.ApplyPosition();
+                for (int i = 0; i < Panels.Count; i++)
+                    if (Panels[i] != null) Panels[i].ApplyBounds();
             });
         }
     }
