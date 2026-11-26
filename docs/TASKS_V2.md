@@ -2,7 +2,7 @@
 
 - 关联：Issue #33、`docs/DESIGN_V2.md`
 - 规则：每个任务一个提交或一组小提交；完成勾选前必须有验证记录。
-- 当前聚焦：M1 新外壳（旧看板隐藏、Dock/灵动岛首版、任务栏自动隐藏）。
+- 当前聚焦：M2 已通过集成 PR #49 合入 `main`（`c222f91`）；下一步 M3 灵动岛媒体/通知。
 
 ## Phase 0 · 需求与设计（已完成）
 
@@ -22,7 +22,7 @@
 - 已生成离屏预览 `docs/screens/v2/m1-preview.png` 与按压态对照 `m1-preview-pressed.png` / `m1-feedback-compare.png`；不是桌面真机截图，仅用于材质/布局/按压态初评。
 - 点击反馈：Dock 项与右侧按钮、灵动岛快捷按钮统一为按下 0.94 缩放 + 按压底色，释放回弹 + accent 波纹；静态预览可见，真机手感仍待验证。
 - 高清图标：Dock 应用走 `SHGetImageList(SHIL_JUMBO)` + `IImageList.GetIcon`，探针确认 256×256；系统入口仍用矢量图标；`.lnk` 箭头由 Shell 图标源决定，未做全局箭头开关。
-- 用户此前明确“不运行”，因此不把“能启动”写成已验证；下列任务保持未勾选。
+- M1/M2 已于 2026-11-26 真机验收并经 PR #49 合入 `main`；下列任务仍按各自验收标准勾选，未验证项保留未勾选。
 
 - [ ] **TASK-010** [REQ-002] `ShellStore` + `shell.json` 默认配置、原子保存、坏文件回退
   - 实现：`ShellConfig`；默认 8 项；原子写；损坏文件回退 `.bad-*`。
@@ -52,12 +52,13 @@
 
 ### M2 实现状态（2026-11-26）
 
-- Issue #37；分支 `feat/v2-dock-autohide`（从 `feat/v2-shell` 切出，堆叠在 M1 之后）；Draft PR #38。
-- Issue #39；分支 `feat/v2-dock-presets`（从 `feat/v2-dock-autohide` 切出）；Draft PR #40。
-- Issue #41；分支 `feat/v2-dock-running`（从 `feat/v2-dock-presets` 切出）；Draft PR #42（base `feat/v2-dock-presets`）。
-- Issue #43；分支 `feat/v2-dock-reorder`（从 `feat/v2-dock-running` 切出）；Draft PR #44（base `feat/v2-dock-running`）。
-- Issue #45；分支 `feat/v2-dock-hover`（从 `feat/v2-dock-reorder` 切出）；Draft PR #46（base `feat/v2-dock-reorder`）。
-- Issue #47（bug）；分支 `fix/v2-dock-taskbar-offset`（从 `feat/v2-dock-hover` 切出）；PR 待创建。
+- 集成：`feat/v2-m2-integration` → PR #49 已 MERGED（`c222f91`）；逐级 PR #36/#38/#40/#42/#44/#46/#48 已关闭。
+- Issue #37 / `feat/v2-dock-autohide` / PR #38：自动隐藏与热区唤出。
+- Issue #39 / `feat/v2-dock-presets` / PR #40：三档尺寸预设。
+- Issue #41 / `feat/v2-dock-running` / PR #42：运行指示点。
+- Issue #43 / `feat/v2-dock-reorder` / PR #44：拖拽排序。
+- Issue #45 / `feat/v2-dock-hover` / PR #46：悬停放大。
+- Issue #47 / `fix/v2-dock-taskbar-offset` / PR #48：任务栏常显位置修复。
 - 已实现：`shell.json` 增加 `dockAutoHide`（默认 false）；托盘/快捷菜单增加切换；Dock 全局 55ms 鼠标轮询、底部 6px 热区、离开 650ms 收起；170ms cubic ease-out 滑入/滑出；隐藏位置按屏幕底边计算，任务栏露出时也能完全推出；切换开关、显示全部、重排时刷新状态。
 - 已验证：构建通过（205 KB）；`--selftest` 读取 `dockAutoHide=False`；临时写入 `true` 后读取为 `True`，已恢复原文件；离屏 `--preview` 打印隐藏态 `dockHidden top=1442`，`screenBottom=1440`，窗口完全移出屏幕。
 - 未验证：真机热区唤出、650ms 收起、动画中途反向、任务栏唤出共存、125% DPI。需要用真实鼠标事件验收。

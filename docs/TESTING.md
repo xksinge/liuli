@@ -37,6 +37,7 @@
 - 运行指示实时增减：启动记事本 3s 后“记事本”图标下方圆点出现；关闭 3s 后圆点消失。截图 `m2-real-running-on.png` / `m2-real-running-off.png`。
 - 按压态：在 Edge 图标上按下并截图，出现按压底色且图标缩小；随后把指针移出 Dock 再松开，取消点击、未启动 Edge。截图 `m2-real-pressed.png`；未逐像素测量 0.94。
 - 留档：`m2-real-hover.png`、`m2-real-drag.png`、`m2-real-taskbar.png`、`m2-real-running-on/off.png`、`m2-real-pressed.png`。
+- 集成：PR #49 以 merge commit `c222f91` 合入 `main`；合入前在 `feat/v2-m2-integration` 重新构建（209 KB）、`--selftest` 通过、真机启动正常。
 
 ## v2.0 M1（2026-11-26）
 

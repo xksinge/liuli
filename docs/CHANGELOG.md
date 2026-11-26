@@ -37,6 +37,7 @@
 - 运行指示：启动记事本 3s 后圆点出现，关闭 3s 后消失；截图 `m2-real-running-on/off.png`
 - 按压态：Edge 按下出现按压底色并缩小，移出后松开取消、未启动；截图 `m2-real-pressed.png`
 - **未验证**：外部文件拖入、125% DPI、2s 枚举 CPU 长时占用；按压 0.94 未逐像素测量
+- 集成：M1+M2 经 PR #49 以 merge commit `c222f91` 合入 `main`；逐级 Draft PR 与 Issue #35/#37/#39/#41/#43/#45/#47 已关闭
 
 ## [Unreleased · v2.0 M1]
 

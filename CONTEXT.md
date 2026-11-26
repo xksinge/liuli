@@ -2,12 +2,12 @@
 
 ## Resume
 
-- 当前任务：M2 集成验收 PR #49（`feat/v2-m2-integration` → `main`）
-- 状态：M1+M2 共 33 个提交已汇总；集成分支构建通过（209 KB）、`--selftest` 通过、真机启动正常；125% DPI、外部文件拖入、2s 枚举 CPU 长时占用仍未验证
-- 分支：`feat/v2-m2-integration`（从 `fix/v2-dock-taskbar-offset` 切出）
-- PR：集成 PR #49 Draft（base `main`）；逐级 PR #36/#38/#40/#42/#44/#46/#48 在合并后关闭
-- 下一步：PR #49 标记 Ready → merge commit 合入 `main` → 关闭逐级 Draft PR
-- 阻塞：无；验收后配置为标准档、Dock 常显、任务栏自动隐藏、原 8 项顺序，Liuli 已退出
+- 当前任务：M2 已合入 `main`，准备进入 M3（媒体/通知）
+- 状态：M1+M2 共 34 个提交经 PR #49 合并（merge commit `c222f91`）；逐级 PR #36/#38/#40/#42/#44/#46/#48 已关闭，Issue #35/#37/#39/#41/#43/#45/#47 已关闭；集成分支构建/自检/启动通过；125% DPI、外部文件拖入、2s 枚举 CPU 长时占用仍未验证
+- 分支：`main`（c222f91）
+- PR：集成 PR #49 已 MERGED
+- 下一步：从 `main` 切 M3 分支，先补媒体/通知需求与设计，再实现
+- 阻塞：无；配置为标准档、Dock 常显、任务栏自动隐藏、原 8 项顺序，Liuli 已退出
 - 约束：旧看板功能封存；不改动 `boards.json` 与 `Documents\Liuli`
 
 ## Session Log
@@ -33,6 +33,7 @@
 | 2026-11-26 | 创建 Issue #47，开 `fix/v2-dock-taskbar-offset`；修复 `WorkingArea` 双重扣除，真机 top 1248→1296 | Issue #47；构建 209 KB |
 | 2026-11-26 | 补 M2 真机验收：三档菜单循环/重启保持、记事本圆点实时增减、Edge 按压态；开 PR #48 | `m2-real-*` 截图 |
 | 2026-11-26 | 汇总 M1+M2 为集成分支 `feat/v2-m2-integration`，开 PR #49；构建/selftest/启动通过 | 33 commits，209 KB |
+| 2026-11-26 | PR #49 以 merge commit `c222f91` 合入 `main`；关闭逐级 PR 与 Issue #35/#37/#39/#41/#43/#45/#47 | M2 收口 |
 
 ## Key Decisions
 
