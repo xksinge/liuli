@@ -151,7 +151,7 @@ M1 实际命名：`V2Shell`、`ShellConfig`、`V2Window`、`DockForm`、`IslandF
 - 保存/覆盖：`SaveTheme` 同名覆盖，`ActiveTheme` 指向当前快照；手动改玻璃、Dock、灵动岛、面板后立刻清空 `ActiveTheme`，避免把已偏离的状态误标成“当前”。
 - 加载：`LoadTheme` 先应用快照，壁纸文件存在时 `Wallpaper.Set` + `Backdrop.Rebuild`，再重建面板、Dock、灵动岛；任一步失败只影响对应窗口，不改快照内容。
 - 删除：二次确认（同一条目点两次），删除当前主题时同步清空 `activeTheme`；坏 JSON 由 `NormalizeThemes` 收敛，空/重复名自动修复。
-- 设置面板 `V2SettingsForm`：900×720 自绘玻璃窗、八页导航、窗口可拖动；滑杆松手保存，磨砂/压暗松手才重烘壁纸，开关/内容切换即时写 `shell.json`。
+- 设置面板 `V2SettingsForm`：900×720 自绘玻璃窗、九页导航、窗口可拖动；滑杆松手保存，磨砂/压暗松手才重烘壁纸，开关/内容切换即时写 `shell.json`。
 - 页面职责：
   - 主题：玻璃浓度 20–140、磨砂 10–100、圆角 10–30、自动/深色/浅色、保存当前主题（内嵌原生 TextBox 命名）、恢复外观默认、主题库加载/覆盖/删除。
   - 配色：强调色来源三选一（跟随壁纸 / 预设 / 自定义）、6 个预设色卡、自定义取色（`ColorDialog`，取消不改）、当前配色说明。
@@ -183,6 +183,19 @@ M1 实际命名：`V2Shell`、`ShellConfig`、`V2Window`、`DockForm`、`IslandF
 - 系统图标：`DesktopState` 维护五个 CLSID，写 `HideDesktopIcons\NewStartPanel` 与 `ClassicStartMenu`（1 隐藏 / 0 显示）；`SHChangeNotify(0x08000000)` 通知资源管理器刷新，不重启 Explorer。
 - 退出语义：`Quit` 只在“配置仍要隐藏且确实是 Liuli 隐藏”时恢复原状态；用户切到显示后退出不再反向隐藏。系统图标开关属于显式偏好，退出后保持。
 - 兼容：Windows 11 25H2 桌面已不绘制“控制面板”系统图标，开关仍写注册表/配置但无可见图标；Win10 1903 待回归。
+
+### 7.7 桌面收纳面板（TASK-054，Issue #16）
+
+- 产品路线：一期只做“单面板 + 分组标签”，不是多个酷呆式盒子；数据模型与二期多盒子共用。参考 GlassBoard 的 `Entry` 索引模型，只借鉴机制，不复制代码。
+- 数据模型：`ShellConfig` 新增 `collectorOn` / `collectorAutoScan` / `collectorX/Y/W/H` / `collectorGroup` / `collectorItems[]`；`CollectorItem` 保存 `path/name/group/hidden/manual/folder`，`path` 永远指向原文件或文件夹，没有“收纳目录/移动后路径”。
+- 同步：`CollectorState.Sync` 扫描用户桌面 + 公共桌面，按路径合并；新文件用 `Icons.GroupOf` 按扩展名/文件夹/`groups.txt` 分组；文件消失只移除入口，不删除磁盘文件。手动拖入的桌面外入口标记 `manual`，原件在就保留。
+- 刷新：面板内 `Timer(2000)` 在 UI 线程轮询，满足“新/删/改 5 秒内可见”；不引入 `FileSystemWatcher` 跨线程回 UI 的复杂度。默认开启，可在收纳页关闭。
+- 面板：`CollectorForm` 是独立分层窗口，620×430，可拖标题、可拖右下角缩放；顶部分组标签（全部/应用/文件夹/文档/图片/影音/压缩包/代码/其他），网格每页 18 项，滚轮翻页；双击入口打开原路径，右键可移出（只隐藏入口）或在资源管理器中显示。
+- 分组：面板内拖动超过 8px 进入换组模式，松手只改 `CollectorItem.Group`，不产生文件移动；当前分组、面板位置/尺寸写回 `shell.json`。
+- 安全拖出：入口拖出面板边界时提供 `DataFormats.FileDrop`，允许效果只给 `DragDropEffects.Copy`；资源管理器默认复制，绝不默认移动原件。
+- 原生图标：收纳开启时配合桌面页“隐藏全部桌面图标”（运行期 `ShowWindow`）；面板 2 秒 tick 检测 Explorer 重启后原生图标是否重现并再次隐藏，不写系统“显示桌面图标”注册表偏好。
+- 限制：一期不替换 Explorer 桌面视图，不做多个盒子；`REQ-044` 的“绑定文件夹组件”仍保留为后续独立组件；125% DPI、多屏、超大桌面（>500 项）未回归。
+
 
 ## 8. 配色
 

@@ -19,6 +19,7 @@ namespace Liuli
         public static ShellConfig Config;
         public static DockForm Dock;
         public static IslandForm Island;
+        public static CollectorForm Collector;
         public static readonly List<PanelForm> Panels = new List<PanelForm>();
         public static V2Host Host;
         public static WeatherService Weather;
@@ -72,6 +73,11 @@ namespace Liuli
                 PanelForm pf = new PanelForm(Config.Panels[i]);
                 Panels.Add(pf);
                 pf.Show();
+            }
+            if (Config.CollectorOn)
+            {
+                Collector = new CollectorForm();
+                Collector.Show();
             }
 
             statsTimer = new Timer();
@@ -134,6 +140,8 @@ namespace Liuli
             menu.Items.Add("Dock 尺寸：小/标准/大（点击切换）", null, delegate { CycleDockPreset(); });
             menu.Items.Add("灵动岛设置", null, delegate { OpenIslandSettingsLater(Cursor.Position); });
             menu.Items.Add("新建面板", null, delegate { AddPanel(); });
+            menu.Items.Add("桌面收纳：开/关", null, delegate { ToggleCollector(); });
+            menu.Items.Add("重新扫描桌面收纳", null, delegate { ScanCollectorNow(); });
             menu.Items.Add("任务栏自动隐藏：开/关", null, delegate { ToggleTaskbarAutoHide(); });
             menu.Items.Add("恢复系统任务栏", null, delegate { RestoreTaskbar(); });
             menu.Items.Add("重载 Dock 默认组合", null, delegate { ResetDock(); });
@@ -185,6 +193,8 @@ namespace Liuli
             items.Add(new MenuForm.Item("Dock 尺寸：" + DockPresetLabel(Config == null ? "standard" : Config.DockPreset) + "（点击切换）", delegate { CycleDockPreset(); }, Glyph.Gear));
             items.Add(new MenuForm.Item("灵动岛设置", delegate { OpenIslandSettingsLater(screen); }, Glyph.Gear));
             items.Add(new MenuForm.Item("新建面板", delegate { AddPanel(); }, Glyph.Plus));
+            items.Add(new MenuForm.Item("桌面收纳：" + (Config != null && Config.CollectorOn ? "开" : "关"), delegate { ToggleCollector(); }, Glyph.Folder));
+            items.Add(new MenuForm.Item("重新扫描桌面收纳", delegate { ScanCollectorNow(); }, Glyph.Restore));
             items.Add(new MenuForm.Item("任务栏自动隐藏：开/关", delegate { ToggleTaskbarAutoHide(); }, Glyph.Gear));
             items.Add(new MenuForm.Item("恢复系统任务栏", delegate { RestoreTaskbar(); }, Glyph.Restore));
             items.Add(new MenuForm.Item("重载 Dock 默认组合", delegate { ResetDock(); }, Glyph.Restore));
@@ -219,6 +229,11 @@ namespace Liuli
                 Panels[i].Show();
                 Panels[i].ApplyBounds();
             }
+            if (Config != null && Config.CollectorOn)
+            {
+                if (Collector == null) { Collector = new CollectorForm(); Collector.Show(); }
+                else { Collector.Show(); Collector.ApplyBounds(); }
+            }
         }
 
         public static void HideAll()
@@ -226,6 +241,7 @@ namespace Liuli
             allHidden = true;
             if (Dock != null) Dock.Hide();
             if (Island != null) Island.Hide();
+            if (Collector != null) Collector.Hide();
             for (int i = 0; i < Panels.Count; i++)
                 if (Panels[i] != null) Panels[i].Hide();
         }
@@ -441,6 +457,7 @@ namespace Liuli
             if (Dock != null) { Dock.RelayoutPublic(); Dock.Render(); }
             if (Island != null) Island.RefreshIsland();
             RefreshPanels();
+            if (Collector != null) Collector.Render();
         }
 
         public static void SetDockOn(bool on)
@@ -470,6 +487,51 @@ namespace Liuli
             Config.DockAutoHide = on;
             Config.Save();
             if (Dock != null) Dock.RefreshAutoHide();
+        }
+
+        public static void ToggleCollector()
+        {
+            if (Config == null) return;
+            SetCollectorOn(!Config.CollectorOn);
+        }
+
+        public static void SetCollectorOn(bool on)
+        {
+            if (Config == null) return;
+            MarkThemeDirty();
+            Config.CollectorOn = on;
+            Config.Save();
+            if (on)
+            {
+                if (Collector == null) { Collector = new CollectorForm(); Collector.Show(); }
+                else { Collector.Show(); Collector.ApplyBounds(); }
+                if (allHidden && Collector != null) Collector.Hide();
+                CollectorState.Sync(true);
+                if (Collector != null) Collector.Render();
+                Toast("桌面收纳已开启；建议在桌面页隐藏原生图标");
+            }
+            else if (Collector != null)
+            {
+                Collector.Hide();
+                Collector.Close();
+                Collector = null;
+                Toast("桌面收纳已关闭，原文件未移动；桌面图标仍按桌面页设置");
+            }
+        }
+
+        public static void ScanCollectorNow()
+        {
+            if (Config == null) return;
+            bool changed = CollectorState.Sync(true);
+            if (Collector != null) Collector.Render();
+            Toast(changed ? "桌面收纳已刷新" : "桌面没有变化");
+        }
+
+        public static void RefreshCollector()
+        {
+            if (Collector == null) return;
+            Collector.ApplyBounds();
+            Collector.Render();
         }
 
         public static void SetDockPreset(string preset)
@@ -878,6 +940,7 @@ namespace Liuli
             try { if (wallTimer != null) wallTimer.Stop(); } catch { }
             try { if (Dock != null) Dock.Close(); } catch { }
             try { if (Island != null) Island.Close(); } catch { }
+            try { if (Collector != null) Collector.Close(); } catch { }
             try { if (Settings != null) Settings.Close(); } catch { }
             for (int i = 0; i < Panels.Count; i++) { try { if (Panels[i] != null) Panels[i].Close(); } catch { } }
             try
@@ -897,6 +960,7 @@ namespace Liuli
             {
                 if (Dock != null) Dock.ApplyPosition();
                 if (Island != null) Island.ApplyPosition();
+                if (Collector != null) Collector.ApplyBounds();
                 for (int i = 0; i < Panels.Count; i++)
                     if (Panels[i] != null) Panels[i].ApplyBounds();
             });
