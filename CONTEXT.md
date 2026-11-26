@@ -17,6 +17,7 @@
 | 2026-11-26 | 补充 Dock 系统入口、桌面图标默认隐藏、任务栏自动隐藏、壁纸取色、屏幕/文字适配、UI 视觉闸门 | Requirements / Issue #33 评论 |
 | 2026-11-26 | 建立项目开发流程执行清单 | `docs/DEVELOPMENT.md` |
 | 2026-11-26 | 需求文档落分支；v1.6 原型停到 experiment 分支，工作区恢复干净 | `docs/v2-requirements` @ adbcd6f；`experiment/v1.6-dock-island` @ 28e8cfd |
+| 2026-11-26 | 推送需求分支并开 Draft PR | PR #34 |
 
 ## Key Decisions
 

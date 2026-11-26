@@ -47,7 +47,7 @@
 
 ## 6. 当前仓库状态（2026-11-26）
 
-- 工作分支 `docs/v2-requirements`，工作区干净；需求文档首次提交 `adbcd6f`。
+- 工作分支 `docs/v2-requirements`，已推送 origin，Draft PR #34；工作区干净。
 - v1.6 Dock/灵动岛原型停在 `experiment/v1.6-dock-island`（`28e8cfd`），不合入 main，不作为 v2.0 基线。
 - 本地 `main` 在 `41c9f24`（v1.5.0），比 `origin/main` 领先 11 个提交；远程推送曾失败，需用 API/PR 补齐。
 - `docs/REQUIREMENTS.md` 为 v2.0 需求草稿；确认前不写新功能代码。

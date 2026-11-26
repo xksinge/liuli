@@ -5,6 +5,7 @@
 - 取代：v1.x 的“玻璃看板 + 文件收纳”产品定义
 - 最后功能版本：v1.5.0（仅作为技术资产与历史记录，不再扩展）
 - 关联 Issue：https://github.com/xksinge/liuli/issues/33
+- 评审 PR：https://github.com/xksinge/liuli/pull/34（Draft）
 - 原则：**功能对齐优先，视觉逐步逼近；先需求，后设计，再编码。**
 - 流程：全程按 `docs/DEVELOPMENT.md` 的阶段闸门与留痕要求执行。
 
