@@ -110,6 +110,10 @@ namespace Liuli
         public static extern IntPtr FindWindow(string cls, string title);
         [DllImport("user32.dll", CharSet = CharSet.Unicode)]
         public static extern IntPtr FindWindowEx(IntPtr parent, IntPtr after, string cls, string title);
+
+        public delegate bool EnumWinProc(IntPtr h, IntPtr l);
+        [DllImport("user32.dll")] public static extern bool EnumWindows(EnumWinProc cb, IntPtr l);
+        [DllImport("user32.dll")] public static extern bool EnumChildWindows(IntPtr parent, EnumWinProc cb, IntPtr l);
         [DllImport("user32.dll", CharSet = CharSet.Unicode)]
         public static extern IntPtr SendMessage(IntPtr h, int msg, IntPtr w, IntPtr l);
         [DllImport("user32.dll", CharSet = CharSet.Unicode)]
@@ -251,33 +255,91 @@ namespace Liuli
         }
 
         /// <summary>桌面图标显隐：0x7402 是资源管理器“显示桌面图标”的命令 ID。</summary>
+        /// <remarks>
+        /// Win11 26200 上 FindWindow("Progman") 会返回 0，但 EnumWindows 能枚举到，所以先枚举再找子窗；
+        /// SysListView32 是 DefView 的孙辈，FindWindowEx 只查直接子窗，必须用 EnumChildWindows 递归找。
+        /// </remarks>
         public static bool ToggleDesktopIcons(out bool nowVisible)
         {
             nowVisible = true;
             try
             {
-                IntPtr prog = FindWindow("Progman", null);
-                IntPtr defView = IntPtr.Zero;
-                if (prog != IntPtr.Zero) defView = FindWindowEx(prog, IntPtr.Zero, "SHELLDLL_DefView", null);
-                if (defView == IntPtr.Zero)
-                {
-                    IntPtr worker = IntPtr.Zero;
-                    while (true)
-                    {
-                        worker = FindWindowEx(IntPtr.Zero, worker, "WorkerW", null);
-                        if (worker == IntPtr.Zero) break;
-                        IntPtr child = FindWindowEx(worker, IntPtr.Zero, "SHELLDLL_DefView", null);
-                        if (child != IntPtr.Zero) { defView = child; break; }
-                    }
-                }
+                IntPtr defView = DesktopDefView();
                 if (defView == IntPtr.Zero) return false;
-                IntPtr list = FindWindowEx(defView, IntPtr.Zero, "SysListView32", "FolderView");
-                bool visible = list != IntPtr.Zero && IsWindowVisible(list);
+                IntPtr list = DesktopIconList(defView);
+                bool before = list != IntPtr.Zero && IsWindowVisible(list);
                 SendMessage(defView, WM_COMMAND, new IntPtr(0x7402), IntPtr.Zero);
-                nowVisible = !visible;
+                System.Threading.Thread.Sleep(200);
+                list = DesktopIconList(defView);
+                if (list != IntPtr.Zero) nowVisible = IsWindowVisible(list);
+                else nowVisible = !before;
                 return true;
             }
             catch { return false; }
+        }
+
+        /// <summary>探测桌面图标当前是否可见（读不到就按可见处理，避免误隐藏）。</summary>
+        public static bool DesktopIconsVisible()
+        {
+            try
+            {
+                IntPtr defView = DesktopDefView();
+                if (defView == IntPtr.Zero) return true;
+                IntPtr list = DesktopIconList(defView);
+                if (list == IntPtr.Zero) return true;
+                return IsWindowVisible(list);
+            }
+            catch { return true; }
+        }
+
+        /// <summary>找到承载桌面图标的 SHELLDLL_DefView：先枚举 Progman / WorkerW，再退回 FindWindow。</summary>
+        public static IntPtr DesktopDefView()
+        {
+            IntPtr progDv = IntPtr.Zero, workerDv = IntPtr.Zero;
+            try
+            {
+                EnumWindows(delegate (IntPtr h, IntPtr l)
+                {
+                    string c = ClassOf(h);
+                    if (c != "Progman" && c != "WorkerW") return true;
+                    IntPtr dv = FindWindowEx(h, IntPtr.Zero, "SHELLDLL_DefView", null);
+                    if (dv == IntPtr.Zero || DesktopIconList(dv) == IntPtr.Zero) return true;
+                    // 有些机器上 WorkerW 也挂着 DefView（壁纸宿主），优先用 Progman 下那份真桌面
+                    if (c == "Progman") progDv = dv; else workerDv = dv;
+                    return true;
+                }, IntPtr.Zero);
+            }
+            catch { }
+            if (progDv != IntPtr.Zero) return progDv;
+            if (workerDv != IntPtr.Zero) return workerDv;
+            IntPtr prog = FindWindow("Progman", null);
+            return prog == IntPtr.Zero ? IntPtr.Zero : FindWindowEx(prog, IntPtr.Zero, "SHELLDLL_DefView", null);
+        }
+
+        static IntPtr DesktopIconList(IntPtr defView)
+        {
+            IntPtr list = IntPtr.Zero;
+            try
+            {
+                EnumChildWindows(defView, delegate (IntPtr h, IntPtr l)
+                {
+                    if (ClassOf(h) == "SysListView32") { list = h; return false; }
+                    return true;
+                }, IntPtr.Zero);
+            }
+            catch { }
+            return list;
+        }
+
+        static string ClassOf(IntPtr h)
+        {
+            try
+            {
+                StringBuilder sb = new StringBuilder(128);
+                GetClassName(h, sb, sb.Capacity);
+                return sb.ToString();
+            }
+            catch { return ""; }
         }
 
         /// <summary>读取当前壁纸层窗口句柄（用于动态壁纸时取帧；读不到返回 0）。</summary>
