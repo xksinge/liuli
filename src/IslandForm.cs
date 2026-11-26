@@ -10,8 +10,14 @@ namespace Liuli
     {
         Timer clock;
         Timer hover;
+        Timer animTimer;
         bool expanded;
         int hoverBtn = -1;
+        int pressedBtn = -1;
+        int bounceBtn = -1;
+        bool pressedBody;
+        long bounceAt;
+        long pulseAt;
         string lastClock = "";
         long leaveAt;
 
@@ -29,6 +35,10 @@ namespace Liuli
             hover.Interval = 140;
             hover.Tick += delegate { TickHover(); };
             hover.Start();
+
+            animTimer = new Timer();
+            animTimer.Interval = 16;
+            animTimer.Tick += delegate { TickAnim(); };
         }
 
         protected override void OnReady()
@@ -149,6 +159,47 @@ namespace Liuli
             Render();
         }
 
+        // ---------- 点击反馈 ----------
+        float BounceScale()
+        {
+            if (bounceAt == 0) return 1f;
+            float t = (Environment.TickCount - bounceAt) / 190f;
+            if (t < 0f) t = 0f;
+            if (t >= 1f) return 1f;
+            float e = 1f - (1f - t) * (1f - t) * (1f - t);
+            return 0.90f + 0.10f * e + 0.06f * (float)Math.Sin(Math.PI * t);
+        }
+
+        void Pulse(int button)
+        {
+            bounceBtn = button;
+            bounceAt = Environment.TickCount;
+            pulseAt = Environment.TickCount;
+            if (animTimer != null && !animTimer.Enabled) animTimer.Start();
+            Render();
+        }
+
+        void TickAnim()
+        {
+            long now = Environment.TickCount;
+            if (bounceAt != 0 && now - bounceAt > 220)
+            {
+                bounceBtn = -1;
+                bounceAt = 0;
+                pulseAt = 0;
+                if (animTimer != null) animTimer.Stop();
+                Render();
+                return;
+            }
+            Render();
+        }
+
+        public void PreviewPressBtn(int index)
+        {
+            pressedBtn = index;
+            Render();
+        }
+
         // ---------- 绘制 ----------
         public void Render()
         {
@@ -162,6 +213,21 @@ namespace Liuli
                 g.Clear(Color.FromArgb(0));
                 Rectangle body = CurrentBody();
                 PaintGlass(g, body, body.Height / 2);
+
+                int pressAlpha = 0;
+                if (pressedBody) pressAlpha = 42;
+                else if (pulseAt != 0)
+                {
+                    float t = (Environment.TickCount - pulseAt) / 190f;
+                    if (t >= 0f && t < 1f) pressAlpha = (int)(38 * (1f - t));
+                }
+                if (pressAlpha > 0)
+                {
+                    using (GraphicsPath p = Theme.Round(body, body.Height / 2))
+                    using (SolidBrush b = new SolidBrush(Color.FromArgb(pressAlpha, 0, 0, 0)))
+                        g.FillPath(b, p);
+                }
+
                 if (expanded) PaintExpanded(g, body);
                 else PaintCollapsed(g, body);
                 Native.PushLayered(Handle, Canvas, Location, (byte)255);
@@ -239,7 +305,13 @@ namespace Liuli
 
             Rectangle[] rs = QuickButtons();
             Glyph[] gl = { Glyph.Plus, Glyph.Broom, Glyph.Gear };
-            for (int i = 0; i < 3; i++) PaintIconButton(g, rs[i], gl[i], hoverBtn == i);
+            float bs = BounceScale();
+            for (int i = 0; i < 3; i++)
+            {
+                bool pressed = pressedBtn == i;
+                float sc = pressed ? 0.90f : (bounceBtn == i ? bs : 1f);
+                PaintIconButton(g, rs[i], gl[i], hoverBtn == i, pressed, sc);
+            }
         }
 
         void Stat(Graphics g, int x, int y, string label, string text, float pct)
@@ -265,23 +337,55 @@ namespace Liuli
         }
 
         // ---------- 交互 ----------
-        protected override void OnMouseUp(MouseEventArgs e)
+        protected override void OnMouseDown(MouseEventArgs e)
         {
-            base.OnMouseUp(e);
+            base.OnMouseDown(e);
             if (e.Button != MouseButtons.Left) return;
+            if (!CurrentBody().Contains(e.Location)) return;
+            pressedBody = true;
+            pressedBtn = -1;
             if (expanded)
             {
                 Rectangle[] rs = QuickButtons();
                 for (int i = 0; i < rs.Length; i++)
                 {
                     if (!rs[i].Contains(e.Location)) continue;
-                    if (i == 0) V2Shell.Toast("应用面板将在 M4 提供");
-                    else if (i == 1) V2Shell.Toast("桌面图标管理将在 M5 提供");
+                    pressedBtn = i;
+                    break;
+                }
+            }
+            Render();
+        }
+
+        protected override void OnMouseUp(MouseEventArgs e)
+        {
+            base.OnMouseUp(e);
+            if (e.Button != MouseButtons.Left) return;
+            int pb = pressedBtn;
+            bool bodyPressed = pressedBody;
+            pressedBtn = -1;
+            pressedBody = false;
+            if (!bodyPressed && pb < 0) return;
+            if (pb >= 0 && expanded)
+            {
+                Rectangle[] rs = QuickButtons();
+                if (pb < rs.Length && rs[pb].Contains(e.Location))
+                {
+                    Pulse(pb);
+                    if (pb == 0) V2Shell.Toast("应用面板将在 M4 提供");
+                    else if (pb == 1) V2Shell.Toast("桌面图标管理将在 M5 提供");
                     else V2Shell.ShowMenu(PointToScreen(e.Location));
                     return;
                 }
+                Render();
+                return;
             }
-            V2Shell.ShowMenu(PointToScreen(e.Location));
+            if (CurrentBody().Contains(e.Location))
+            {
+                Pulse(-1);
+                V2Shell.ShowMenu(PointToScreen(e.Location));
+            }
+            else Render();
         }
 
         protected override void OnMouseLeave(EventArgs e)
@@ -295,6 +399,7 @@ namespace Liuli
         {
             if (clock != null) clock.Stop();
             if (hover != null) hover.Stop();
+            if (animTimer != null) animTimer.Stop();
             base.OnFormClosed(e);
         }
     }

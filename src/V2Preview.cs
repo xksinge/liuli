@@ -32,41 +32,20 @@ namespace Liuli
                 IntPtr ih = island.Handle;
                 island.ExpandForPreview();
 
-                Rectangle screen = Screen.PrimaryScreen.Bounds;
-                Bitmap shot = new Bitmap(screen.Width, screen.Height, PixelFormat.Format32bppPArgb);
-                using (Graphics g = Graphics.FromImage(shot))
-                {
-                    g.SmoothingMode = SmoothingMode.AntiAlias;
-                    g.InterpolationMode = InterpolationMode.HighQualityBicubic;
-                    if (Backdrop.Source != null) g.DrawImage(Backdrop.Source, screen);
-                    else
-                    {
-                        using (LinearGradientBrush b = new LinearGradientBrush(screen, Util.Rgb(28, 38, 56), Util.Rgb(10, 14, 22), 90f))
-                            g.FillRectangle(b, screen);
-                    }
-
-                    Bitmap bmp = dock.Snapshot();
-                    if (bmp != null)
-                    {
-                        g.DrawImage(bmp, dock.Left, dock.Top, bmp.Width, bmp.Height);
-                        bmp.Dispose();
-                    }
-                    bmp = island.Snapshot();
-                    if (bmp != null)
-                    {
-                        g.DrawImage(bmp, island.Left, island.Top, bmp.Width, bmp.Height);
-                        bmp.Dispose();
-                    }
-                }
-
                 string dir = Path.Combine(Paths.Base, "..\\docs\\screens\\v2");
                 if (!Directory.Exists(dir)) Directory.CreateDirectory(dir);
                 string file = Path.Combine(dir, "m1-preview.png");
-                shot.Save(file, ImageFormat.Png);
-                shot.Dispose();
+                SaveShot(dock, island, file);
+
+                dock.PreviewPress(4);
+                island.PreviewPressBtn(2);
+                string pressedFile = Path.Combine(dir, "m1-preview-pressed.png");
+                SaveShot(dock, island, pressedFile);
+
                 dock.Dispose();
                 island.Dispose();
                 Console.WriteLine("preview=" + file + " " + new FileInfo(file).Length + "B");
+                Console.WriteLine("preview=" + pressedFile + " " + new FileInfo(pressedFile).Length + "B");
                 return 0;
             }
             catch (Exception ex)
@@ -74,6 +53,38 @@ namespace Liuli
                 Console.WriteLine("preview failed: " + ex);
                 return 2;
             }
+        }
+
+        static void SaveShot(DockForm dock, IslandForm island, string file)
+        {
+            Rectangle screen = Screen.PrimaryScreen.Bounds;
+            Bitmap shot = new Bitmap(screen.Width, screen.Height, PixelFormat.Format32bppPArgb);
+            using (Graphics g = Graphics.FromImage(shot))
+            {
+                g.SmoothingMode = SmoothingMode.AntiAlias;
+                g.InterpolationMode = InterpolationMode.HighQualityBicubic;
+                if (Backdrop.Source != null) g.DrawImage(Backdrop.Source, screen);
+                else
+                {
+                    using (LinearGradientBrush b = new LinearGradientBrush(screen, Util.Rgb(28, 38, 56), Util.Rgb(10, 14, 22), 90f))
+                        g.FillRectangle(b, screen);
+                }
+
+                Bitmap bmp = dock.Snapshot();
+                if (bmp != null)
+                {
+                    g.DrawImage(bmp, dock.Left, dock.Top, bmp.Width, bmp.Height);
+                    bmp.Dispose();
+                }
+                bmp = island.Snapshot();
+                if (bmp != null)
+                {
+                    g.DrawImage(bmp, island.Left, island.Top, bmp.Width, bmp.Height);
+                    bmp.Dispose();
+                }
+            }
+            shot.Save(file, ImageFormat.Png);
+            shot.Dispose();
         }
     }
 }

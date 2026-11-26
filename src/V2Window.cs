@@ -150,19 +150,33 @@ namespace Liuli
             return veil;
         }
 
-        protected void PaintIconButton(Graphics g, Rectangle r, Glyph glyph, bool hover)
+        protected void PaintIconButton(Graphics g, Rectangle r, Glyph glyph, bool hover, bool pressed, float iconScale)
         {
             int radius = r.Height / 2;
             using (GraphicsPath p = Theme.Round(r, radius))
             {
-                if (hover)
+                if (pressed)
+                {
+                    using (SolidBrush b = new SolidBrush(Theme.Press)) g.FillPath(b, p);
+                    using (Pen pen = new Pen(Color.FromArgb(58, 255, 255, 255), 1f)) g.DrawPath(pen, p);
+                }
+                else if (hover)
                 {
                     using (SolidBrush b = new SolidBrush(Theme.Hover)) g.FillPath(b, p);
                     using (Pen pen = new Pen(Color.FromArgb(40, 255, 255, 255), 1f)) g.DrawPath(pen, p);
                 }
             }
             Rectangle inner = Util.Inflate(r, -(int)(r.Width * 0.27f));
-            Theme.Glyph(g, glyph, inner, hover ? Theme.TextMain : Theme.TextSub, 1.5f * UiScale);
+            inner = ScaleRect(inner, iconScale);
+            Theme.Glyph(g, glyph, inner, (hover || pressed) ? Theme.TextMain : Theme.TextSub, 1.5f * UiScale);
+        }
+
+        protected static Rectangle ScaleRect(Rectangle r, float scale)
+        {
+            if (scale < 0.01f) scale = 0.01f;
+            int w = Math.Max(1, Util.RoundI(r.Width * scale));
+            int h = Math.Max(1, Util.RoundI(r.Height * scale));
+            return new Rectangle(r.X + (r.Width - w) / 2, r.Y + (r.Height - h) / 2, w, h);
         }
 
         protected void PaintTag(Graphics g, string text, int centerX, int y, int maxWidth)

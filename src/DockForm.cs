@@ -11,9 +11,17 @@ namespace Liuli
     sealed class DockForm : V2Window
     {
         Timer positionTimer;
+        Timer animTimer;
         DropTarget oleDrop;
         int hoverItem = -1;
         int hoverBtn = -1;
+        int pressedItem = -1;
+        int pressedBtn = -1;
+        int bounceItem = -1;
+        int bounceBtn = -1;
+        int flashItem = -1;
+        long bounceAt;
+        long flashAt;
         bool down;
         Point downPoint;
 
@@ -28,6 +36,10 @@ namespace Liuli
             positionTimer.Interval = 320;
             positionTimer.Tick += delegate { TickPosition(); };
             positionTimer.Start();
+
+            animTimer = new Timer();
+            animTimer.Interval = 16;
+            animTimer.Tick += delegate { TickAnim(); };
         }
 
         protected override void OnReady()
@@ -158,14 +170,32 @@ namespace Liuli
                 List<DockItem> items = Items();
                 for (int i = 0; i < itemRects.Count && i < items.Count; i++)
                 {
-                    Rectangle r = itemRects[i];
-                    if (hoverItem == i)
+                    bool pressed = pressedItem == i;
+                    bool bouncing = bounceItem == i;
+                    float sc = pressed ? 0.90f : (bouncing ? BounceScale() : 1f);
+                    Rectangle baseRect = itemRects[i];
+                    Rectangle r = ScaleRect(baseRect, sc);
+                    if (hoverItem == i || pressed)
                     {
-                        Rectangle bg = Util.Inflate(r, Util.RoundI(3 * UiScale));
+                        Rectangle bg = Util.Inflate(baseRect, Util.RoundI(3 * UiScale));
                         using (GraphicsPath p = Theme.Round(bg, Util.RoundI(10 * UiScale)))
-                        using (SolidBrush b = new SolidBrush(Theme.Hover)) g.FillPath(b, p);
+                        using (SolidBrush b = new SolidBrush(pressed ? Theme.Press : Theme.Hover)) g.FillPath(b, p);
                     }
                     DockGlyphs.Draw(g, items[i], r, UiScale);
+
+                    if (flashItem == i && flashAt != 0)
+                    {
+                        float t = (Environment.TickCount - flashAt) / 280f;
+                        if (t >= 0f && t < 1f)
+                        {
+                            int alpha = (int)(120 * (1f - t));
+                            int radius = baseRect.Width / 2 + Util.RoundI(baseRect.Width * 0.34f * t);
+                            Rectangle ring = new Rectangle(baseRect.X + baseRect.Width / 2 - radius, baseRect.Y + baseRect.Height / 2 - radius,
+                                radius * 2, radius * 2);
+                            using (Pen pen = new Pen(Color.FromArgb(alpha, Theme.Accent), 1.4f * UiScale))
+                                g.DrawEllipse(pen, ring);
+                        }
+                    }
                 }
 
                 if (items.Count > 0 && itemRects.Count > 0)
@@ -176,7 +206,13 @@ namespace Liuli
                 }
 
                 Glyph[] glyphs = { Glyph.Plus, Glyph.Broom, Glyph.Gear };
-                for (int i = 0; i < 3; i++) PaintIconButton(g, btnRects[i], glyphs[i], hoverBtn == i);
+                float buttonScale = BounceScale();
+                for (int i = 0; i < 3; i++)
+                {
+                    bool pressed = pressedBtn == i;
+                    float sc = pressed ? 0.90f : (bounceBtn == i ? buttonScale : 1f);
+                    PaintIconButton(g, btnRects[i], glyphs[i], hoverBtn == i, pressed, sc);
+                }
 
                 if (hoverItem >= 0 && hoverItem < items.Count)
                 {
@@ -193,6 +229,44 @@ namespace Liuli
                 Native.PushLayered(Handle, Canvas, Location, (byte)255);
             }
             finally { g.Dispose(); }
+        }
+
+        // ---------- 点击反馈 ----------
+        float BounceScale()
+        {
+            if (bounceAt == 0) return 1f;
+            float t = (Environment.TickCount - bounceAt) / 190f;
+            if (t < 0f) t = 0f;
+            if (t >= 1f) return 1f;
+            float e = 1f - (1f - t) * (1f - t) * (1f - t);
+            return 0.90f + 0.10f * e + 0.06f * (float)Math.Sin(Math.PI * t);
+        }
+
+        void StartAnim()
+        {
+            if (animTimer != null && !animTimer.Enabled) animTimer.Start();
+        }
+
+        void TickAnim()
+        {
+            long now = Environment.TickCount;
+            if (bounceAt != 0 && now - bounceAt > 280)
+            {
+                bounceItem = -1;
+                bounceBtn = -1;
+                flashItem = -1;
+                bounceAt = 0;
+                if (animTimer != null) animTimer.Stop();
+                Render();
+                return;
+            }
+            Render();
+        }
+
+        public void PreviewPress(int index)
+        {
+            pressedItem = index;
+            Render();
         }
 
         // ---------- 交互 ----------
@@ -239,7 +313,18 @@ namespace Liuli
                     return;
                 }
             }
-            if (e.Button == MouseButtons.Left) { down = true; downPoint = e.Location; }
+            if (e.Button == MouseButtons.Left)
+            {
+                down = true;
+                downPoint = e.Location;
+                pressedItem = -1;
+                pressedBtn = -1;
+                for (int i = 0; i < itemRects.Count; i++)
+                    if (Util.Inflate(itemRects[i], Util.RoundI(3 * UiScale)).Contains(e.Location)) { pressedItem = i; break; }
+                for (int i = 0; i < btnRects.Length; i++)
+                    if (btnRects[i].Contains(e.Location)) { pressedBtn = i; break; }
+                if (pressedItem >= 0 || pressedBtn >= 0) Render();
+            }
         }
 
         protected override void OnMouseUp(MouseEventArgs e)
@@ -247,28 +332,49 @@ namespace Liuli
             base.OnMouseUp(e);
             if (!down || e.Button != MouseButtons.Left) return;
             down = false;
-            if (Math.Abs(e.X - downPoint.X) > 4 || Math.Abs(e.Y - downPoint.Y) > 4) return;
-
-            List<DockItem> items = Items();
-            for (int i = 0; i < itemRects.Count && i < items.Count; i++)
+            int pi = pressedItem;
+            int pb = pressedBtn;
+            pressedItem = -1;
+            pressedBtn = -1;
+            if (Math.Abs(e.X - downPoint.X) > 4 || Math.Abs(e.Y - downPoint.Y) > 4)
             {
-                if (!itemRects[i].Contains(e.Location)) continue;
-                items[i].Launch();
+                Render();
                 return;
             }
-            for (int i = 0; i < btnRects.Length; i++)
+
+            List<DockItem> items = Items();
+            if (pi >= 0 && pi < itemRects.Count && pi < items.Count && itemRects[pi].Contains(e.Location))
             {
-                if (!btnRects[i].Contains(e.Location)) continue;
-                if (i == 0) V2Shell.Toast("应用面板将在 M4 提供");
-                else if (i == 1) V2Shell.Toast("桌面图标管理将在 M5 提供");
+                Pulse(pi, -1);
+                items[pi].Launch();
+                return;
+            }
+            if (pb >= 0 && pb < btnRects.Length && btnRects[pb].Contains(e.Location))
+            {
+                Pulse(-1, pb);
+                if (pb == 0) V2Shell.Toast("应用面板将在 M4 提供");
+                else if (pb == 1) V2Shell.Toast("桌面图标管理将在 M5 提供");
                 else V2Shell.ShowMenu(PointToScreen(e.Location));
                 return;
             }
+            Render();
+        }
+
+        void Pulse(int item, int button)
+        {
+            bounceItem = item;
+            bounceBtn = button;
+            flashItem = item;
+            bounceAt = Environment.TickCount;
+            flashAt = Environment.TickCount;
+            StartAnim();
+            Render();
         }
 
         protected override void OnFormClosed(FormClosedEventArgs e)
         {
             if (positionTimer != null) positionTimer.Stop();
+            if (animTimer != null) animTimer.Stop();
             try { if (oleDrop != null) DropTarget.RevokeDragDrop(Handle); } catch { }
             base.OnFormClosed(e);
         }
