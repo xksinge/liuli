@@ -31,7 +31,12 @@ namespace Liuli
             try
             {
                 if (Path.EndsWith(".exe", StringComparison.OrdinalIgnoreCase))
-                    return new string[] { System.IO.Path.GetFileNameWithoutExtension(Path) };
+                {
+                    string file = System.IO.Path.GetFileNameWithoutExtension(Path);
+                    if (string.Equals(file, "calc", StringComparison.OrdinalIgnoreCase))
+                        return new string[] { "CalculatorApp", "Calculator", "WindowsCalculator" };
+                    return new string[] { file };
+                }
             }
             catch { }
             return new string[0];

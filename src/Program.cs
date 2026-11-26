@@ -71,7 +71,7 @@ namespace Liuli
                 for (int i = 0; i < c.DockItems.Count; i++)
                 {
                     DockItem it = c.DockItems[i];
-                    Console.WriteLine("  " + (i + 1) + ". " + it.Kind + " " + it.Id + " " + it.DisplayName);
+                    Console.WriteLine("  " + (i + 1) + ". " + it.Kind + " " + it.Id + " " + it.DisplayName + " proc=" + string.Join("|", it.ProcessNames()));
                 }
                 Console.WriteLine("taskbar.autoHide=" + Taskbar.AutoHide() + " visible=" + Taskbar.Visible() + " height=" + Taskbar.VisibleHeight());
                 Bitmap probe = Icons.Get(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Windows), "explorer.exe"), 256);
