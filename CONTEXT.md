@@ -50,6 +50,7 @@
 - `bin\Liuli.exe` 已是 v2 构建（193 KB），但**未启动 UI 验证**；`--selftest` 只验证配置/任务栏状态。
 - `bin\data\shell.json` 已由自检生成，含 8 个默认 Dock 项；`boards.json` 未改动。
 - 坏 `shell.json` 回退已测：非对象 JSON → `.bad-*` 备份 + 重建默认 8 项。
+- 离屏预览已生成 `docs/screens/v2/m1-preview.png`（`--preview`，不显示窗口）；真机截图仍待做。
 - 任务栏完全隐藏、桌面图标隐藏、Dock 自动隐藏动画、主题预设、多屏均未在 M1 实现，按 TASKS_V2 后续阶段处理。
 
 ## M1 已知限制（未验证 ≠ 已完成）

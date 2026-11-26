@@ -12,6 +12,7 @@
 - `bin\data\shell.json` 独立配置：默认生成、原子写入、坏文件备份回退
 - `Taskbar`：读取/设置 `ABS_AUTOHIDE`，托盘内切换与恢复；Dock 检测任务栏露出时上移避让
 - `Liuli.exe --selftest` 无界面自检入口
+- `Liuli.exe --preview` 离屏预览：不显示窗口，把 Dock 与展开态灵动岛合成到 PNG
 
 ### 变更
 

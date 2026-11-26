@@ -19,6 +19,7 @@
 - 已提交：`3be11bb`、`62ce47c`、`7282f77`、`87c92b7`、`0bbc294`、`92eab42`；Draft PR #36。
 - 已验证：`pwsh tools/build.ps1` 编译成功（193 KB）；`bin\Liuli.exe --selftest` 读取 `bin\data\shell.json`，默认 8 项，任务栏 `ABS_AUTOHIDE=1`。
 - 未验证：真机 UI 启动、截图、125% DPI、Dock 点击/拖入/右键移除、任务栏开关恢复。
+- 已生成离屏预览 `docs/screens/v2/m1-preview.png`；不是桌面真机截图，仅用于材质/布局初评。
 - 用户此前明确“不运行”，因此不把“能启动”写成已验证；下列任务保持未勾选。
 
 - [ ] **TASK-010** [REQ-002] `ShellStore` + `shell.json` 默认配置、原子保存、坏文件回退
