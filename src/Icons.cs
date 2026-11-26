@@ -385,6 +385,8 @@ namespace Liuli
         {
             try
             {
+                // 自定义收纳根是用户自己的目录，撤销后最多留个空文件夹，绝不代删
+                if (App.Ws != null && App.Ws.Set.StoreRoot.Trim().Length > 0) return;
                 if (!Directory.Exists(LiuliRoot)) return;
                 // 撤销后只剩空分组目录，整棵树一起清掉（有文件则保留，绝不递归删用户文件）
                 if (Directory.GetFiles(LiuliRoot, "*", SearchOption.AllDirectories).Length == 0)
