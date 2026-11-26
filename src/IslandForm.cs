@@ -463,7 +463,7 @@ namespace Liuli
                 if (pb < rs.Length && rs[pb].Contains(e.Location))
                 {
                     Pulse(pb);
-                    if (pb == 0) V2Shell.Toast("应用面板将在 M4 提供");
+                    if (pb == 0) V2Shell.AddPanel();
                     else if (pb == 1) V2Shell.Toast("桌面图标管理将在 M5 提供");
                     else V2Shell.ShowMenu(PointToScreen(e.Location));
                     return;

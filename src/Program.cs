@@ -69,6 +69,13 @@ namespace Liuli
                 Console.WriteLine("dockOn=" + c.DockOn + " dockAutoHide=" + c.DockAutoHide + " dockPreset=" + c.DockPreset + " islandOn=" + c.IslandOn + " taskbarAutoHide=" + c.TaskbarAutoHide);
                 c.NormalizeIsland();
                 Console.WriteLine("island.width=" + c.IslandWidth + " height=" + c.IslandHeight + " top=" + c.IslandTop + " animMs=" + c.IslandAnimMs + " quick=" + c.IslandQuick + " weather=" + c.IslandWeather + " stats=" + c.IslandStats);
+                Console.WriteLine("panels=" + c.Panels.Count);
+                for (int i = 0; i < c.Panels.Count; i++)
+                {
+                    PanelConfig p = c.Panels[i];
+                    Console.WriteLine("  panel." + (i + 1) + " content=" + p.Content + " x=" + p.X + " y=" + p.Y +
+                        " w=" + p.W + " h=" + p.H + " topMost=" + p.TopMostPanel);
+                }
                 Console.WriteLine("dockItems=" + c.DockItems.Count);
                 for (int i = 0; i < c.DockItems.Count; i++)
                 {

@@ -5,9 +5,39 @@ using System.Diagnostics;
 using System.Drawing;
 using System.IO;
 using System.Text;
+using System.Windows.Forms;
 
 namespace Liuli
 {
+    sealed class PanelConfig
+    {
+        public string Id = "";
+        public string Content = "clock";
+        public int X = -1;
+        public int Y = -1;
+        public int W = 340;
+        public int H = 200;
+        public bool TopMostPanel = true;
+
+        public static string NormalizeContent(string s)
+        {
+            string v = (s == null ? "" : s.Trim().ToLowerInvariant());
+            if (v == "empty" || v == "clock" || v == "weather" || v == "stats") return v;
+            return "empty";
+        }
+
+        public static string ContentName(string content)
+        {
+            switch (NormalizeContent(content))
+            {
+                case "clock": return "时钟";
+                case "weather": return "天气";
+                case "stats": return "系统";
+                default: return "空容器";
+            }
+        }
+    }
+
     sealed class DockItem
     {
         public string Kind = "app";       // system / app
@@ -163,6 +193,7 @@ namespace Liuli
         public bool HideShellControlPanel = true;
 
         public List<DockItem> DockItems = new List<DockItem>();
+        public List<PanelConfig> Panels = new List<PanelConfig>();
 
         public static string FilePath { get { return Path.Combine(Paths.Data, "shell.json"); } }
 
@@ -235,6 +266,28 @@ namespace Liuli
                         }
                     }
                 }
+
+                object panelsObj = root.ContainsKey("panels") ? root["panels"] : null;
+                List<object> panels = Json.Arr(panelsObj);
+                if (panels != null)
+                {
+                    c.Panels = new List<PanelConfig>();
+                    for (int i = 0; i < panels.Count && c.Panels.Count < 6; i++)
+                    {
+                        Dictionary<string, object> d = Json.Obj(panels[i]);
+                        if (d == null) continue;
+                        PanelConfig p = new PanelConfig();
+                        p.Id = Json.Str(d, "id", "");
+                        p.Content = PanelConfig.NormalizeContent(Json.Str(d, "content", "empty"));
+                        p.X = Json.Int(d, "x", -1);
+                        p.Y = Json.Int(d, "y", -1);
+                        p.W = Json.Int(d, "w", 340);
+                        p.H = Json.Int(d, "h", 200);
+                        p.TopMostPanel = Json.Bool(d, "topMost", true);
+                        c.Panels.Add(p);
+                    }
+                }
+                c.NormalizePanels();
                 return c;
             }
             catch (Exception ex)
@@ -317,6 +370,7 @@ namespace Liuli
             try
             {
                 NormalizeIsland();
+                NormalizePanels();
                 Dictionary<string, object> root = new Dictionary<string, object>();
                 root["version"] = Version;
                 root["dockOn"] = DockOn;
@@ -357,6 +411,23 @@ namespace Liuli
                     arr.Add(d);
                 }
                 root["dockItems"] = arr;
+
+                List<object> panelArr = new List<object>();
+                for (int i = 0; i < Panels.Count; i++)
+                {
+                    PanelConfig p = Panels[i];
+                    if (p == null) continue;
+                    Dictionary<string, object> d = new Dictionary<string, object>();
+                    d["id"] = p.Id;
+                    d["content"] = PanelConfig.NormalizeContent(p.Content);
+                    d["x"] = p.X;
+                    d["y"] = p.Y;
+                    d["w"] = p.W;
+                    d["h"] = p.H;
+                    d["topMost"] = p.TopMostPanel;
+                    panelArr.Add(d);
+                }
+                root["panels"] = panelArr;
                 Util.WriteAllTextAtomic(FilePath, Json.Write(root, true));
             }
             catch (Exception ex) { Log.Warn("config", "shell.json 保存失败：" + ex.Message); }
@@ -368,6 +439,61 @@ namespace Liuli
             IslandHeight = Util.Clamp(IslandHeight, 100, 180);
             IslandTop = Util.Clamp(IslandTop, 0, 80);
             IslandAnimMs = Util.Clamp(IslandAnimMs, 0, 400);
+        }
+
+        public void NormalizePanels()
+        {
+            if (Panels == null) Panels = new List<PanelConfig>();
+            if (Panels.Count > 6) Panels.RemoveRange(6, Panels.Count - 6);
+            Rectangle work = Screen.PrimaryScreen.WorkingArea;
+            HashSet<string> ids = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            for (int i = 0; i < Panels.Count; i++)
+            {
+                PanelConfig p = Panels[i];
+                if (p == null) { Panels.RemoveAt(i); i--; continue; }
+                p.Id = (p.Id == null ? "" : p.Id.Trim());
+                if (p.Id.Length == 0 || ids.Contains(p.Id))
+                    p.Id = "panel-" + Guid.NewGuid().ToString("N").Substring(0, 8);
+                ids.Add(p.Id);
+                p.Content = PanelConfig.NormalizeContent(p.Content);
+                p.W = Util.Clamp(p.W, 220, 720);
+                p.H = Util.Clamp(p.H, 120, 520);
+                if (p.W > work.Width - 40) p.W = Math.Max(220, work.Width - 40);
+                if (p.H > work.Height - 40) p.H = Math.Max(120, work.Height - 40);
+                if (p.X == -1 || p.Y == -1 || p.X < work.Left || p.Y < work.Top ||
+                    p.X > work.Right - 80 || p.Y > work.Bottom - 60)
+                {
+                    p.X = work.Right - p.W - 40 - i * 24;
+                    p.Y = work.Top + 160 + i * 28;
+                }
+                if (p.X > work.Right - 80) p.X = work.Right - 80;
+                if (p.Y > work.Bottom - 60) p.Y = work.Bottom - 60;
+            }
+        }
+
+        public PanelConfig NewPanel(int index)
+        {
+            Rectangle work = Screen.PrimaryScreen.WorkingArea;
+            PanelConfig p = new PanelConfig();
+            p.Id = "panel-" + Guid.NewGuid().ToString("N").Substring(0, 8);
+            p.Content = "clock";
+            p.W = 340;
+            p.H = 200;
+            p.X = work.Right - p.W - 40 - index * 24;
+            p.Y = work.Top + 160 + index * 28;
+            p.TopMostPanel = true;
+            NormalizePanelsAfterAdd(p, work);
+            return p;
+        }
+
+        static void NormalizePanelsAfterAdd(PanelConfig p, Rectangle work)
+        {
+            p.W = Util.Clamp(p.W, 220, 720);
+            p.H = Util.Clamp(p.H, 120, 520);
+            if (p.X < work.Left) p.X = work.Left;
+            if (p.Y < work.Top) p.Y = work.Top;
+            if (p.X > work.Right - 80) p.X = work.Right - 80;
+            if (p.Y > work.Bottom - 60) p.Y = work.Bottom - 60;
         }
 
         public void ApplyTheme()
