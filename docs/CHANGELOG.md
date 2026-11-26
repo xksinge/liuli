@@ -13,6 +13,8 @@
 - `Taskbar`：读取/设置 `ABS_AUTOHIDE`，托盘内切换与恢复；Dock 检测任务栏露出时上移避让
 - `Liuli.exe --selftest` 无界面自检入口
 - `Liuli.exe --preview` 离屏预览：不显示窗口，把 Dock 与展开态灵动岛合成到 PNG
+- Dock / 灵动岛点击反馈：按下 0.90 缩放与按压底色，释放 190ms 回弹、280ms accent 波纹；右侧圆按钮同步
+- `m1-preview-pressed.png` / `m1-feedback-compare.png`：静止态与按压态对照，供视觉评审
 
 ### 变更
 

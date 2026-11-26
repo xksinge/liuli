@@ -16,10 +16,11 @@
 
 ### M1 实现状态（2026-11-26）
 
-- 已提交：`3be11bb`、`62ce47c`、`7282f77`、`87c92b7`、`0bbc294`、`92eab42`；Draft PR #36。
-- 已验证：`pwsh tools/build.ps1` 编译成功（193 KB）；`bin\Liuli.exe --selftest` 读取 `bin\data\shell.json`，默认 8 项，任务栏 `ABS_AUTOHIDE=1`。
-- 未验证：真机 UI 启动、截图、125% DPI、Dock 点击/拖入/右键移除、任务栏开关恢复。
-- 已生成离屏预览 `docs/screens/v2/m1-preview.png`；不是桌面真机截图，仅用于材质/布局初评。
+- 已提交：`3be11bb`、`62ce47c`、`7282f77`、`87c92b7`、`0bbc294`、`92eab42`；点击反馈 `a7b7b3e`；Draft PR #36。
+- 已验证：`pwsh tools/build.ps1` 编译成功（197.5 KB）；`bin\Liuli.exe --selftest` 读取 `bin\data\shell.json`，默认 8 项，任务栏 `ABS_AUTOHIDE=1`。
+- 未验证：真机 UI 启动、截图、125% DPI、Dock 点击/拖入/右键移除、任务栏开关恢复、点击反馈动态手感。
+- 已生成离屏预览 `docs/screens/v2/m1-preview.png` 与按压态对照 `m1-preview-pressed.png` / `m1-feedback-compare.png`；不是桌面真机截图，仅用于材质/布局/按压态初评。
+- 点击反馈：Dock 项与右侧按钮、灵动岛快捷按钮统一为按下 0.90 缩放 + 按压底色，释放回弹 + accent 波纹；静态预览可见，真机手感仍待验证。
 - 用户此前明确“不运行”，因此不把“能启动”写成已验证；下列任务保持未勾选。
 
 - [ ] **TASK-010** [REQ-002] `ShellStore` + `shell.json` 默认配置、原子保存、坏文件回退
