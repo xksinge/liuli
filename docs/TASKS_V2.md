@@ -110,7 +110,7 @@
 
 ## Phase 5 · M5 组件、壁纸、配色、桌面图标
 
-- [x] **TASK-050** [REQ-040–042] 时钟/天气/系统组件（Issue #64）
+- [x] **TASK-050** [REQ-040–042] 时钟/天气/系统组件（Issue #64 / PR #65）
   - 实现：时钟面板右键新增“时间制：24/12 小时”“显示秒：开/关”，配置 `clock24` / `clockSeconds`；`PanelContent.ClockText` 统一 24/12 小时与秒格式；12 小时制顶部显示上午/下午。
   - 天气：`Weather.Offline` 时在“城市 · 天气”后追加“离线缓存”，无缓存仍显示“天气离线”。
   - 刷新：`PanelForm.ApplyTickInterval` 秒显示 1 秒、系统 2 秒、其它 5 秒；`V2Shell` 系统读数保持 2 秒采样上限。
