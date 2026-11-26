@@ -1,0 +1,48 @@
+# CONTEXT · Liuli
+
+## Resume
+
+- 当前任务：Issue #33 / v2.0 需求基线
+- 状态：需求 Draft，等待用户确认
+- 下一步：确认范围后写 `docs/DESIGN_V2.md`，再写 `docs/TASKS_V2.md`
+- 阻塞：Dock 默认组合、多屏首版范围、任务栏完全隐藏是否启用，待用户确认
+- 约束：需求确认前不写新功能代码；不恢复 v1.x 看板主功能
+
+## Session Log
+
+| 日期 | 摘要 | 产物 |
+| --- | --- | --- |
+| 2026-11-26 | v1.5.0 目录绑定与 4 秒同步发布 | Issue #31 / PR #32 / Release v1.5.0 |
+| 2026-11-26 | 发现产品方向偏离，重建 v2.0 GlassBoard 功能对齐需求 | `docs/REQUIREMENTS.md`、Issue #33 |
+| 2026-11-26 | 补充 Dock 系统入口、桌面图标默认隐藏、任务栏自动隐藏、壁纸取色、屏幕/文字适配、UI 视觉闸门 | Requirements / Issue #33 评论 |
+| 2026-11-26 | 建立项目开发流程执行清单 | `docs/DEVELOPMENT.md` |
+| 2026-11-26 | 需求文档落分支；v1.6 原型停到 experiment 分支，工作区恢复干净 | `docs/v2-requirements` @ adbcd6f；`experiment/v1.6-dock-island` @ 28e8cfd |
+| 2026-11-26 | 推送需求分支并开 Draft PR | PR #34 |
+
+## Key Decisions
+
+- D-001：v2.0 基线为 GlassBoard 功能对齐，不是文件看板工具。
+- D-002：v1.x 看板/整理/收纳同步封存，代码与数据保留。
+- D-003：保留玻璃底、分层窗口、Theme/Glass、配置、天气/系统读数等底层能力。
+- D-006：桌面图标默认隐藏；系统图标分桌面/Dock 两套开关；Dock 默认混合系统入口 + 自带应用。
+- D-007：任务栏优先持久化自动隐藏；不做永久移除/替换 Explorer。
+- D-008：壁纸自动取色默认开，6 套预设 + 自定义，全局统一 Theme token。
+- D-009：Per-Monitor V2；默认单屏；多屏先做“所有屏 Dock + 主屏灵动岛”。
+- D-010：UI 美观是 P0 发布闸门。
+
+## Open Questions
+
+1. Dock 默认常显还是自动隐藏；默认组合是否按当前 3 系统 + 5 自带。
+2. 灵动岛首版是否只做时间/天气/系统，媒体与通知放 P1。
+3. 多屏首版是否只做“所有屏 Dock + 主屏灵动岛”，每屏独立布局后置。
+4. 任务栏完全隐藏是否作为 P1 实验项，默认关闭。
+5. 图标收纳是否 P1。
+6. 是否有可提供的 GlassBoard 版本/截图/推荐配置作为视觉基准。
+
+## Divergences
+
+- v1.6 Dock/灵动岛原型已停在 `experiment/v1.6-dock-island`（28e8cfd），不作为 v2.0 实现基线，不合入 main。
+- 当前工作分支为 `docs/v2-requirements`（adbcd6f），工作区干净。
+- 本地 `main` 领先 `origin/main` 11 个提交，远程同步待补。
+- `docs/REQUIREMENTS.md` 仍是 Draft，未进入设计阶段。
+- 当前运行的 `bin\Liuli.exe` 仍是 v1.6 原型构建，与源码分支不一致。
