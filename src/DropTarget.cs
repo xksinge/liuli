@@ -1,6 +1,7 @@
 ﻿// Liuli · OLE 拖放目标：分层窗口只靠 DragAcceptFiles 在部分场景收不到 WM_DROPFILES，
 // 直接注册 IDropTarget，让资源管理器的拖拽稳定落到看板上。
 using System;
+using System.Collections.Generic;
 using System.Runtime.InteropServices;
 using System.Runtime.InteropServices.ComTypes;
 
@@ -25,13 +26,45 @@ namespace Liuli
 
         static string[] Files(IDataObject data)
         {
+            // 直接按 CF_HDROP 读取：OLE 传进来的 IDataObject 不能可靠地转成 WinForms.IDataObject
             try
             {
-                System.Windows.Forms.IDataObject w = data as System.Windows.Forms.IDataObject;
-                if (w == null || !w.GetDataPresent(System.Windows.Forms.DataFormats.FileDrop)) return null;
-                return (string[])w.GetData(System.Windows.Forms.DataFormats.FileDrop);
+                FORMATETC fe = new FORMATETC();
+                fe.cfFormat = 15; // CF_HDROP
+                fe.dwAspect = DVASPECT.DVASPECT_CONTENT;
+                fe.lindex = -1;
+                fe.tymed = TYMED.TYMED_HGLOBAL;
+                STGMEDIUM stg;
+                data.GetData(ref fe, out stg);
+                if (stg.unionmember == IntPtr.Zero) return null;
+                IntPtr p = GlobalLock(stg.unionmember);
+                if (p == IntPtr.Zero) { ReleaseStgMedium(ref stg); return null; }
+                try
+                {
+                    DROPFILES df = (DROPFILES)Marshal.PtrToStructure(p, typeof(DROPFILES));
+                    IntPtr s = new IntPtr(p.ToInt64() + (long)df.pFiles);
+                    List<string> list = new List<string>();
+                    for (int i = 0; i < 64; i++)
+                    {
+                        string one = df.fWide != 0 ? Marshal.PtrToStringUni(s) : Marshal.PtrToStringAnsi(s);
+                        if (one == null || one.Length == 0) break;
+                        list.Add(one);
+                        int bytes = one.Length + 1;
+                        s = new IntPtr(s.ToInt64() + (df.fWide != 0 ? bytes * 2 : bytes));
+                    }
+                    return list.Count > 0 ? list.ToArray() : null;
+                }
+                finally
+                {
+                    GlobalUnlock(stg.unionmember);
+                    ReleaseStgMedium(ref stg);
+                }
             }
-            catch { return null; }
+            catch (Exception ex)
+            {
+                Log.Warn("drop", "读取拖入文件失败 " + ex.Message);
+                return null;
+            }
         }
 
         public void DragEnter(IDataObject pDataObj, uint grfKeyState, POINTL pt, ref uint pdwEffect)
@@ -65,6 +98,16 @@ namespace Liuli
             }
             else pdwEffect = 0;
         }
+
+        [StructLayout(LayoutKind.Sequential)]
+        public struct DROPFILES { public uint pFiles; public int x; public int y; public int fNC; public int fWide; }
+
+        [DllImport("kernel32.dll")]
+        static extern IntPtr GlobalLock(IntPtr h);
+        [DllImport("kernel32.dll")]
+        static extern bool GlobalUnlock(IntPtr h);
+        [DllImport("ole32.dll")]
+        static extern void ReleaseStgMedium(ref STGMEDIUM medium);
 
         [DllImport("ole32.dll")]
         public static extern int RegisterDragDrop(IntPtr hwnd, IDropTarget target);

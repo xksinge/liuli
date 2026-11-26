@@ -72,6 +72,12 @@ namespace Liuli
         Point lastClickPos;
         int lastSecond = -1;
 
+        // 文件条目：按下先不打开，移动超过阈值才拖出，松开才算单击
+        int tilePressIndex = -1;
+        Point tilePressScreen;
+        bool tileDragged;
+        long lastTileOpenTick;
+
         public BoardWindow(Board b)
         {
             B = b;
@@ -417,6 +423,19 @@ namespace Liuli
         {
             base.OnMouseMove(e);
             App.KickAnimation();
+            if (tilePressIndex >= 0 && !tileDragged && (Control.MouseButtons & MouseButtons.Left) != 0)
+            {
+                Point cur = Cursor.Position;
+                System.Drawing.Size sz = SystemInformation.DragSize;
+                if (Math.Abs(cur.X - tilePressScreen.X) > Math.Max(4, sz.Width / 2) ||
+                    Math.Abs(cur.Y - tilePressScreen.Y) > Math.Max(4, sz.Height / 2))
+                {
+                    int idx = tilePressIndex;
+                    tilePressIndex = -1;
+                    tileDragged = true;
+                    StartItemDrag(idx);
+                }
+            }
             if (drag != DragMode.None) { DoDrag(e); return; }
             UpdateHover(e.Location);
         }
@@ -577,9 +596,14 @@ namespace Liuli
             }
             if (tag == "tile")
             {
-                if (dbl) { OpenItemFolder(pressedIndex); return; }
-                if (pressedIndex >= 0 && pressedIndex < B.Items.Count) Native.ShellOpen(B.Items[pressedIndex].Path);
-                return;
+                // 单击打开改到 MouseUp：先允许拖出，避免一按下就打开
+                if (pressedIndex >= 0 && pressedIndex < B.Items.Count)
+                {
+                    tilePressIndex = pressedIndex;
+                    tilePressScreen = PointToScreen(e.Location);
+                    tileDragged = false;
+                    return;
+                }
             }
             if (tag == "item")
             {
@@ -604,6 +628,24 @@ namespace Liuli
         protected override void OnMouseUp(MouseEventArgs e)
         {
             base.OnMouseUp(e);
+            if (tilePressIndex >= 0)
+            {
+                int idx = tilePressIndex;
+                bool dragged = tileDragged;
+                tilePressIndex = -1;
+                tileDragged = false;
+                if (!dragged && idx >= 0 && idx < B.Items.Count)
+                {
+                    long now = Environment.TickCount;
+                    if (now - lastTileOpenTick > 400)
+                    {
+                        lastTileOpenTick = now;
+                        string p = B.Items[idx].Path;
+                        if (System.IO.Directory.Exists(p)) OpenItemFolder(idx);
+                        else Native.ShellOpen(p);
+                    }
+                }
+            }
             if (drag != DragMode.None)
             {
                 if (drag == DragMode.Move && !dragMoved)
@@ -880,6 +922,27 @@ namespace Liuli
             if (idx < 0 || idx >= B.Items.Count) return;
             B.Items[idx].Done = !B.Items[idx].Done;
             dirty = true; App.Save();
+        }
+
+        void StartItemDrag(int idx)
+        {
+            if (idx < 0 || idx >= B.Items.Count) return;
+            string p = B.Items[idx].Path;
+            if (!System.IO.File.Exists(p) && !System.IO.Directory.Exists(p)) return;
+            try
+            {
+                DataObject data = new DataObject();
+                data.SetData(DataFormats.FileDrop, new string[] { p });
+                DragDropEffects eff = DoDragDrop(data, DragDropEffects.Move | DragDropEffects.Copy);
+                // 被移到了别处（桌面/Explorer/另一个看板）：原条目移除，避免留下失效路径
+                if (eff == DragDropEffects.Move)
+                {
+                    if (idx < B.Items.Count && B.Items[idx].Path == p) B.Items.RemoveAt(idx);
+                    dirty = true; App.Save();
+                    Toast("已移出 1 项");
+                }
+            }
+            catch (Exception ex) { Log.Warn("drop", "拖出失败 " + ex.Message); }
         }
 
         void OpenItemFolder(int idx)

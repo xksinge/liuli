@@ -51,7 +51,7 @@ namespace Liuli
 
     static class V
     {
-        public const string Version = "1.3.2";
+        public const string Version = "1.3.3";
         public const string Name = "Liuli 琉璃";
         public const string Tagline = "把桌面变成一块会呼吸的玻璃看板";
     }
