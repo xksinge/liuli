@@ -22,6 +22,23 @@ namespace Liuli
         public static CollectorForm Collector;
         public static readonly List<PanelForm> Panels = new List<PanelForm>();
         public static V2Host Host;
+        public static bool HotkeyToggleOk;
+        public static bool HotkeySettingsOk;
+
+        public static string HotkeyStatus()
+        {
+            return "Ctrl+Alt+L 显示/隐藏：" + (HotkeyToggleOk ? "已注册" : "失败") + "\n" +
+                "Ctrl+Alt+G 打开设置：" + (HotkeySettingsOk ? "已注册" : "失败");
+        }
+
+        public static bool ResetHotkeys()
+        {
+            if (Host == null || !Host.IsHandleCreated) return false;
+            bool ok = Host.RegisterDefaultHotkeys();
+            Toast(ok ? "快捷键已重新注册" : "快捷键注册失败，可能被其它程序占用");
+            return ok;
+        }
+
         public static WeatherService Weather;
         public static StatsNow Stats = new StatsNow();
         public static int ActivateMessage;
@@ -1038,11 +1055,31 @@ namespace Liuli
             try
             {
                 V2Shell.ActivateMessage = Native.RegisterWindowMessage(V2Shell.ActivateMessageName);
-                Native.RegisterHotKey(Handle, 11, 2 | 1, (uint)Keys.L);
-                Native.RegisterHotKey(Handle, 12, 2 | 1, (uint)Keys.G);
+                RegisterDefaultHotkeys();
                 V2Shell.CreateTray();
             }
             catch (Exception ex) { Log.Warn("hotkey", ex.Message); }
+        }
+
+        public bool RegisterDefaultHotkeys()
+        {
+            try
+            {
+                Native.UnregisterHotKey(Handle, 11);
+                Native.UnregisterHotKey(Handle, 12);
+                V2Shell.HotkeyToggleOk = Native.RegisterHotKey(Handle, 11, 2 | 1, (uint)Keys.L);
+                V2Shell.HotkeySettingsOk = Native.RegisterHotKey(Handle, 12, 2 | 1, (uint)Keys.G);
+                Log.Info("hotkey", "toggle=" + (V2Shell.HotkeyToggleOk ? "ok" : "fail") +
+                    " settings=" + (V2Shell.HotkeySettingsOk ? "ok" : "fail"));
+                return V2Shell.HotkeyToggleOk && V2Shell.HotkeySettingsOk;
+            }
+            catch (Exception ex)
+            {
+                V2Shell.HotkeyToggleOk = false;
+                V2Shell.HotkeySettingsOk = false;
+                Log.Warn("hotkey", ex.Message);
+                return false;
+            }
         }
 
         protected override void WndProc(ref Message m)

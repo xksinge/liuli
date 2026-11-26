@@ -635,8 +635,13 @@ namespace Liuli
                 "当前值：" + (run.Length == 0 ? "未写入" : run) +
                 "\n只写当前用户，不写 HKLM；不需要管理员权限。", x, y, w);
             y += Util.RoundI(104 * S);
-            AddSection("后续", x, y, w); y += Util.RoundI(26 * S);
-            AddInfo("系统模块", "快捷键配置（REQ-063）与日志诊断（REQ-064）将在本页继续补齐；当前快捷键仍为 Ctrl+Alt+L / Ctrl+Alt+G。", x, y, w);
+            AddSection("快捷键", x, y, w); y += Util.RoundI(26 * S);
+            AddInfo("默认热键", V2Shell.HotkeyStatus() + "\n默认组合固定；被其它程序占用时显示失败，可先重新注册再重启 Liuli 排查。", x, y, w);
+            y += Util.RoundI(78 * S);
+            AddButton("重新注册快捷键", "先注销再注册 Ctrl+Alt+L 显示/隐藏、Ctrl+Alt+G 打开设置", "hotkeyReset", x, y, w, false,
+                delegate { V2Shell.ResetHotkeys(); BuildPage(8); Invalidate(); });
+            y += Util.RoundI(58 * S);
+            AddInfo("后续", "日志诊断（REQ-064）将在本页继续补齐。", x, y, w);
         }
 
         void BuildAboutPage()
