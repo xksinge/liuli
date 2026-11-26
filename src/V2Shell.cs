@@ -24,6 +24,7 @@ namespace Liuli
         public static WeatherService Weather;
         public static StatsNow Stats = new StatsNow();
         public static int ActivateMessage;
+        public static V2SettingsForm Settings;
 
         static NotifyIcon tray;
         static Timer statsTimer;
@@ -120,6 +121,7 @@ namespace Liuli
             tray.Icon = MakeIcon();
             tray.Visible = true;
             ContextMenuStrip menu = new ContextMenuStrip();
+            menu.Items.Add("打开设置", null, delegate { OpenSettings(); });
             menu.Items.Add("显示/隐藏桌面层", null, delegate { ToggleAll(); });
             menu.Items.Add("Dock 自动隐藏：开/关", null, delegate { ToggleDockAutoHide(); });
             menu.Items.Add("Dock 尺寸：小/标准/大（点击切换）", null, delegate { CycleDockPreset(); });
@@ -134,7 +136,7 @@ namespace Liuli
             menu.Items.Add(new ToolStripSeparator());
             menu.Items.Add("退出 Liuli", null, delegate { Quit(); });
             tray.ContextMenuStrip = menu;
-            tray.DoubleClick += delegate { ShowMenu(Cursor.Position); };
+            tray.DoubleClick += delegate { OpenSettings(); };
         }
 
         static Icon MakeIcon()
@@ -170,6 +172,7 @@ namespace Liuli
         public static void ShowMenu(Point screen)
         {
             List<MenuForm.Item> items = new List<MenuForm.Item>();
+            items.Add(new MenuForm.Item("打开设置", delegate { OpenSettings(); }, Glyph.Gear));
             items.Add(new MenuForm.Item("显示/隐藏桌面层", delegate { ToggleAll(); }));
             items.Add(new MenuForm.Item("Dock 自动隐藏：开/关", delegate { ToggleDockAutoHide(); }, Glyph.Gear));
             items.Add(new MenuForm.Item("Dock 尺寸：" + DockPresetLabel(Config == null ? "standard" : Config.DockPreset) + "（点击切换）", delegate { CycleDockPreset(); }, Glyph.Gear));
@@ -350,6 +353,7 @@ namespace Liuli
                 return null;
             }
             PanelConfig cfg = Config.NewPanel(Config.Panels.Count);
+            MarkThemeDirty();
             Config.Panels.Add(cfg);
             Config.Save();
             PanelForm pf = new PanelForm(cfg);
@@ -363,6 +367,7 @@ namespace Liuli
         public static void RemovePanel(PanelForm panel)
         {
             if (Config == null || panel == null || panel.Cfg == null) return;
+            MarkThemeDirty();
             Panels.Remove(panel);
             Config.Panels.Remove(panel.Cfg);
             Config.Save();
@@ -373,7 +378,13 @@ namespace Liuli
         public static void SavePanels()
         {
             if (Config == null) return;
+            MarkThemeDirty();
             Config.Save();
+        }
+
+        public static void MarkThemeDirty()
+        {
+            if (Config != null && !string.IsNullOrEmpty(Config.ActiveTheme)) Config.ActiveTheme = "";
         }
 
         public static void RefreshPanels()
@@ -381,6 +392,201 @@ namespace Liuli
             for (int i = 0; i < Panels.Count; i++)
             {
                 if (Panels[i] != null && Panels[i].Visible) Panels[i].Render();
+            }
+        }
+
+        public static void OpenSettings()
+        {
+            OpenSettings(0);
+        }
+
+        public static void OpenSettings(int startPage)
+        {
+            if (Settings != null && !Settings.IsDisposed)
+            {
+                Settings.Show();
+                Settings.ShowPage(startPage);
+                Settings.Activate();
+                return;
+            }
+            Settings = new V2SettingsForm(startPage);
+            Settings.Show();
+            Settings.Activate();
+        }
+
+        public static void SettingsClosed()
+        {
+            Settings = null;
+        }
+
+        /// <summary>主题/外观参数变了以后统一重绘；磨砂变化时重烘壁纸。</summary>
+        public static void ApplyVisualSettings(bool rebake)
+        {
+            if (Config == null) return;
+            MarkThemeDirty();
+            Config.ApplyTheme();
+            if (rebake) Backdrop.Rebuild();
+            if (Dock != null) { Dock.RelayoutPublic(); Dock.Render(); }
+            if (Island != null) Island.RefreshIsland();
+            RefreshPanels();
+        }
+
+        public static void SetDockOn(bool on)
+        {
+            if (Config == null) return;
+            MarkThemeDirty();
+            Config.DockOn = on;
+            Config.Save();
+            if (on)
+            {
+                if (Dock == null) { Dock = new DockForm(); Dock.Show(); }
+                else { Dock.Show(); Dock.RelayoutPublic(); Dock.RefreshAutoHide(); }
+                if (allHidden && Dock != null) Dock.Hide();
+            }
+            else if (Dock != null)
+            {
+                Dock.Hide();
+                Dock.Close();
+                Dock = null;
+            }
+        }
+
+        public static void SetDockAutoHide(bool on)
+        {
+            if (Config == null) return;
+            MarkThemeDirty();
+            Config.DockAutoHide = on;
+            Config.Save();
+            if (Dock != null) Dock.RefreshAutoHide();
+        }
+
+        public static void SetDockPreset(string preset)
+        {
+            if (Config == null) return;
+            MarkThemeDirty();
+            Config.DockPreset = string.Equals(preset, "small", StringComparison.OrdinalIgnoreCase) ? "small" :
+                (string.Equals(preset, "large", StringComparison.OrdinalIgnoreCase) ? "large" : "standard");
+            Config.Save();
+            if (Dock != null) Dock.RelayoutPublic();
+        }
+
+        public static void ApplyIslandSettings()
+        {
+            if (Config == null) return;
+            MarkThemeDirty();
+            Config.NormalizeIsland();
+            Config.Save();
+            if (!Config.IslandOn)
+            {
+                if (Island != null) { Island.Hide(); Island.Close(); Island = null; }
+                return;
+            }
+            if (Island == null)
+            {
+                Island = new IslandForm();
+                Island.Show();
+            }
+            else
+            {
+                Island.Show();
+                Island.ApplyConfig();
+            }
+            if (allHidden && Island != null) Island.Hide();
+        }
+
+        public static void SaveCurrentTheme(string name)
+        {
+            if (Config == null) return;
+            ThemeSnapshot t = Config.SaveTheme(name);
+            Toast("主题已保存：" + t.Name);
+            if (Settings != null) Settings.ReloadPage();
+        }
+
+        public static void DeleteTheme(string name)
+        {
+            if (Config == null) return;
+            if (Config.DeleteTheme(name))
+            {
+                Toast("主题已删除：" + name);
+                if (Settings != null) Settings.ReloadPage();
+            }
+        }
+
+        public static void LoadTheme(ThemeSnapshot t)
+        {
+            if (Config == null || t == null) return;
+            t.ApplyTo(Config);
+            if (!string.IsNullOrEmpty(t.WallpaperPath) && File.Exists(t.WallpaperPath))
+                Wallpaper.Set(t.WallpaperPath, t.WallpaperStyle, t.WallpaperTile);
+            // 主题可能只改磨砂而壁纸路径没有落盘，统一重烘一次，保证玻璃强度与明暗都生效。
+            Backdrop.Rebuild();
+            Config.ApplyTheme();
+            RebuildPanels();
+            ApplyDockRuntime();
+            ApplyIslandRuntime();
+            Config.Save();
+            if (Settings != null) Settings.ReloadPage();
+            Toast("已加载主题：" + t.Name);
+        }
+
+        public static void RestoreVisualDefaults()
+        {
+            if (Config == null) return;
+            Config.GlassPct = 100;
+            Config.BlurPct = 62;
+            Config.Radius = 20;
+            Config.ThemeMode = "auto";
+            Config.ThemePreset = "mist";
+            Config.ActiveTheme = "";
+            Config.Save();
+            ApplyVisualSettings(true);
+            if (Settings != null) Settings.ReloadPage();
+            Toast("外观已恢复默认");
+        }
+
+        static void RebuildPanels()
+        {
+            for (int i = 0; i < Panels.Count; i++)
+            {
+                try { if (Panels[i] != null) Panels[i].Close(); } catch { }
+            }
+            Panels.Clear();
+            for (int i = 0; i < Config.Panels.Count; i++)
+            {
+                PanelForm pf = new PanelForm(Config.Panels[i]);
+                Panels.Add(pf);
+                pf.Show();
+                if (allHidden) pf.Hide();
+            }
+        }
+
+        static void ApplyDockRuntime()
+        {
+            if (Config.DockOn)
+            {
+                if (Dock == null) { Dock = new DockForm(); Dock.Show(); }
+                else { Dock.Show(); Dock.RelayoutPublic(); Dock.RefreshAutoHide(); }
+                if (allHidden && Dock != null) Dock.Hide();
+            }
+            else if (Dock != null)
+            {
+                try { Dock.Close(); } catch { }
+                Dock = null;
+            }
+        }
+
+        static void ApplyIslandRuntime()
+        {
+            if (Config.IslandOn)
+            {
+                if (Island == null) { Island = new IslandForm(); Island.Show(); }
+                else { Island.Show(); Island.ApplyConfig(); }
+                if (allHidden && Island != null) Island.Hide();
+            }
+            else if (Island != null)
+            {
+                try { Island.Close(); } catch { }
+                Island = null;
             }
         }
 
@@ -525,6 +731,7 @@ namespace Liuli
             try { if (wallTimer != null) wallTimer.Stop(); } catch { }
             try { if (Dock != null) Dock.Close(); } catch { }
             try { if (Island != null) Island.Close(); } catch { }
+            try { if (Settings != null) Settings.Close(); } catch { }
             for (int i = 0; i < Panels.Count; i++) { try { if (Panels[i] != null) Panels[i].Close(); } catch { } }
             try { if (Host != null) Host.Close(); } catch { }
             Application.Exit();
@@ -572,7 +779,7 @@ namespace Liuli
             {
                 int id = m.WParam.ToInt32();
                 if (id == 11) V2Shell.ToggleAll();
-                else if (id == 12) V2Shell.ShowMenu(Cursor.Position);
+                else if (id == 12) V2Shell.OpenSettings();
                 return;
             }
             if (V2Shell.ActivateMessage != 0 && m.Msg == V2Shell.ActivateMessage)
