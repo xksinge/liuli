@@ -55,6 +55,7 @@
 - TASK-023 Issue #43 OPEN；工作分支 `feat/v2-dock-reorder`，从 `feat/v2-dock-running` 切出；Draft PR #44（base `feat/v2-dock-running`）；拖拽排序与插入线已构建通过，真机拖动待验证。
 - TASK-024 悬停放大 Issue #45 OPEN；工作分支 `feat/v2-dock-hover`，从 `feat/v2-dock-reorder` 切出；Draft PR #46（base `feat/v2-dock-reorder`）；已构建通过，真机手感待验证。
 - 任务栏常显 bug Issue #47 OPEN；工作分支 `fix/v2-dock-taskbar-offset`，从 `feat/v2-dock-hover` 切出；修复 `BaseTopY` 双重扣除，真机 `top=1296` 验证通过，PR 待创建。
+- M2 集成：分支 `feat/v2-m2-integration`（从 fix 分支切出），PR #49（base `main`，Draft）；含 M1+M2 共 33 个提交，构建/selftest/启动通过，待合入后关闭逐级 Draft。
 - 已提交 `3be11bb`、`62ce47c`、`7282f77`、`87c92b7`、`0bbc294`、`92eab42` 及文档提交。
 - v1.6 Dock/灵动岛原型停在 `experiment/v1.6-dock-island`（`28e8cfd`），不合入 main，不作为 v2.0 基线。
 - v2 外壳代码已构建成功（203.5 KB）；`--selftest` 验证默认 shell.json、任务栏自动隐藏状态、`dockAutoHide` 与 `dockPreset`；真机 UI/截图待做。

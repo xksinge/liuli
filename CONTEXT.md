@@ -2,12 +2,12 @@
 
 ## Resume
 
-- 当前任务：Issue #47 / 修复任务栏常显时 Dock 上移量翻倍
-- 状态：M2 代码项完成；真机已验证 Dock 悬停、拖拽到末尾、自动隐藏 `1444→1344→1444`、任务栏常显（修复后 `top=1296`）、灵动岛展开/收起、三档菜单循环与重启保持（`576/658/494`）、记事本运行圆点实时增减、按压态；**125% DPI、外部文件拖入、2s 枚举 CPU 长时占用未验证**
-- 分支：`fix/v2-dock-taskbar-offset`（从 `feat/v2-dock-hover` 切出）
-- PR：自动隐藏 `#38`、尺寸预设 `#40`、运行指示 `#42`、拖拽排序 `#44`、悬停放大 `#46`；任务栏修复 PR 待创建；M1 PR #36 仍 Draft
-- 下一步：提交 Issue #47 修复并开 Draft PR（base `feat/v2-dock-hover`），再补 125% DPI / 外部文件拖入 / 尺寸重启保持
-- 阻塞：无；真机验收已做，验收后已恢复 `dockItems` 顺序、`dockAutoHide=false`、`taskbarAutoHide=true` 并退出 Liuli
+- 当前任务：M2 集成验收 PR #49（`feat/v2-m2-integration` → `main`）
+- 状态：M1+M2 共 33 个提交已汇总；集成分支构建通过（209 KB）、`--selftest` 通过、真机启动正常；125% DPI、外部文件拖入、2s 枚举 CPU 长时占用仍未验证
+- 分支：`feat/v2-m2-integration`（从 `fix/v2-dock-taskbar-offset` 切出）
+- PR：集成 PR #49 Draft（base `main`）；逐级 PR #36/#38/#40/#42/#44/#46/#48 在合并后关闭
+- 下一步：PR #49 标记 Ready → merge commit 合入 `main` → 关闭逐级 Draft PR
+- 阻塞：无；验收后配置为标准档、Dock 常显、任务栏自动隐藏、原 8 项顺序，Liuli 已退出
 - 约束：旧看板功能封存；不改动 `boards.json` 与 `Documents\Liuli`
 
 ## Session Log
@@ -32,6 +32,7 @@
 | 2026-11-26 | M2 真机验收：悬停/拖拽/自动隐藏/任务栏共存/灵动岛通过；发现任务栏常显 Dock 多上移 48px | 真实截图 `m2-real-*.png` |
 | 2026-11-26 | 创建 Issue #47，开 `fix/v2-dock-taskbar-offset`；修复 `WorkingArea` 双重扣除，真机 top 1248→1296 | Issue #47；构建 209 KB |
 | 2026-11-26 | 补 M2 真机验收：三档菜单循环/重启保持、记事本圆点实时增减、Edge 按压态；开 PR #48 | `m2-real-*` 截图 |
+| 2026-11-26 | 汇总 M1+M2 为集成分支 `feat/v2-m2-integration`，开 PR #49；构建/selftest/启动通过 | 33 commits，209 KB |
 
 ## Key Decisions
 
