@@ -13,6 +13,8 @@ namespace Liuli
         static int Main(string[] args)
         {
             Paths.Ensure();
+            if (args.Length > 0 && string.Equals(args[0], "--selftest", StringComparison.OrdinalIgnoreCase))
+                return SelfTest();
             Native.EnablePerMonitorDpi();
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
@@ -51,6 +53,30 @@ namespace Liuli
                 try { mutex.ReleaseMutex(); } catch { }
             }
             return 0;
+        }
+
+        /// <summary>无界面自检：只验证 shell.json、默认 Dock 与任务栏状态，不启动窗口。</summary>
+        static int SelfTest()
+        {
+            try
+            {
+                ShellConfig c = ShellConfig.Load();
+                Console.WriteLine("shell.json=" + ShellConfig.FilePath);
+                Console.WriteLine("dockOn=" + c.DockOn + " islandOn=" + c.IslandOn + " taskbarAutoHide=" + c.TaskbarAutoHide);
+                Console.WriteLine("dockItems=" + c.DockItems.Count);
+                for (int i = 0; i < c.DockItems.Count; i++)
+                {
+                    DockItem it = c.DockItems[i];
+                    Console.WriteLine("  " + (i + 1) + ". " + it.Kind + " " + it.Id + " " + it.DisplayName);
+                }
+                Console.WriteLine("taskbar.autoHide=" + Taskbar.AutoHide() + " visible=" + Taskbar.Visible() + " height=" + Taskbar.VisibleHeight());
+                return 0;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("selftest failed: " + ex);
+                return 2;
+            }
         }
     }
 }
