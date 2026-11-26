@@ -160,6 +160,7 @@ namespace Liuli
             d["collapsed"] = b.Collapsed;
             d["z"] = b.Z;
             d["text"] = b.Text;
+            if (b.Kind == BoardKind.Files) d["folder"] = b.Folder;
             if (b.Kind == BoardKind.Status)
             {
                 d["city"] = b.City;
@@ -216,6 +217,7 @@ namespace Liuli
             b.Collapsed = Json.Bool(d, "collapsed", false);
             b.Z = Json.Int(d, "z", 0);
             b.Text = Json.Str(d, "text", "");
+            b.Folder = Json.Str(d, "folder", "");
             b.City = Json.Str(d, "city", "道孚");
             b.Lat = Json.Num(d, "lat", 30.98);
             b.Lon = Json.Num(d, "lon", 101.12);

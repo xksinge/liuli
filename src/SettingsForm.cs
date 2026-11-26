@@ -203,6 +203,11 @@ namespace Liuli
                         }
                     }
                 });
+                AddButton("打开收纳目录", Icons.LiuliRoot + "（按看板标题分文件夹）", y, false, delegate
+                {
+                    try { Directory.CreateDirectory(Icons.LiuliRoot); } catch { }
+                    Native.ShellOpen(Icons.LiuliRoot);
+                });
                 AddButton("导出备份", "把看板与设置打成一个 zip，默认放 data\\backups", y, false, delegate { App.ExportBackup(); });
                 AddButton("导入备份", "会先给当前状态留一份再覆盖", y, false, delegate { App.ImportBackup(); });
                 AddButton("打开数据目录", Paths.Data, y, false, delegate { Native.ShellOpen(Paths.Data); });

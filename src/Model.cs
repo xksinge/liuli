@@ -68,6 +68,7 @@ namespace Liuli
         public int Z;
 
         public string Text = "";           // Note 正文 / Status 副标题
+        public string Folder = "";         // Files 看板绑定的收纳目录（绝对路径，空=按标题推导）
         public string City = "道孚";
         public double Lat = 30.98, Lon = 101.12;
         public bool ShowWeather = true;
