@@ -14,10 +14,22 @@
 
 **目标**：启动只见 Dock、灵动岛；旧看板入口不可达；任务栏自动隐藏可设可恢复；主屏 100%/125% 不裁切。
 
+### M1 实现状态（2026-11-26）
+
+- 已提交：`3be11bb`、`62ce47c`、`7282f77`、`87c92b7`、`0bbc294`、`92eab42`；点击反馈 `a7b7b3e`；高清图标 `f3f5a1b`；Draft PR #36。
+- 已验证：`pwsh tools/build.ps1` 编译成功（199 KB）；`bin\Liuli.exe --selftest` 读取 `bin\data\shell.json`，默认 8 项，任务栏 `ABS_AUTOHIDE=1`，图标探针 `explorer 256x256`。
+- 未验证：真机 UI 启动、截图、125% DPI、Dock 点击/拖入/右键移除、任务栏开关恢复、点击反馈动态手感、`.lnk` 实际显示。
+- 已生成离屏预览 `docs/screens/v2/m1-preview.png` 与按压态对照 `m1-preview-pressed.png` / `m1-feedback-compare.png`；不是桌面真机截图，仅用于材质/布局/按压态初评。
+- 点击反馈：Dock 项与右侧按钮、灵动岛快捷按钮统一为按下 0.94 缩放 + 按压底色，释放回弹 + accent 波纹；静态预览可见，真机手感仍待验证。
+- 高清图标：Dock 应用走 `SHGetImageList(SHIL_JUMBO)` + `IImageList.GetIcon`，探针确认 256×256；系统入口仍用矢量图标；`.lnk` 箭头由 Shell 图标源决定，未做全局箭头开关。
+- 用户此前明确“不运行”，因此不把“能启动”写成已验证；下列任务保持未勾选。
+
 - [ ] **TASK-010** [REQ-002] `ShellStore` + `shell.json` 默认配置、原子保存、坏文件回退
-  - 验证：首次启动生成；删除文件后重建；写入损坏 JSON 后回退 `.broken-*`。
+  - 实现：`ShellConfig`；默认 8 项；原子写；损坏文件回退 `.bad-*`。
+  - 验证：首次生成、默认 8 项、非对象 JSON 回退（生成 `.bad-*` 并重建）已通过；删除文件后重建未单独测。
 - [ ] **TASK-011** [REQ-090/091] `V2Window` 分层窗口基类：ULW、无焦点、画布、DPI、命中区
-  - 验证：空窗口可显示/隐藏；透明区点击穿透；125% 下尺寸正确。
+  - 实现：`V2Window`；Per-Monitor 句柄 DPI；画布/玻璃/按钮/标签。
+  - 验证：编译通过；显示/隐藏、透明区穿透、125% 未真机验证。
 - [ ] **TASK-012** [REQ-001/004] `V2App` 启动、单实例、托盘、热键、退出清理；`Program` 切到 V2
   - 验证：旧看板不出现；托盘可退出；`Ctrl+Alt+L` 隐藏/恢复；无残留进程。
 - [ ] **TASK-013** [REQ-005/007] `Taskbar` 自动隐藏设置/恢复；Dock 底部避让
@@ -25,7 +37,8 @@
 - [ ] **TASK-014** [REQ-010–013/017/018] `DockWindow` 默认组合、系统入口、启动、右键移除、拖入固定
   - 验证：8 项默认；点击资源管理器/此电脑/回收站；拖入 `.lnk` 后持久化；重启仍在。
 - [ ] **TASK-015** [REQ-019] Dock 图标高清（256px）与去脚标开关
-  - 验证：`.lnk` 无箭头；125% 不糊；开关立即重绘。
+  - 实现：`Icons.Draw` 源尺寸参数 + `Icons.Get` 按尺寸缓存；`SHIL_JUMBO` 256px 提取，失败回退 32px；Dock 应用调用 256px。
+  - 验证：`--selftest` 探针 `explorer 256x256`；`.lnk` 实际显示、125% 清晰度未真机验证。
 - [ ] **TASK-016** [REQ-020–022/025] `IslandWindow` 收起/展开、时间/天气/系统、快捷动作
   - 验证：悬停 150ms 展开；离开 1s 收起；时间跨分钟刷新；不抢焦点。
 - [ ] **TASK-017** [REQ-003/004] 设置/编辑期间隐藏 Dock 与灵动岛，关闭恢复
@@ -37,12 +50,40 @@
 
 ## Phase 2 · M2 Dock 完整
 
+### M2 实现状态（2026-11-26）
+
+- Issue #37；分支 `feat/v2-dock-autohide`（从 `feat/v2-shell` 切出，堆叠在 M1 之后）；Draft PR #38。
+- Issue #39；分支 `feat/v2-dock-presets`（从 `feat/v2-dock-autohide` 切出）；Draft PR #40。
+- Issue #41；分支 `feat/v2-dock-running`（从 `feat/v2-dock-presets` 切出）；Draft PR #42（base `feat/v2-dock-presets`）。
+- Issue #43；分支 `feat/v2-dock-reorder`（从 `feat/v2-dock-running` 切出）；Draft PR #44（base `feat/v2-dock-running`）。
+- Issue #45；分支 `feat/v2-dock-hover`（从 `feat/v2-dock-reorder` 切出）；Draft PR #46（base `feat/v2-dock-reorder`）。
+- Issue #47（bug）；分支 `fix/v2-dock-taskbar-offset`（从 `feat/v2-dock-hover` 切出）；PR 待创建。
+- 已实现：`shell.json` 增加 `dockAutoHide`（默认 false）；托盘/快捷菜单增加切换；Dock 全局 55ms 鼠标轮询、底部 6px 热区、离开 650ms 收起；170ms cubic ease-out 滑入/滑出；隐藏位置按屏幕底边计算，任务栏露出时也能完全推出；切换开关、显示全部、重排时刷新状态。
+- 已验证：构建通过（205 KB）；`--selftest` 读取 `dockAutoHide=False`；临时写入 `true` 后读取为 `True`，已恢复原文件；离屏 `--preview` 打印隐藏态 `dockHidden top=1442`，`screenBottom=1440`，窗口完全移出屏幕。
+- 未验证：真机热区唤出、650ms 收起、动画中途反向、任务栏唤出共存、125% DPI。需要用真实鼠标事件验收。
+- 三档尺寸（Issue #39）：`dockPreset=small/standard/large` 对应 0.86/1.0/1.14 整体缩放；托盘/快捷菜单循环切换；离屏尺寸 small 494×86、standard 576×100、large 658×114，对照图 `docs/screens/v2/m2-dock-presets.png`。
+- 运行指示（Issue #41）：每 2s 一次进程枚举，缓存目标名；仅 app 项绘制 accent 小圆点；预览检测到 `explorer`、`SystemSettings`，对照图 `docs/screens/v2/m2-dock-running.png`。
+- 拖拽排序（Issue #43）：左键移动超过 8px 进入排序，拖拽时显示 accent 插入竖线，松手写回 `shell.json`；`m2-dock-reorder.png` 展示开头/中间/末尾三个插入位。
+- 悬停放大（Issue #45）：指针进入 Dock 项后 140ms ease-out 放大到 1.08，按下仍为 0.94；`m2-dock-hover.png` 对照普通态/第 4 项悬停态。
+- 真机验收（2026-11-26）：Dock 悬停、拖拽到末尾、自动隐藏 `top=1444→1344→1444`、任务栏常显 `top=1296`、灵动岛展开/收起通过；三档菜单循环 `576/658/494` 并重启保持；记事本圆点 3s 内出现/消失；按压态截图。留档 `m2-real-*.png`。
+- 任务栏常显 bug（Issue #47）：修复 `WorkingArea` 与 `Taskbar.VisibleHeight` 双重扣除，Dock top 1248→1296。
+
 - [ ] **TASK-020** [REQ-014] Dock 自动隐藏与唤出动画（含任务栏共存）
+  - 实现：`DockForm` 的 `autoTimer` / `slideTimer` / `SlideTo` / `HiddenOffset`；配置与菜单切换。
+  - 验证：真机底部热区唤出、650ms 收起、任务栏常显位置通过；动画中途反向未验证。
 - [ ] **TASK-021** [REQ-015] 图标尺寸/间距/整体缩放三档预设
+  - 实现：`dockPreset` 配置 + `DockForm.PresetScale()` 乘到 `UiScale`；托盘/快捷菜单循环切换；`--preview` 三档对照。
+  - 验证：配置写入 `large` 后自检读取正确；真机菜单循环 `standard→large→small→standard`、尺寸 `576×100 / 658×114 / 494×86`、`large` 重启保持均通过；1366×768 未验证。
 - [ ] **TASK-022** [REQ-016] 运行指示点（P1）
+  - 实现：`DockItem.ProcessNames()` + `DockForm.RefreshRunning()` 2s 缓存枚举；仅 app 项绘制 accent 圆点；`.lnk` 暂不解析。
+  - 验证：真机 explorer/设置圆点可见；记事本启动 3s 圆点出现、关闭 3s 消失；2s 枚举 CPU 长时占用未测。
 - [ ] **TASK-023** [REQ-013] 拖拽排序（P1）
+  - 实现：`DockForm` 的 `dragging/dragFrom/dragTo` 与 `InsertSlot()`；`V2Shell.MoveDockItem()` 写回配置；插入位 accent 竖线。
+  - 验证：真机拖资源管理器到末尾、配置顺序变化并立即重排通过；外部文件拖入未回归验证。
 - [ ] **TASK-024** [REQ-019] GlassBoard Dock 实测核对：动画、分组、滚轮、右侧小按钮
+  - 已补：悬停 1.08 放大（Issue #45）；真机核对悬停/拖拽/自动隐藏/任务栏共存；分组、滚轮、右侧小按钮仍未核对。
 - [ ] **TASK-025** [REQ-010–019] Dock 验收截图与回归
+  - 已留档：`m2-real-hover.png`、`m2-real-drag.png`、`m2-real-taskbar.png`、`m2-real-running-on/off.png`、`m2-real-pressed.png`；125% DPI / 外部文件拖入仍待验。
 
 ## Phase 3 · M3 灵动岛
 
@@ -93,3 +134,5 @@
 证据：docs/screens/v2/m1-dock.png、日志时间戳
 未验证：...
 ```
+
+

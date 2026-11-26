@@ -47,13 +47,23 @@
 
 ## 6. 当前仓库状态（2026-11-26）
 
-- 工作分支 `docs/v2-requirements`，已推送 origin，Draft PR #34；工作区干净。
+- `main` 已同步到 `19ed1bc`（PR #34 squash 合并，docs v2 基线）；Issue #33 已关闭。
+- M1 Issue #35 OPEN；工作分支 `feat/v2-shell`，已推送；Draft PR #36。
+- M2 Issue #37 OPEN；工作分支 `feat/v2-dock-autohide`，从 `feat/v2-shell` 切出；Draft PR #38（base `feat/v2-shell`）；自动隐藏代码已构建通过，真机热区/动画待验证。
+- TASK-021 Issue #39 OPEN；工作分支 `feat/v2-dock-presets`，从 `feat/v2-dock-autohide` 切出；Draft PR #40（base `feat/v2-dock-autohide`）；三档尺寸与离屏对照已构建通过，真机切换待验证。
+- TASK-022 Issue #41 OPEN；工作分支 `feat/v2-dock-running`，从 `feat/v2-dock-presets` 切出；Draft PR #42（base `feat/v2-dock-presets`）；运行指示已构建通过，真机状态变化待验证。
+- TASK-023 Issue #43 OPEN；工作分支 `feat/v2-dock-reorder`，从 `feat/v2-dock-running` 切出；Draft PR #44（base `feat/v2-dock-running`）；拖拽排序与插入线已构建通过，真机拖动待验证。
+- TASK-024 悬停放大 Issue #45 OPEN；工作分支 `feat/v2-dock-hover`，从 `feat/v2-dock-reorder` 切出；Draft PR #46（base `feat/v2-dock-reorder`）；已构建通过，真机手感待验证。
+- 任务栏常显 bug Issue #47 OPEN；工作分支 `fix/v2-dock-taskbar-offset`，从 `feat/v2-dock-hover` 切出；修复 `BaseTopY` 双重扣除，真机 `top=1296` 验证通过，PR 待创建。
+- M2 集成：分支 `feat/v2-m2-integration`（从 fix 分支切出），PR #49（base `main`，Draft）；含 M1+M2 共 33 个提交，构建/selftest/启动通过，待合入后关闭逐级 Draft。
+- 已提交 `3be11bb`、`62ce47c`、`7282f77`、`87c92b7`、`0bbc294`、`92eab42` 及文档提交。
 - v1.6 Dock/灵动岛原型停在 `experiment/v1.6-dock-island`（`28e8cfd`），不合入 main，不作为 v2.0 基线。
-- 本地 `main` 在 `41c9f24`（v1.5.0），比 `origin/main` 领先 11 个提交；远程推送曾失败，需用 API/PR 补齐。
-- `docs/REQUIREMENTS.md` 为 v2.0 需求草稿；确认前不写新功能代码。
+- v2 外壳代码已构建成功（203.5 KB）；`--selftest` 验证默认 shell.json、任务栏自动隐藏状态、`dockAutoHide` 与 `dockPreset`；真机 UI/截图待做。
+- `docs/REQUIREMENTS.md` 已确认；`docs/DESIGN_V2.md`、`docs/TASKS_V2.md` 已合入 main。
 
 ## 7. Definition of Ready / Done
 
 **Ready**：Issue 有背景、目标、验收；需求文档确认；设计评审通过；任务拆分到可验证单元。
 
 **Done**：REQ 验收逐条通过；测试与截图留档；性能未回退；配置可回退；文档更新；Issue 关闭；PR 合并；发布留痕齐全。
+

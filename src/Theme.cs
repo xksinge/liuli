@@ -62,7 +62,7 @@ namespace Liuli
                 EdgeHi = Color.FromArgb(120, 255, 255, 255);
                 EdgeLo = Color.FromArgb(22, 0, 0, 0);
                 Hover = Color.FromArgb(26, 0, 0, 0);
-                Press = Color.FromArgb(42, 0, 0, 0);
+                Press = Color.FromArgb(32, 0, 0, 0);
             }
             else
             {
@@ -98,6 +98,12 @@ namespace Liuli
         public static Font Font(float px, FontStyle style)
         {
             return Get(Family, px * S, style);
+        }
+
+        /// <summary>v2 外壳按窗口自己的缩放取字，不受全局 Theme.S 影响。</summary>
+        public static Font Font(float px, FontStyle style, float scale)
+        {
+            return Get(Family, px * scale, style);
         }
 
         public static Font Mono(float px, FontStyle style)

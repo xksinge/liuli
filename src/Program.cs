@@ -1,5 +1,7 @@
 ﻿// Liuli · 入口：单实例、DPI、异常兜底、启动/退出。
 using System;
+using System.Drawing;
+using System.IO;
 using System.Threading;
 using System.Windows.Forms;
 
@@ -7,20 +9,24 @@ namespace Liuli
 {
     static class Program
     {
-        const string MutexName = "Liuli.Desktop.Boards.v1";
+        const string MutexName = "Liuli.Desktop.Shell.v2";
 
         [STAThread]
         static int Main(string[] args)
         {
             Paths.Ensure();
             Native.EnablePerMonitorDpi();
+            if (args.Length > 0 && string.Equals(args[0], "--selftest", StringComparison.OrdinalIgnoreCase))
+                return SelfTest();
+            if (args.Length > 0 && string.Equals(args[0], "--preview", StringComparison.OrdinalIgnoreCase))
+                return V2Preview.Run(args);
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
             Application.SetUnhandledExceptionMode(UnhandledExceptionMode.CatchException);
             Application.ThreadException += delegate (object s, ThreadExceptionEventArgs e)
             {
                 Log.Error("crash", e.Exception.ToString());
-                try { App.UI(delegate { App.Toast("出了点问题，已记到日志"); }); } catch { }
+                try { V2Shell.UI(delegate { V2Shell.Toast("出了点问题，已记到日志"); }); } catch { }
             };
             AppDomain.CurrentDomain.UnhandledException += delegate (object s, UnhandledExceptionEventArgs e)
             {
@@ -31,15 +37,15 @@ namespace Liuli
             Mutex mutex = new Mutex(true, MutexName, out first);
             if (!first)
             {
-                int msg = Native.RegisterWindowMessage(App.ActivateMessageName);
+                int msg = Native.RegisterWindowMessage(V2Shell.ActivateMessageName);
                 Native.PostMessage(new IntPtr(Native.HWND_BROADCAST), msg, IntPtr.Zero, IntPtr.Zero);
                 return 0;
             }
 
             try
             {
-                App.Boot();
-                Application.Run(App.Host);
+                V2Shell.Boot();
+                Application.Run(V2Shell.Host);
             }
             catch (Exception ex)
             {
@@ -51,6 +57,32 @@ namespace Liuli
                 try { mutex.ReleaseMutex(); } catch { }
             }
             return 0;
+        }
+
+        /// <summary>无界面自检：只验证 shell.json、默认 Dock 与任务栏状态，不启动窗口。</summary>
+        static int SelfTest()
+        {
+            try
+            {
+                ShellConfig c = ShellConfig.Load();
+                Console.WriteLine("shell.json=" + ShellConfig.FilePath);
+                Console.WriteLine("dockOn=" + c.DockOn + " dockAutoHide=" + c.DockAutoHide + " dockPreset=" + c.DockPreset + " islandOn=" + c.IslandOn + " taskbarAutoHide=" + c.TaskbarAutoHide);
+                Console.WriteLine("dockItems=" + c.DockItems.Count);
+                for (int i = 0; i < c.DockItems.Count; i++)
+                {
+                    DockItem it = c.DockItems[i];
+                    Console.WriteLine("  " + (i + 1) + ". " + it.Kind + " " + it.Id + " " + it.DisplayName + " proc=" + string.Join("|", it.ProcessNames()));
+                }
+                Console.WriteLine("taskbar.autoHide=" + Taskbar.AutoHide() + " visible=" + Taskbar.Visible() + " height=" + Taskbar.VisibleHeight());
+                Bitmap probe = Icons.Get(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Windows), "explorer.exe"), 256);
+                Console.WriteLine("iconProbe=explorer " + (probe == null ? "null" : probe.Width + "x" + probe.Height));
+                return 0;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("selftest failed: " + ex);
+                return 2;
+            }
         }
     }
 }

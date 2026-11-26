@@ -2,11 +2,13 @@
 
 ## Resume
 
-- 当前任务：Issue #33 / v2.0 需求基线
-- 状态：需求 Draft，等待用户确认
-- 下一步：确认范围后写 `docs/DESIGN_V2.md`，再写 `docs/TASKS_V2.md`
-- 阻塞：Dock 默认组合、多屏首版范围、任务栏完全隐藏是否启用，待用户确认
-- 约束：需求确认前不写新功能代码；不恢复 v1.x 看板主功能
+- 当前任务：M2 集成验收 PR #49（`feat/v2-m2-integration` → `main`）
+- 状态：M1+M2 共 33 个提交已汇总；集成分支构建通过（209 KB）、`--selftest` 通过、真机启动正常；125% DPI、外部文件拖入、2s 枚举 CPU 长时占用仍未验证
+- 分支：`feat/v2-m2-integration`（从 `fix/v2-dock-taskbar-offset` 切出）
+- PR：集成 PR #49 Draft（base `main`）；逐级 PR #36/#38/#40/#42/#44/#46/#48 在合并后关闭
+- 下一步：PR #49 标记 Ready → merge commit 合入 `main` → 关闭逐级 Draft PR
+- 阻塞：无；验收后配置为标准档、Dock 常显、任务栏自动隐藏、原 8 项顺序，Liuli 已退出
+- 约束：旧看板功能封存；不改动 `boards.json` 与 `Documents\Liuli`
 
 ## Session Log
 
@@ -17,7 +19,20 @@
 | 2026-11-26 | 补充 Dock 系统入口、桌面图标默认隐藏、任务栏自动隐藏、壁纸取色、屏幕/文字适配、UI 视觉闸门 | Requirements / Issue #33 评论 |
 | 2026-11-26 | 建立项目开发流程执行清单 | `docs/DEVELOPMENT.md` |
 | 2026-11-26 | 需求文档落分支；v1.6 原型停到 experiment 分支，工作区恢复干净 | `docs/v2-requirements` @ adbcd6f；`experiment/v1.6-dock-island` @ 28e8cfd |
-| 2026-11-26 | 推送需求分支并开 Draft PR | PR #34 |
+| 2026-11-26 | PR #34 以 squash 合入 main，Issue #33 关闭 | main `19ed1bc` |
+| 2026-11-26 | 创建 M1 Issue #35，开 `feat/v2-shell` | Issue #35 |
+| 2026-11-26 | 实现 v2 配置/任务栏/Dock/灵动岛/入口切换，构建通过 | 提交 3be11bb、62ce47c、7282f77、87c92b7 |
+| 2026-11-26 | Dock/灵动岛增加点击按压、回弹、波纹反馈；生成按压态对照 | 提交 a7b7b3e |
+| 2026-11-26 | Dock 应用图标改用 256px Shell 图像列表，图标探针通过 | 提交 f3f5a1b |
+| 2026-11-26 | 创建 M2 Issue #37，开 `feat/v2-dock-autohide`；实现 Dock 自动隐藏/热区/170ms 动画 | Issue #37；构建 201.5 KB |
+| 2026-11-26 | 创建 Issue #39，开 `feat/v2-dock-presets`；实现三档尺寸与离屏对照 | Issue #39；构建 203.5 KB |
+| 2026-11-26 | 创建 Issue #41，开 `feat/v2-dock-running`；实现运行指示圆点与放大对照 | Issue #41；构建 205 KB |
+| 2026-11-26 | 创建 Issue #43，开 `feat/v2-dock-reorder`；实现拖拽排序与三插入位对照 | Issue #43；构建 207.5 KB |
+| 2026-11-26 | 创建 Issue #45，开 `feat/v2-dock-hover`；实现悬停 1.08 放大与普通/悬停对照 | Issue #45；构建 209 KB |
+| 2026-11-26 | M2 真机验收：悬停/拖拽/自动隐藏/任务栏共存/灵动岛通过；发现任务栏常显 Dock 多上移 48px | 真实截图 `m2-real-*.png` |
+| 2026-11-26 | 创建 Issue #47，开 `fix/v2-dock-taskbar-offset`；修复 `WorkingArea` 双重扣除，真机 top 1248→1296 | Issue #47；构建 209 KB |
+| 2026-11-26 | 补 M2 真机验收：三档菜单循环/重启保持、记事本圆点实时增减、Edge 按压态；开 PR #48 | `m2-real-*` 截图 |
+| 2026-11-26 | 汇总 M1+M2 为集成分支 `feat/v2-m2-integration`，开 PR #49；构建/selftest/启动通过 | 33 commits，209 KB |
 
 ## Key Decisions
 
@@ -32,17 +47,27 @@
 
 ## Open Questions
 
-1. Dock 默认常显还是自动隐藏；默认组合是否按当前 3 系统 + 5 自带。
-2. 灵动岛首版是否只做时间/天气/系统，媒体与通知放 P1。
-3. 多屏首版是否只做“所有屏 Dock + 主屏灵动岛”，每屏独立布局后置。
-4. 任务栏完全隐藏是否作为 P1 实验项，默认关闭。
-5. 图标收纳是否 P1。
-6. 是否有可提供的 GlassBoard 版本/截图/推荐配置作为视觉基准。
+1. Dock 默认常显还是自动隐藏：M1 按常显实现，自动隐藏/动画留 M2。
+2. 灵动岛首版只做时间/天气/系统读数，媒体与通知留 M3。
+3. 多屏首版“所有屏 Dock + 主屏灵动岛”尚未实现，留 Phase 7。
+4. 任务栏完全隐藏仍作为 P1 实验项，M1 只做自动隐藏。
+5. 图标收纳仍按 P1。
+6. GlassBoard 版本/截图/推荐配置：现有 10 张参考图已用于需求，M1 未逐像素对标。
 
 ## Divergences
 
 - v1.6 Dock/灵动岛原型已停在 `experiment/v1.6-dock-island`（28e8cfd），不作为 v2.0 实现基线，不合入 main。
-- 当前工作分支为 `docs/v2-requirements`（adbcd6f），工作区干净。
-- 本地 `main` 领先 `origin/main` 11 个提交，远程同步待补。
-- `docs/REQUIREMENTS.md` 仍是 Draft，未进入设计阶段。
-- 当前运行的 `bin\Liuli.exe` 仍是 v1.6 原型构建，与源码分支不一致。
+- v2 外壳已切到 `feat/v2-shell`；`Program.Main` 不再 `App.Boot()`，旧看板窗口不会创建。
+- `bin\Liuli.exe` 已是 v2 构建（199 KB），但**未启动 UI 验证**；`--selftest` 只验证配置/任务栏状态/图标提取。
+- `bin\data\shell.json` 已由自检生成，含 8 个默认 Dock 项；`boards.json` 未改动。
+- 坏 `shell.json` 回退已测：非对象 JSON → `.bad-*` 备份 + 重建默认 8 项。
+- 离屏预览已生成 `docs/screens/v2/m1-preview.png` 与按压态 `m1-preview-pressed.png` / `m1-feedback-compare.png`（`--preview`，不显示窗口）；真机截图仍待做。
+- 任务栏完全隐藏、桌面图标隐藏、Dock 自动隐藏动画、主题预设、多屏均未在 M1 实现，按 TASKS_V2 后续阶段处理。
+
+## M1 已知限制（未验证 ≠ 已完成）
+
+- Dock 常显，未做自动隐藏/唤出动画（M2）。
+- 桌面图标仍按系统现状显示；默认隐藏与系统图标开关在 M5。
+- 灵动岛只有时间/天气/CPU/内存/磁盘与 3 个快捷动作；媒体/通知在 M3。
+- 文字缩放已按窗口 DPI 计算，但只在代码层验证；125% 真机未测。
+- 任务栏自动隐藏设置、恢复、Dock 避让均为代码实现；selftest 只读取当前状态，未做开关回归。

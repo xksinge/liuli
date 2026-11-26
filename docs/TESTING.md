@@ -1,5 +1,59 @@
 # 测试记录
 
+## v2.0 M2（2026-11-26）
+
+| 项 | 结果 | 说明 |
+| --- | --- | --- |
+| 构建 | 通过 | `pwsh -File tools\build.ps1` → `bin\Liuli.exe` 209 KB |
+| 配置默认值 | 通过 | `--selftest`：`dockAutoHide=False`、`dockPreset=standard`，未写字段时保持常显/标准 |
+| 配置读写 | 通过 | 临时写入 `dockAutoHide=true` / `dockPreset=large` 后自检读取正确；测试后恢复原 `shell.json` |
+| 隐藏几何 | 通过（离屏） | `--preview`：`dockHidden top=1442`，`screenBottom=1440`，窗口完全移出屏幕 |
+| 三档尺寸 | 通过（离屏） | small 494×86、standard 576×100、large 658×114；`m2-dock-presets.png` 对照已生成 |
+| 运行指示 | 通过（离屏） | `dockRunning=explorer,SystemSettings`；`m2-dock-running.png` 可见 explorer/settings 下方圆点；自检映射 `calc.exe → CalculatorApp / Calculator / WindowsCalculator` |
+| 拖拽排序 | 通过（离屏） | 开头/中间/末尾三个插入位对照 `m2-dock-reorder.png`；插入线位置与三档布局共用 `itemRects` |
+| 悬停放大 | 通过（离屏 + 真机） | 真机悬停第 4 项出现“资源管理器”标签、图标放大；截图 `m2-real-hover.png` |
+| 真实拖拽 | 通过（真机） | 按住资源管理器拖到末尾，`dockItems` 顺序变为 7 项后追加资源管理器；截图 `m2-real-drag.png` |
+| 自动隐藏真机 | 通过（真机） | 隐藏 `top=1444`，底部热区唤出 `top=1344`，离开 650ms 后回到 `1444` |
+| 任务栏共存 | 通过（修复后真机） | 任务栏常显时 Dock `top=1296`，body 在任务栏上方留约 8px；截图 `m2-real-taskbar.png`；修复前为 1248（多让 48px） |
+| 灵动岛悬停 | 通过（真机） | 悬停展开日期/天气/CPU/内存/磁盘/三快捷动作，离开 1.5s 后收起 |
+| 点击反馈 | 部分通过（真机） | Dock 齿轮点击能打开菜单；按压 0.94 的瞬时视觉未截到，按钮动作未逐个验 |
+| 尺寸切换/重启保持 | **未验证** | 三档尺寸离屏通过；菜单循环切换与重启保持未测 |
+| 运行状态实时变化/CPU | **部分通过** | 真机可见 explorer/设置下方圆点；启动/退出应用实时增减与 2s 枚举 CPU 未测 |
+| 外部文件拖入 | **未验证** | 需真实拖文件进 Dock，确认与内部排序不冲突、不移动源文件 |
+| 125% DPI | **未验证** | 需改缩放后实测圆点、悬停、插入线与窗口位置 |
+| 外部文件拖入 Dock | **未验证** | 需从资源管理器拖真实文件，验证 COPY 固定与内部排序优先级 |
+| 2s 运行枚举 CPU | **未单独测量** | 只确认功能可用，未测长时占用 |
+
+### M2 真机验收记录（2026-11-26）
+
+- 启动：`bin\Liuli.exe`，PID 9604 / 29708，`[v2] 外壳启动完成 ms=407~891`，天气 `道孚 2° 晴`。
+- 窗口：Dock `576×100`，标准档；灵动岛 `264×64`（收起）；主屏 2560×1440。
+- 悬停：Dock 第 4 项出现标签并放大；灵动岛展开后显示 CPU/内存/磁盘 + 三快捷动作，离开 1.5s 收起。
+- 拖拽：资源管理器从第 4 位拖到末尾，`shell.json` 顺序实际变更，Dock 立即重排。
+- 自动隐藏：隐藏 `top=1444` → 底部热区 `top=1344` → 离开 650ms 回到 `1444`。
+- 任务栏共存：任务栏常显时 Dock `top=1296`；修复前 1248，确认 `WorkingArea` 与 `VisibleHeight` 双重扣除（Issue #47）。
+- 状态恢复：验收后已恢复原 `dockItems` 顺序、`dockAutoHide=false`、`taskbarAutoHide=true`，并退出 Liuli。
+- 三档菜单：真机点齿轮 → 菜单第 3 行连续切换，`standard→large→small→standard`，实测 `576×100 / 658×114 / 494×86`；`large` 重启后仍为 `658×114`，再恢复 `standard` 重启回 `576×100`。
+- 运行指示实时增减：启动记事本 3s 后“记事本”图标下方圆点出现；关闭 3s 后圆点消失。截图 `m2-real-running-on.png` / `m2-real-running-off.png`。
+- 按压态：在 Edge 图标上按下并截图，出现按压底色且图标缩小；随后把指针移出 Dock 再松开，取消点击、未启动 Edge。截图 `m2-real-pressed.png`；未逐像素测量 0.94。
+- 留档：`m2-real-hover.png`、`m2-real-drag.png`、`m2-real-taskbar.png`、`m2-real-running-on/off.png`、`m2-real-pressed.png`。
+
+## v2.0 M1（2026-11-26）
+
+| 项 | 结果 | 说明 |
+| --- | --- | --- |
+| 构建 | 通过 | `pwsh -File tools\build.ps1` → `bin\Liuli.exe` 199 KB |
+| 配置自检 | 通过 | `Liuli.exe --selftest`：`shell.json` 生成，默认 8 个 Dock 项 |
+| 坏配置回退 | 通过 | 写入 `not a json object` 后自检：备份 `shell.json.bad-20261126-171933`，重建默认 8 项 |
+| 任务栏状态 | 通过（只读） | `ABM_GETSTATE=1`；隐藏时 `Shell_TrayWnd rect.top=1438`，`Visible=false` |
+| UI 启动 | **未验证** | 用户要求先不运行；不能算视觉/交互验收 |
+| 离屏预览 | 通过 | `Liuli.exe --preview` 生成 `m1-preview.png`、`m1-preview-pressed.png`、`m1-feedback-compare.png`；不显示窗口 |
+| 点击反馈 | 静态预览通过，动态**未验证** | 按下 0.94 缩放 + 按压底色；释放 190ms 回弹 + 280ms 波纹；灵动岛按钮同步；真机手感待测 |
+| Dock 图标高清 | 提取通过，125% **未验证** | `--selftest` 探针 `explorer 256x256`；改用 `SHIL_JUMBO` + `IImageList`，失败回退 32px |
+| 125% DPI | **未验证** | 代码按句柄 DPI 缩放，需改缩放后实测 |
+| Dock 点击/拖入/右键移除 | **未验证** | 需真机操作 |
+| 任务栏开关/恢复 | **未验证** | 需真机操作并对比 `ABM_GETSTATE` |
+
 ## 环境
 
 | 项 | 值 |
@@ -93,3 +147,5 @@ v1.2.0 补充实测：WS 53.6MB、私有 30.9MB、exe 151KB（开机自启开关
 - 一次性异常：整理后新建代码看板并点击其「收藏」时，待办看板出现过一次内容空白，重启恢复，后续同路径操作未复现——记录在案，暂未修
 
 以上均已在 GitHub Issues 建单跟踪，不在此处标记为“通过”。
+
+

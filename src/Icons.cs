@@ -132,7 +132,12 @@ namespace Liuli
 
         public static void Draw(Graphics g, string path, Rectangle r)
         {
-            Bitmap bmp = Get(path, Math.Max(16, r.Width));
+            Draw(g, path, r, 0);
+        }
+
+        public static void Draw(Graphics g, string path, Rectangle r, int sourceSize)
+        {
+            Bitmap bmp = Get(path, sourceSize > 0 ? sourceSize : Math.Max(16, r.Width));
             if (bmp == null)
             {
                 Theme.Glyph(g, Glyph.Folder, r, Theme.TextFaint, 1.3f * Theme.S);
@@ -147,7 +152,7 @@ namespace Liuli
         public static Bitmap Get(string path, int size)
         {
             if (string.IsNullOrEmpty(path)) return null;
-            string key = path + "|" + SafeStamp(path);
+            string key = path + "|" + size + "|" + SafeStamp(path);
             lock (gate)
             {
                 Bitmap b;
@@ -178,16 +183,20 @@ namespace Liuli
             IntPtr hIcon = IntPtr.Zero;
             try
             {
-                Native.SHFILEINFO info = new Native.SHFILEINFO();
-                uint flags = Native.SHGFI_ICON | Native.SHGFI_LARGEICON;
-                uint attrs = 0;
-                if (Directory.Exists(path))
+                if (size >= 64) hIcon = LoadJumbo(path);
+                if (hIcon == IntPtr.Zero)
                 {
-                    attrs = 0x10; // FILE_ATTRIBUTE_DIRECTORY
-                    flags |= Native.SHGFI_USEFILEATTRIBUTES;
+                    Native.SHFILEINFO info = new Native.SHFILEINFO();
+                    uint flags = Native.SHGFI_ICON | Native.SHGFI_LARGEICON;
+                    uint attrs = 0;
+                    if (Directory.Exists(path))
+                    {
+                        attrs = 0x10; // FILE_ATTRIBUTE_DIRECTORY
+                        flags |= Native.SHGFI_USEFILEATTRIBUTES;
+                    }
+                    Native.SHGetFileInfo(path, attrs, ref info, (uint)Marshal.SizeOf(info), flags);
+                    hIcon = info.hIcon;
                 }
-                Native.SHGetFileInfo(path, attrs, ref info, (uint)Marshal.SizeOf(info), flags);
-                hIcon = info.hIcon;
                 if (hIcon == IntPtr.Zero) return null;
                 using (Icon ic = Icon.FromHandle(hIcon))
                 {
@@ -211,6 +220,61 @@ namespace Liuli
             finally
             {
                 if (hIcon != IntPtr.Zero) Native.DestroyIcon(hIcon);
+            }
+        }
+
+        const int SHIL_JUMBO = 4;
+        static readonly Guid IID_IImageList = new Guid("46EB5926-582E-4017-9FDF-E8998DAA0950");
+
+        [ComImport]
+        [Guid("46EB5926-582E-4017-9FDF-E8998DAA0950")]
+        [InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
+        interface IImageList
+        {
+            [PreserveSig] int Add(IntPtr hbmImage, IntPtr hbmMask, ref int pi);
+            [PreserveSig] int ReplaceIcon(int i, IntPtr hicon, ref int pi);
+            [PreserveSig] int SetOverlayImage(int iImage, int iOverlay);
+            [PreserveSig] int Replace(int i, IntPtr hbmImage, IntPtr hbmMask);
+            [PreserveSig] int AddMasked(IntPtr hbmImage, int crMask, ref int pi);
+            [PreserveSig] int Draw(IntPtr pimldp);
+            [PreserveSig] int Remove(int i);
+            [PreserveSig] int GetIcon(int i, int flags, out IntPtr picon);
+        }
+
+        [DllImport("shell32.dll")]
+        static extern int SHGetImageList(int iImageList, ref Guid riid, out IImageList ppv);
+
+        static IntPtr LoadJumbo(string path)
+        {
+            IImageList list = null;
+            try
+            {
+                Native.SHFILEINFO info = new Native.SHFILEINFO();
+                uint flags = 0x4000; // SHGFI_SYSICONINDEX
+                uint attrs = 0;
+                if (Directory.Exists(path))
+                {
+                    attrs = 0x10;
+                    flags |= Native.SHGFI_USEFILEATTRIBUTES;
+                }
+                IntPtr ok = Native.SHGetFileInfo(path, attrs, ref info, (uint)Marshal.SizeOf(info), flags);
+                if (ok == IntPtr.Zero) return IntPtr.Zero;
+
+                Guid iid = IID_IImageList;
+                if (SHGetImageList(SHIL_JUMBO, ref iid, out list) != 0 || list == null) return IntPtr.Zero;
+                IntPtr hIcon = IntPtr.Zero;
+                int hr = list.GetIcon(info.iIcon, 0, out hIcon);
+                if (hr != 0) return IntPtr.Zero;
+                return hIcon;
+            }
+            catch (Exception ex)
+            {
+                Log.Warn("icons", "提取 256px 图标失败 " + path + " " + ex.Message);
+                return IntPtr.Zero;
+            }
+            finally
+            {
+                if (list != null) Marshal.ReleaseComObject(list);
             }
         }
 

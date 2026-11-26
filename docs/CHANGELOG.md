@@ -2,6 +2,70 @@
 
 遵循 Keep a Changelog；版本遵循 SemVer。
 
+## [Unreleased · v2.0 M2]
+
+### 新增
+
+- Dock 自动隐藏：`shell.json` 新增 `dockAutoHide`（默认关闭）；托盘与快捷菜单可切换
+- 底部 6 逻辑像素热区唤出，离开约 650ms 收起；170ms cubic ease-out 滑入/滑出
+- 隐藏位置按屏幕底边计算，任务栏露出时 Dock 也能完全移出屏幕
+- Dock 三档尺寸预设：`dockPreset=small/standard/large`，整体缩放 0.86/1.0/1.14；托盘/快捷菜单循环切换并持久化
+- Dock 运行指示点：每 2s 一次进程枚举并缓存，仅 app 项绘制 accent 小圆点；`.lnk` 暂不解析
+- Dock 拖拽排序：移动超过 8px 进入排序，显示 accent 插入竖线，松手写回 `shell.json`
+- Dock 悬停放大：指针进入后 140ms ease-out 到 1.08，按下仍 0.94，拖拽时禁用
+- `m2-dock-presets.png`：三档 Dock 同背景离屏对照（494×86 / 576×100 / 658×114）
+- `m2-dock-running.png`：运行指示放大对照（explorer / SystemSettings）
+- `m2-dock-reorder.png`：拖拽插入位置对照（开头 / 中间 / 末尾）
+- `m2-dock-hover.png`：普通态 / 悬停第 4 项对照
+- `--selftest` 输出 `dockAutoHide` 与 `dockPreset`；`--preview` 输出隐藏态窗口位置与三档尺寸
+
+### 修复
+
+- 任务栏常显时 Dock 上移量翻倍：`BaseTopY()` 不再重复扣 `Taskbar.VisibleHeight()`；真机 top 从 1248 修正为 1296（Issue #47）
+- 资源管理器/计算器等 exe 的运行指示映射补齐；`calc.exe` 映射到 `CalculatorApp / Calculator / WindowsCalculator`
+
+### 验证
+
+- 构建通过，`bin\Liuli.exe` 209 KB
+- 配置读写：临时写入 `dockAutoHide=true` 后自检读取为 `True`；临时写入 `dockPreset=large` 后自检读取为 `large`，测试后恢复原文件
+- 隐藏几何：`dockHidden top=1442`，`screenBottom=1440`
+- 三档尺寸：small 494×86、standard 576×100、large 658×114；对照图 `docs/screens/v2/m2-dock-presets.png`
+- 运行指示：`--preview` 检测到 `dockRunning=explorer,SystemSettings`，放大对照图 `docs/screens/v2/m2-dock-running.png`
+- 拖拽排序：`--preview` 生成开头/中间/末尾插入位对照 `docs/screens/v2/m2-dock-reorder.png`
+- 悬停放大：`--preview` 生成普通态/第 4 项悬停态对照 `docs/screens/v2/m2-dock-hover.png`
+- 三档尺寸：真机菜单循环 `standard→large→small→standard`，实测 `576×100 / 658×114 / 494×86`；`large` 重启保持，恢复 `standard` 后重启保持
+- 运行指示：启动记事本 3s 后圆点出现，关闭 3s 后消失；截图 `m2-real-running-on/off.png`
+- 按压态：Edge 按下出现按压底色并缩小，移出后松开取消、未启动；截图 `m2-real-pressed.png`
+- **未验证**：外部文件拖入、125% DPI、2s 枚举 CPU 长时占用；按压 0.94 未逐像素测量
+
+## [Unreleased · v2.0 M1]
+
+### 新增
+
+- 新外壳 `V2Shell`：启动不再创建旧看板窗口；托盘菜单与 `Ctrl+Alt+L` / `Ctrl+Alt+G` 热键
+- 底部玻璃 Dock：默认 3 个系统入口 + 5 个 Windows 内置应用；左键启动、拖入固定（COPY）、右键移除、配置持久化
+- 顶部灵动岛：收起时间/天气，悬停展开日期、天气、CPU/内存/磁盘与三个快捷动作；不抢焦点
+- `bin\data\shell.json` 独立配置：默认生成、原子写入、坏文件备份回退
+- `Taskbar`：读取/设置 `ABS_AUTOHIDE`，托盘内切换与恢复；Dock 检测任务栏露出时上移避让
+- `Liuli.exe --selftest` 无界面自检入口
+- `Liuli.exe --preview` 离屏预览：不显示窗口，把 Dock 与展开态灵动岛合成到 PNG
+- Dock / 灵动岛点击反馈：按下 0.94 缩放与按压底色，释放 190ms 回弹、280ms accent 波纹；右侧圆按钮同步
+- `m1-preview-pressed.png` / `m1-feedback-compare.png`：静止态与按压态对照，供视觉评审
+- Dock 应用图标改用 Shell `SHIL_JUMBO` 256px 图像列表；失败回退 32px，缓存按尺寸区分
+
+### 变更
+
+- `Program.Main` 从 `App.Boot()` 切换到 `V2Shell.Boot()`；旧 `App`/`BoardWindow` 仍编译但不创建
+- `DropTarget` 增加可指定 COPY/MOVE 的重载，Dock 固定不再移动源文件
+- `Theme` 增加按窗口缩放取字的 `Font(px, style, scale)` 重载
+
+### 验证
+
+- `pwsh tools/build.ps1` 构建成功（193 KB）
+- `Liuli.exe --selftest`：`shell.json` 生成成功，默认 8 个 Dock 项；任务栏 `ABS_AUTOHIDE=1`、隐藏状态 `rect.top=1438`
+- 坏 JSON 回退：写入非对象 JSON 后自检生成 `.bad-*` 备份并重建默认 8 项
+- **未验证**：真机 UI 启动/截图、125% DPI、Dock 点击/拖入/右键移除、任务栏开关恢复、热键与退出清理
+
 ## [1.5.0] - 2026-11-26
 
 ### 新增
@@ -242,3 +306,5 @@
 - 视频壁纸依赖 Media Feature Pack，缺组件环境未验证（#1）
 - 设置项与编辑交互未全量真机回归（#2）
 - Win10 1903 / 多 DPI 未验证（#4）
+
+
