@@ -1,11 +1,12 @@
 # Liuli 2.0 需求基线（GlassBoard 功能对齐版）
 
-- 状态：Draft，待确认
+- 状态：Confirmed（2026-11-26，用户确认“开始工作”）
 - 日期：2026-11-26
 - 取代：v1.x 的“玻璃看板 + 文件收纳”产品定义
 - 最后功能版本：v1.5.0（仅作为技术资产与历史记录，不再扩展）
 - 关联 Issue：https://github.com/xksinge/liuli/issues/33
 - 评审 PR：https://github.com/xksinge/liuli/pull/34（Draft）
+- 设计与任务：`docs/DESIGN_V2.md`、`docs/TASKS_V2.md`
 - 原则：**功能对齐优先，视觉逐步逼近；先需求，后设计，再编码。**
 - 流程：全程按 `docs/DEVELOPMENT.md` 的阶段闸门与留痕要求执行。
 
