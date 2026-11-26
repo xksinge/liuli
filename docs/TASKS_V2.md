@@ -111,7 +111,7 @@
 ## Phase 5 · M5 组件、壁纸、配色、桌面图标
 
 - [ ] **TASK-050** [REQ-040–042] 时钟/天气/系统组件
-- [x] **TASK-051** [REQ-050–052] 壁纸读取/切换/压暗（Issue #59）
+- [x] **TASK-051** [REQ-050–052] 壁纸读取/切换/压暗（Issue #59 / PR #60）
   - 实现：设置新增“壁纸”页；当前壁纸预览（文件解码，不截屏）、文件名/路径/系统样式、选择本地图片、0–80% 压暗、恢复首次换图前的系统壁纸；`ShellConfig` 增加 `wallpaperDim` / `wallpaperOrig` / `wallpaperOrigStyle` / `wallpaperOrigTile`，`ThemeSnapshot` 同步保存压暗。
   - 玻璃底：`Backdrop.ApplyDim` 在磨砂后、取平均色前压暗；`ApplyVisualSettings` / `LoadTheme` 二次 `ApplyTheme`，让新壁纸的明暗与自动强调色进入重烘。
   - 验证：构建 `bin\Liuli.exe` 268.5 KB；7 页导航、预览、路径/样式、滑杆、选择/恢复按钮真机显示；原生对话框实际选中测试图并写 `img0` 原壁纸记录；压暗 0→41→79 落盘并日志 `mean=37,41,44 light=0`；恢复按钮写回原图、清记录、刷新预览；主题快照 `WallpaperDim=42` 保存/加载/`ApplyTo` 反射通过；截图 `docs/screens/v7/`。
