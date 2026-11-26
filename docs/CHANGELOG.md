@@ -2,6 +2,20 @@
 
 遵循 Keep a Changelog；版本遵循 SemVer。
 
+## [1.0.2] - 2026-11-26
+
+### 修复
+
+- 隐藏桌面图标无效（Win11 26200）：`FindWindow("Progman")` 在该版本返回 0，且 `SysListView32` 是 DefView 的孙辈，`FindWindowEx` 查不到；改为 `EnumWindows` 定位 Progman/WorkerW → DefView，再用 `EnumChildWindows` 递归找图标列表（#8）
+- 「已经是隐藏状态」误判：原判断把“当前可见”和“想要隐藏”直接比较，导致开关只写配置不发命令；改为目标态判断（可见且要显示 / 不可见且要隐藏）（#8）
+- 图标显隐操作补日志（`[icons] 桌面图标 nowVisible=... wantHidden=...`），便于追溯（#8）
+
+### 验证
+
+- 设置页点击「隐藏桌面图标」：`hideDesktopIcons=true`，桌面图标实际消失，日志 `nowVisible=False` 通过
+- 再次点击恢复：`hideDesktopIcons=false`，图标恢复，日志 `nowVisible=True` 通过
+- 退出/重启后开关与实际状态一致
+
 ## [1.0.1] - 2026-11-25
 
 ### 修复

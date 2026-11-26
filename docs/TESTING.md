@@ -11,15 +11,15 @@
 | 编译器 | `C:\Windows\Microsoft.NET\Framework64\v4.0.30319\csc.exe` |
 | 构建 | `pwsh -File tools\build.ps1` → `bin\Liuli.exe`（约 147KB） |
 
-## 性能实测（2026-11-25，v1.0.1）
+## 性能实测（2026-11-26，v1.0.2）
 
 | 指标 | 结果 | 测量方式 |
 | --- | --- | --- |
-| 常驻内存（Working Set） | 56.0MB | 启动 70s 后 `(Get-Process Liuli).WorkingSet64` |
-| 私有内存 | 30.7MB | `PrivateMemorySize64` |
-| 闲置 CPU | 0.06%（单核占比） | 进程 `TotalProcessorTime` 30 秒增量 / 30 / 逻辑核数 |
+| 常驻内存（Working Set） | 55.7MB | 启动 90s 后 `(Get-Process Liuli).WorkingSet64` |
+| 私有内存 | 33.8MB | `PrivateMemorySize64`（设置面板打开时） |
+| 闲置 CPU | 0.11%（单核占比） | 进程 `TotalProcessorTime` 30 秒增量 / 30 / 逻辑核数 |
 | 磨砂烘焙 | 219~266ms | 日志 `[wall] 磨砂重烘 ... ms=` |
-| exe 体积 | 147.5KB | 构建输出 |
+| exe 体积 | 148.5KB | 构建输出 |
 
 结论：默认四块看板下内存与闲置 CPU 均达到既定目标（<80MB / <1%）。
 补充观察：图标整理后 11 块看板时 Working Set 约 79~81MB，接近 80MB 上限；属于极端布局，未做进一步优化，已记录为后续优化项。
@@ -38,10 +38,11 @@
 - 待办勾选：点首项勾选框 → `done=true` 落盘；点文字行进入编辑
 - 拖拽标题栏：看板位置变化并落盘；单击不再引起磁吸位移
 - 设置页：磁吸、总在最前、显示控制条开关点验通过（配置与行为一致）
+- 隐藏桌面图标：点击后图标真实隐藏（`nowVisible=False`），再点恢复（`nowVisible=True`），v1.0.2 修复后通过
 
 ## 已知不通过
 
-- 隐藏桌面图标：Win11 26200 点击后 `hideDesktopIcons=true` 但桌面图标仍可见，`FindWindow("Progman")` 返回 0；见 #8
+- 暂无（v1.0.2 已修 #8）
 
 ## 未验证 / 待验证
 
