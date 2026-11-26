@@ -125,7 +125,7 @@
   - 验证：启动 `hidden=True visible=False`；切显示 `visible=True`；此电脑/回收站/用户文件夹/网络逐个 69↔70；隐藏状态菜单退出后图标恢复、标记删除、配置保留；Explorer 重启后已显示系统图标保持（项数 70）。截图 `docs/screens/v7/settings-desktop.png`。
   - 限制：Windows 11 25H2 桌面不再绘制“控制面板”图标，开关写偏好但无可见项（项数 69→69）；Win10 1903、125% DPI、多屏未真机回归。
   - 异常退出：隐藏态强杀后 marker=`1`；重启日志“上次异常退出，已校准桌面图标 visible=True”，随后重新隐藏并重建 marker。
-- [x] **TASK-054** [REQ-085/086] 桌面收纳单面板（Issue #16 / PR #63）
+- [x] **TASK-054** [REQ-085/086] 桌面收纳单面板（Issue #16 / PR #63，已合入 `dc2ef27`）
   - 实现：新增 `CollectorState` / `CollectorForm`；设置由八页增至九页，新“收纳”页；`ShellConfig` 增加 `collectorOn` / `collectorAutoScan` / `collectorX/Y/W/H` / `collectorGroup` / `collectorItems[]`；入口只存原路径，不移动/复制/删除桌面文件；扫描用户桌面+公共桌面，按 `groups.txt`/扩展名/文件夹自动分组；2 秒轮询；双击打开、面板内拖动换组、拖入加入口、右键移出；拖出到资源管理器只允许 Copy。
   - 验证：构建 `bin\Liuli.exe` 293 KB；首次启动 `桌面入口同步 69 项，已写入 shell.json`；面板 620×430 位于 `1900,96`，分组标签/18 项每页/4 页/滚动翻页显示正常；点“文档”组显示 11 项；新建 `Liuli收纳测试.txt` 3 秒内变 70 项并出现在文档组；删除到回收站后 3 秒内回到 69 项；双击打开 Notepad；拖动到“应用”组落盘 `group=应用` 且原文件未移动；重启后 `collectorGroup=文档`、位置/尺寸保持；收纳页开关可关闭/重开面板。截图 `docs/screens/v8/collector-panel.png`、`docs/screens/v8/settings-collector.png`。
   - 限制：`REQ-044` 的“绑定文件夹组件”未实现，保留为后续独立能力；125% DPI、多屏、>500 项、Explorer 重启后原生图标再隐藏未回归；二期多盒子未做。
