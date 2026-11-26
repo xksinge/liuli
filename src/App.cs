@@ -442,32 +442,15 @@ namespace Liuli
 
         static bool DesktopIconsVisible()
         {
-            try
-            {
-                IntPtr prog = Native.FindWindow("Progman", null);
-                IntPtr defView = prog == IntPtr.Zero ? IntPtr.Zero : Native.FindWindowEx(prog, IntPtr.Zero, "SHELLDLL_DefView", null);
-                if (defView == IntPtr.Zero)
-                {
-                    IntPtr worker = IntPtr.Zero;
-                    while (true)
-                    {
-                        worker = Native.FindWindowEx(IntPtr.Zero, worker, "WorkerW", null);
-                        if (worker == IntPtr.Zero) break;
-                        IntPtr child = Native.FindWindowEx(worker, IntPtr.Zero, "SHELLDLL_DefView", null);
-                        if (child != IntPtr.Zero) { defView = child; break; }
-                    }
-                }
-                if (defView == IntPtr.Zero) return true;
-                IntPtr list = Native.FindWindowEx(defView, IntPtr.Zero, "SysListView32", "FolderView");
-                return list != IntPtr.Zero && Native.IsWindowVisible(list);
-            }
-            catch { return true; }
+            // 探测逻辑收口到 Native：Win11 26200 上 FindWindow 不可靠，改用 EnumWindows + EnumChildWindows
+            return Native.DesktopIconsVisible();
         }
 
         public static void SetDesktopIconsHidden(bool hidden)
         {
-            bool now = DesktopIconsVisible();
-            if (hidden == now)
+            bool visible = DesktopIconsVisible();
+            // 目标状态已经成立：visible=true 且要显示，或 visible=false 且要隐藏
+            if (visible != hidden)
             {
                 Ws.Set.HideDesktopIcons = hidden;
                 iconsHiddenByUs = hidden;
@@ -481,6 +464,7 @@ namespace Liuli
                 Ws.Set.HideDesktopIcons = hidden;
                 iconsHiddenByUs = hidden;
                 Save();
+                Log.Info("icons", "桌面图标 nowVisible=" + after + " wantHidden=" + hidden);
                 Toast(hidden ? "桌面图标已隐藏，看板接管入口" : "桌面图标已恢复");
             }
             else Toast("拿不到桌面图标开关，可能被第三方桌面工具接管了");
