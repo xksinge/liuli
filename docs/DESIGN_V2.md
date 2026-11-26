@@ -33,7 +33,8 @@ DockForm.cs       底部 Dock：默认项、固定、启动、移除、任务栏
 DockGlyphs.cs     系统入口矢量图标 + 设置/计算器自定义图标
 IslandForm.cs     顶部灵动岛：收起/展开、时间/天气/系统、快捷动作
 Taskbar.cs        任务栏自动隐藏/恢复（ABM_GETSTATE/ABM_SETSTATE）
-PanelWindow.cs    玻璃面板（M4）
+PanelForm.cs       玻璃面板容器（M4）
+PanelContent.cs    面板四类内容绘制（M4）
 Widgets.cs        时钟/天气/系统组件（M5）
 Palette.cs        壁纸取色、预设、对比度（M5）
 Monitors.cs       单屏/多屏、工作区、DPI、热插拔（Phase 7）
@@ -128,6 +129,17 @@ M1 实际命名：`V2Shell`、`ShellConfig`、`V2Window`、`DockForm`、`IslandF
 - SMTC 媒体标题/艺术家/进度与播放控制（REQ-023）。
 - Windows 通知摘要与忽略/清除（REQ-024）。
 - M3 验收只覆盖 REQ-020–022、025。
+
+### 7.3 M4 玻璃面板（REQ-030/031，P0）
+
+- `PanelForm : V2Window`，窗口四周 12 逻辑像素阴影边距；玻璃主体用 `PaintGlass` + `Theme.Radius`，不另造材质参数。
+- 配置 `panels[]`：`id`、`content`（`empty` / `clock` / `weather` / `stats`）、`x/y/w/h`（body 屏幕坐标与尺寸）、`topMost`；最多 6 个，W 220–720、H 120–520，越界收回当前工作区。
+- 交互：按住玻璃主体拖动；右下角 22px 热区缩放；右键菜单切换内容、置顶/置底、新建、删除。拖动/缩放/切换后立即写 `shell.json`。
+- 点击穿透：`WM_NCHITTEST` 在 body 外返回 `HTTRANSPARENT`、body 内返回 `HTCLIENT`，透明阴影不挡桌面图标。
+- 内容与容器解耦：`PanelContent.Paint` 只读 `content` 与全局 `Weather/Stats`；切换内容不重建窗口，位置尺寸不变。
+- 置顶/置底：`V2Window` 仅在 `TopMost=true` 时设置 `WS_EX_TOPMOST`；面板可降为普通 z 序，被普通窗口覆盖。
+- 入口：Dock 左侧“+”快捷动作、灵动岛“+”快捷动作、托盘/主菜单“新建面板”；没有面板时默认空，不自动创建。
+- 主题保存/加载（REQ-032）留到 Issue #53；本阶段只保存面板布局本身。
 
 ## 8. 配色
 

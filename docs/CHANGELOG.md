@@ -2,6 +2,37 @@
 
 遵循 Keep a Changelog；版本遵循 SemVer。
 
+## [Unreleased · v2.0 M4 面板]
+
+### 新增
+
+- 玻璃面板 `PanelForm`：最多 6 个，默认不创建；按住主体拖动，右下角 22px 热区缩放，位置/尺寸/内容即时写 `shell.json`
+- 面板四类内容：空容器 / 时钟 / 天气 / 系统读数；`PanelContent` 与容器解耦，切换内容不重建窗口、不改变位置尺寸
+- 面板右键菜单：切换四类内容、置顶/置底、新建面板、删除此面板
+- `panels[]` 配置：`id`、`content`、`x/y/w/h`（body 屏幕坐标）、`topMost`；W 220–720、H 120–520，越界/坏值收敛到主屏工作区
+- 入口：Dock 左侧“+”快捷动作、灵动岛“+”快捷动作、托盘/主菜单“新建面板”
+- 透明区点击穿透：`WM_NCHITTEST` 在玻璃 body 外返回 `HTTRANSPARENT`，body 内返回 `HTCLIENT`
+- `--selftest` 输出 `panels=N` 与每个面板的内容/边界/置顶状态
+
+### 变更
+
+- `V2Window` 仅在 `TopMost=true` 时加 `WS_EX_TOPMOST`；面板可降为普通 z 序，被普通窗口覆盖
+- 主菜单“显示/隐藏 Dock 与灵动岛”改为“显示/隐藏桌面层”，面板一并显隐
+- Dock/灵动岛“+”快捷动作从占位提示改为新建面板
+
+### 验证
+
+- 构建通过：`bin\Liuli.exe` 225 KB；`--selftest` 读到 2 个面板及边界
+- 新建：Dock “+” 与灵动岛 “+” 均成功创建面板，默认出现在主屏右侧
+- 拖动：`2180,160` → `1880,360`，松手写盘；缩放：`340×200` → `440×280`，写盘
+- 内容：同一面板 `clock → weather → stats → empty`，`x/y/w/h` 全程保持 `1880/360/440/280`
+- 多面板：两个面板同时显示，第二面板内容切到天气；重启后两个面板位置/内容恢复
+- 透明区：`WM_NCHITTEST` 阴影 `1870,350=-1`、body 内 `1900,380=1`、屏幕外 `=-1`
+- 置底：第二面板 `topMost=false` 后 `WS_EX_TOPMOST` 位清除（`0x08090080`），记事本覆盖该面板；第一面板 `topMost=true`（`0x08090088`）仍压在记事本上
+- 删除：右键“删除此面板”后面板关闭、`panels` 计数减少
+- 截图：`docs/screens/v4/m4-panel-clock.png`、`m4-panel-weather.png`、`m4-panel-stats.png`、`m4-panel-empty.png`、`m4-panel-menu.png`、`m4-panels-two.png`
+- **未验证**：125% DPI、多屏跨屏拖动、6 面板长时 CPU、面板与 M5 壁纸/配色联动
+
 ## [Unreleased · v2.0 M3]
 
 ### 新增
