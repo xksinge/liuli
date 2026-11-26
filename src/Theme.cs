@@ -100,6 +100,12 @@ namespace Liuli
             return Get(Family, px * S, style);
         }
 
+        /// <summary>v2 外壳按窗口自己的缩放取字，不受全局 Theme.S 影响。</summary>
+        public static Font Font(float px, FontStyle style, float scale)
+        {
+            return Get(Family, px * scale, style);
+        }
+
         public static Font Mono(float px, FontStyle style)
         {
             return Get(FamilyMono, px * S, style);
