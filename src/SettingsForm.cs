@@ -134,6 +134,8 @@ namespace Liuli
                     delegate { return App.Ws.Set.AlwaysTop ? 1 : 0; }, delegate (int v) { App.Ws.Set.AlwaysTop = v == 1; App.ApplyTopModeAll(); App.Save(); });
                 AddToggle("显示控制条", "屏幕底部那枚新建/整理/设置胶囊", y,
                     delegate { return App.Ws.Set.ShowBar ? 1 : 0; }, delegate (int v) { App.Ws.Set.ShowBar = v == 1; App.ApplyBarVisible(); App.Save(); });
+                AddToggle("开机自启", "登录 Windows 后自动启动 Liuli（写入当前用户 Run 项）", y,
+                    delegate { return App.Ws.Set.AutoStart ? 1 : 0; }, delegate (int v) { App.SetAutoStart(v == 1); });
                 AddButton("新建一块看板", "便签 / 待办 / 文件 / 代码 / 状态 / 时钟", y, false, delegate
                 {
                     App.ShowKindMenu(new Point(Left + Width / 2, Top + Util.RoundI(160 * Theme.S)));

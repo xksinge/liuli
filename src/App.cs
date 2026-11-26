@@ -7,6 +7,7 @@ using System.Drawing.Drawing2D;
 using System.IO;
 using System.Runtime.InteropServices;
 using System.Windows.Forms;
+using Microsoft.Win32;
 
 namespace Liuli
 {
@@ -53,6 +54,7 @@ namespace Liuli
             Theme.Light = light;
             Theme.ApplyTone();
             Log.Info("theme", "light=" + light + " mean=" + Hex(Backdrop.Mean) + " accent=" + Hex(Theme.Accent) + " text=" + Hex(Theme.TextMain) + " dpi=" + Theme.S);
+            SyncAutoStart();
 
             StatsNow = SysStats.Sample();
 
@@ -603,6 +605,42 @@ namespace Liuli
                 Log.Error("icons", ex);
                 Toast("撤销失败，看日志");
             }
+        }
+
+        // ---------- 开机自启 ----------
+        const string RunKey = @"Software\Microsoft\Windows\CurrentVersion\Run";
+        const string RunValue = "Liuli";
+
+        public static void SetAutoStart(bool on)
+        {
+            Ws.Set.AutoStart = on;
+            try
+            {
+                using (RegistryKey k = Registry.CurrentUser.CreateSubKey(RunKey))
+                {
+                    if (k == null) throw new Exception("无法打开 Run 注册表项");
+                    if (on) k.SetValue(RunValue, "\"" + Application.ExecutablePath + "\"");
+                    else k.DeleteValue(RunValue, false);
+                }
+                Log.Info("app", "开机自启 " + (on ? "on " : "off ") + Application.ExecutablePath);
+            }
+            catch (Exception ex) { Log.Error("app", "开机自启设置失败：" + ex.Message); }
+            Save();
+        }
+
+        /// <summary>启动时对齐配置与注册表：配置要开却没写、配置关了却残留，都以配置为准。</summary>
+        static void SyncAutoStart()
+        {
+            try
+            {
+                string val = null;
+                using (RegistryKey k = Registry.CurrentUser.OpenSubKey(RunKey, false))
+                    if (k != null) val = (string)k.GetValue(RunValue, null);
+                bool reg = val != null && val.Length > 0;
+                if (Ws.Set.AutoStart && !reg) SetAutoStart(true);
+                else if (!Ws.Set.AutoStart && reg) SetAutoStart(false);
+            }
+            catch (Exception ex) { Log.Warn("app", "开机自启同步失败 " + ex.Message); }
         }
 
         // ---------- 杂项 ----------
