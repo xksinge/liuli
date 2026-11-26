@@ -17,6 +17,7 @@ namespace Liuli
         public static int RadiusSm = 13;        // 按钮/条目
         public static int GlassPct = 100;       // 玻璃浓度
         public static int BlurPct = 62;         // 磨砂强度
+        public static int WallpaperDim = 0;     // 壁纸压暗 0–80%
         public static bool Live = false;        // DWM 实时玻璃（GPU）
         public static bool Light = false;       // 壁纸偏亮时自动切浅色文字
         public static bool FollowWallpaperTone = true;

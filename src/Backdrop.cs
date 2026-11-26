@@ -59,6 +59,7 @@ namespace Liuli
                 ImageFx.Frost(raw, 0.80f, 0.95f, 3);
                 ImageFx.Blur(raw, radius, 3);
                 ImageFx.Blur(raw, Math.Max(1, radius / 2), 1);
+                ApplyDim(raw);
 
                 Color mean = ImageFx.Average(raw);
                 bool light;
@@ -80,7 +81,8 @@ namespace Liuli
                     DisposeSoon(old);
                 }
                 LastBuildMs = Environment.TickCount - t0;
-                Log.Info("wall", "磨砂重烘 " + raw0(vb) + " scale=" + scale.ToString("0.###") + " ms=" + LastBuildMs.ToString("0"));
+                Log.Info("wall", "磨砂重烘 " + raw0(vb) + " scale=" + scale.ToString("0.###") + " ms=" + LastBuildMs.ToString("0") +
+                    " dim=" + Theme.WallpaperDim + " mean=" + mean.R + "," + mean.G + "," + mean.B + " light=" + (light ? 1 : 0));
             }
             catch (Exception ex)
             {
@@ -117,6 +119,7 @@ namespace Liuli
                 using (Graphics g = Graphics.FromImage(copy)) g.DrawImage(frame, 0, 0, frame.Width, frame.Height);
                 ImageFx.Frost(copy, 0.80f, 0.95f, 3);
                 ImageFx.Blur(copy, radius, 2);
+                ApplyDim(copy);
                 Color mean = ImageFx.Average(copy);
                 bool light;
                 Color accent;
@@ -152,6 +155,15 @@ namespace Liuli
                 g.PixelOffsetMode = PixelOffsetMode.HighQuality;
                 g.DrawImage(Source, destLocal, s, GraphicsUnit.Pixel);
             }
+        }
+
+        static void ApplyDim(Bitmap bmp)
+        {
+            int pct = Util.Clamp(Theme.WallpaperDim, 0, 80);
+            if (pct <= 0) return;
+            using (Graphics g = Graphics.FromImage(bmp))
+            using (SolidBrush b = new SolidBrush(Color.FromArgb(pct * 255 / 100, 0, 0, 0)))
+                g.FillRectangle(b, 0, 0, bmp.Width, bmp.Height);
         }
 
         static void DisposeSoon(Bitmap old)

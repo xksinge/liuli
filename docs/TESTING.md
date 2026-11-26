@@ -1,5 +1,32 @@
 # 测试记录
 
+## v2.0 M5 壁纸页（2026-11-26，Issue #59）
+
+| 项 | 结果 | 说明 |
+| --- | --- | --- |
+| 构建 | 通过 | `pwsh -NoProfile -File tools\build.ps1` → `bin\Liuli.exe` 268.5 KB；C#5 warning 无新增 |
+| 设置页 | 通过（真机） | 第 6 页“壁纸”，七页导航全部落在 720 内；预览、文件名/路径/样式、压暗滑杆、两个按钮、说明完整显示 |
+| 当前壁纸预览 | 通过（真机） | 默认 `img0.jpg` 解码为 760×428 cover 缩略图，卡片 380×214；切换测试图后预览同步刷新 |
+| 原生选择图片 | 通过（真机） | 打开 `#32770 选择壁纸`，文件名框粘贴 `_scratch\wallpaper-test.png` 后 Enter；Windows 壁纸写入测试图，`wallpaperOrig=C:\WINDOWS\web\wallpaper\Windows\img0.jpg`，预览更新 |
+| 压暗滑杆 | 通过（真机） | 0→41→79，`wallpaperDim` 落盘；松手才重烘，日志 `磨砂重烘 ... dim=79 mean=37,41,44 light=0`，设置页自动切深色 |
+| 恢复系统壁纸 | 通过（真机） | 按钮写回 `img0.jpg`（style 10 / tile 0），`wallpaperOrig` 清空，预览与按钮说明刷新为“当前没有可恢复记录” |
+| 0% 不压暗 | 通过（真机） | 恢复后 `wallpaperDim=0`，mean 回到 `175,195,208 light=1` |
+| 重启保持 | 通过（真机） | 配置含 `wallpaperDim=79` 时重启，日志 `dim=79 mean=37,41,44 light=0`，设置页深色；验收后恢复 `dim=0` |
+| 页面视觉 | 通过（真机） | `docs/screens/v7/settings-wallpaper.png` |
+| 主题快照含压暗 | 通过（反射） | `WallpaperDim=42` → `SaveTheme` → 重新 `Load` → `FindTheme` 读回 42；`ApplyTo` 后 `Config.WallpaperDim=42`；未做真机保存/加载 UI 回归 |
+| WebP | **未验证** | Filter 含 `webp`，但 GDI+ 解码依赖系统 WIC；未用真实 WebP 文件回归 |
+| 125% DPI / 多屏 | **未验证** | 仅在 100% 主屏验证 |
+| 换壁纸 5 秒联动 | **未验证** | 未测 `Backdrop.Tick` 5 秒轮询对新系统壁纸的自动重烘 |
+
+### M5 壁纸真机记录（2026-11-26）
+
+- 设置窗口 `830,360,1730,1080`；壁纸页索引 5，导航客户端 `(80,336)`；压暗滑杆 y≈469，选择按钮 y≈535，恢复按钮 y≈589。
+- 测试壁纸 `_scratch/wallpaper-test.png`（1920×1080，浅蓝渐变 + “Liuli 壁纸测试”）；系统样式始终 10（填充）。
+- 压暗 79% 后 `shell.json`：`wallpaperDim=79`；日志 mean 37,41,44 → `light=0`，背景叠层、文字、导航同步转深色，说明压暗已进入平均色/主题重算。
+- 原生选择对话框：`SetWindowText` 可写入但没有触发 `EN_CHANGE`，`BM_CLICK` / Enter 均不提交；改用真实鼠标点文件名框 + 剪贴板 `Ctrl+V` + 真实 Enter 才生效。
+- 原生对话框的 UIA 树只暴露帮助/视图/组织/新建文件夹/名称/搜索等控件，文件名编辑框与“打开”按钮不在树内；验证不要依赖 UIA 自动化。
+- 验收前备份 `_scratch/shell-before-wallpaper.json`（`wallpaperDim=0`、`wallpaperOrig` 空、0 主题）；最终恢复原壁纸并清测试配置。
+
 ## v2.0 M5 配色（2026-11-26，Issue #56；完整形态 #57）
 
 | 项 | 结果 | 说明 |

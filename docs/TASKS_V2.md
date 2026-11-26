@@ -111,7 +111,11 @@
 ## Phase 5 · M5 组件、壁纸、配色、桌面图标
 
 - [ ] **TASK-050** [REQ-040–042] 时钟/天气/系统组件
-- [ ] **TASK-051** [REQ-050–052] 壁纸读取/切换/压暗
+- [x] **TASK-051** [REQ-050–052] 壁纸读取/切换/压暗（Issue #59）
+  - 实现：设置新增“壁纸”页；当前壁纸预览（文件解码，不截屏）、文件名/路径/系统样式、选择本地图片、0–80% 压暗、恢复首次换图前的系统壁纸；`ShellConfig` 增加 `wallpaperDim` / `wallpaperOrig` / `wallpaperOrigStyle` / `wallpaperOrigTile`，`ThemeSnapshot` 同步保存压暗。
+  - 玻璃底：`Backdrop.ApplyDim` 在磨砂后、取平均色前压暗；`ApplyVisualSettings` / `LoadTheme` 二次 `ApplyTheme`，让新壁纸的明暗与自动强调色进入重烘。
+  - 验证：构建 `bin\Liuli.exe` 268.5 KB；7 页导航、预览、路径/样式、滑杆、选择/恢复按钮真机显示；原生对话框实际选中测试图并写 `img0` 原壁纸记录；压暗 0→41→79 落盘并日志 `mean=37,41,44 light=0`；恢复按钮写回原图、清记录、刷新预览；主题快照 `WallpaperDim=42` 保存/加载/`ApplyTo` 反射通过；截图 `docs/screens/v7/`。
+  - 未验证：WebP 真文件、125% DPI、多屏、换壁纸 5 秒联动、主题快照含压暗的真机 UI 回归。
 - [x] **TASK-052** [REQ-053–057] 配色系统（Issue #56，第一刀；完整形态 Issue #57）
   - 实现：设置新增“配色”页；`accentMode=auto/preset/custom`、`accentPreset 0–5`、`accentCustom #RRGGBB`；`ShellConfig.ResolveAccent` 统一写入 `Theme.Accent`；6 套预设（雾蓝/青瓷/紫雾/暖砂/绯红/石墨）+ `ColorDialog` 自定义；主题快照保存/恢复配色三项。
   - 验证：6 预设逐一点击 `accentPreset` 0→5；自定义取色 `#FF80FF` 全局生效、取消不改；坏值收敛 `auto/5/#7EB2FF`；主题保存后加载恢复 `custom/#FF80FF`；重启保持；截图 `docs/screens/v6/`。
@@ -122,7 +126,7 @@
 ## Phase 6 · M6 设置与系统
 
 - [ ] **TASK-060** [REQ-060] `SettingsV2` 分模块页面
-  - M4 已完成主题/面板/Dock/灵动岛/关于五页与统一入口，M5 加入配色页后为六页；开机自启、快捷键配置、日志诊断等 M6 项仍待补。
+  - M4 已完成主题/面板/Dock/灵动岛/关于五页与统一入口，M5 加入配色、壁纸两页后为七页；开机自启、快捷键配置、日志诊断等 M6 项仍待补。
 - [ ] **TASK-061** [REQ-061] 开机自启
 - [ ] **TASK-062** [REQ-062/092] HiDPI + 文字四档
 - [ ] **TASK-063** [REQ-063] 热键配置/重置
