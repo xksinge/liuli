@@ -586,6 +586,25 @@ namespace Liuli
             Toast(created > 0 ? "整理了 " + items.Count + " 个入口，生成 " + created + " 块看板" : "入口已更新到文件看板");
         }
 
+        public static void UndoOrganize()
+        {
+            if (!File.Exists(Paths.UndoFile)) { Toast("还没有可撤销的整理"); return; }
+            try
+            {
+                File.Copy(Paths.UndoFile, Paths.BoardsFile, true);
+                Ws = Store.Load(ScreenRects());
+                RebuildAllWindows();
+                File.Delete(Paths.UndoFile);
+                Log.Info("icons", "撤销上次整理，看板 " + Ws.Boards.Count + " 块");
+                Toast("已撤销上次整理");
+            }
+            catch (Exception ex)
+            {
+                Log.Error("icons", ex);
+                Toast("撤销失败，看日志");
+            }
+        }
+
         // ---------- 杂项 ----------
         public static void Save()
         {

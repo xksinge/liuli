@@ -6,6 +6,7 @@ using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.IO;
 using System.Runtime.InteropServices;
+using System.Text;
 using System.Threading;
 
 namespace Liuli
@@ -22,9 +23,10 @@ namespace Liuli
     {
         static readonly Dictionary<string, Bitmap> cache = new Dictionary<string, Bitmap>();
         static readonly object gate = new object();
-        static readonly Dictionary<string, string> groups = BuildGroups();
 
         public static readonly string[] GroupOrder = { "应用", "文件夹", "文档", "图片", "影音", "压缩包", "代码", "其他" };
+
+        static readonly Dictionary<string, string> groups = BuildGroups();
 
         static Dictionary<string, string> BuildGroups()
         {
@@ -35,7 +37,33 @@ namespace Liuli
             Put(d, "影音", "mp4", "mkv", "avi", "mov", "wmv", "flv", "webm", "m4v", "mp3", "wav", "flac", "m4a", "aac", "ogg", "wma");
             Put(d, "压缩包", "zip", "rar", "7z", "tar", "gz", "bz2", "xz");
             Put(d, "代码", "cs", "py", "ps1", "js", "ts", "json", "xml", "html", "css", "sql", "java", "c", "cpp", "h", "lua", "sh", "ini", "yml", "yaml");
+            LoadCustom(d);
             return d;
+        }
+
+        /// <summary>data\groups.txt 自定义扩展名分组，行格式 ext=分组；只接受 GroupOrder 里已有的分组。</summary>
+        static void LoadCustom(Dictionary<string, string> d)
+        {
+            try
+            {
+                string f = Path.Combine(Paths.Data, "groups.txt");
+                if (!File.Exists(f)) return;
+                string[] lines = File.ReadAllLines(f, Encoding.UTF8);
+                for (int i = 0; i < lines.Length; i++)
+                {
+                    string line = lines[i].Trim();
+                    if (line.Length == 0 || line.StartsWith("#") || line.StartsWith("//")) continue;
+                    int eq = line.IndexOf('=');
+                    if (eq <= 0) continue;
+                    string ext = line.Substring(0, eq).Trim().TrimStart('.').ToLowerInvariant();
+                    string g = line.Substring(eq + 1).Trim();
+                    if (ext.Length == 0) continue;
+                    if (Array.IndexOf(GroupOrder, g) < 0) { Log.Warn("icons", "groups.txt 分组无效：" + line); continue; }
+                    d[ext] = g;
+                }
+                Log.Info("icons", "groups.txt 自定义规则已加载");
+            }
+            catch (Exception ex) { Log.Warn("icons", "groups.txt 解析失败 " + ex.Message); }
         }
 
         static void Put(Dictionary<string, string> d, string group, params string[] exts)
@@ -198,6 +226,13 @@ namespace Liuli
         public static int OrganizeToBoards(List<DeskItem> items, Rectangle work)
         {
             if (items == null || items.Count == 0) return 0;
+            try
+            {
+                Paths.Ensure();
+                if (File.Exists(Paths.BoardsFile)) File.Copy(Paths.BoardsFile, Paths.UndoFile, true);
+                Log.Info("icons", "整理前快照 " + Paths.UndoFile);
+            }
+            catch (Exception ex) { Log.Warn("icons", "整理前快照失败 " + ex.Message); }
             int created = 0;
             Dictionary<string, List<DeskItem>> byGroup = new Dictionary<string, List<DeskItem>>();
             for (int k = 0; k < items.Count; k++)

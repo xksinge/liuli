@@ -139,6 +139,8 @@ namespace Liuli
                     App.ShowKindMenu(new Point(Left + Width / 2, Top + Util.RoundI(160 * Theme.S)));
                 });
                 AddButton("一键整理桌面图标", "按类型分组成看板，只收入口，不动桌面原件", y, false, delegate { App.OrganizeDesktop(); });
+                AddButton("撤销上次整理", "恢复到上一次整理之前的看板布局（只保留一步）", y, false, delegate { App.UndoOrganize(); });
+                AddInfo("自定义分组", "在 data\\groups.txt 里按 ext=分组 写规则，分组名用 应用/文件夹/文档/图片/影音/压缩包/代码/其他，重启 Liuli 后生效。", y);
                 AddToggle("隐藏桌面图标", "由系统桌面开关控制，退出时恢复；随时可再打开", y,
                     delegate { return App.Ws.Set.HideDesktopIcons ? 1 : 0; }, delegate (int v) { App.SetDesktopIconsHidden(v == 1); });
                 AddButton("把看板收回屏幕内", "多屏切换或分辨率变了以后用", y, false, delegate { App.RescueBoards(); });

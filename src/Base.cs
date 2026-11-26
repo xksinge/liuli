@@ -34,6 +34,7 @@ namespace Liuli
         public static string Backups { get { return Path.Combine(Data, "backups"); } }
         public static string IconCache { get { return Path.Combine(Data, "icons"); } }
         public static string ShotDir { get { return Path.Combine(Data, "shots"); } }
+        public static string UndoFile { get { return Path.Combine(Data, "undo-organize.json"); } }
 
         public static void Ensure()
         {
@@ -49,7 +50,7 @@ namespace Liuli
 
     static class V
     {
-        public const string Version = "1.0.2";
+        public const string Version = "1.1.0";
         public const string Name = "Liuli 琉璃";
         public const string Tagline = "把桌面变成一块会呼吸的玻璃看板";
     }

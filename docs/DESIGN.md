@@ -79,7 +79,7 @@ Program.cs     入口、单实例、DPI、异常兜底
 `bin\data\boards.json`：
 
 ```json
-{ "app":"Liuli", "version":"1.0.0", "settings":{...}, "boards":[{ "id":"b...", "kind":0, "x":32, "y":32, "w":330, "h":300, ... }] }
+{ "app":"Liuli", "version":"1.1.0", "settings":{...}, "boards":[{ "id":"b...", "kind":0, "x":32, "y":32, "w":330, "h":300, ... }] }
 ```
 
 - `W/H` 是含 16px 投影外留白的窗口尺寸，玻璃主体 = `Glass.Body`
@@ -87,6 +87,13 @@ Program.cs     入口、单实例、DPI、异常兜底
 - 保存：写 `*.tmp` 后 `File.Replace`；加载失败把坏文件改名为 `.broken-<时间戳>` 再回退默认
 - 备份：`ZipArchive` 打包 boards/settings/weather/icons 索引，文件名 `Liuli-backup-YYYYMMDD-HHmm.zip`
 - 导入前先自动备份当前状态
+
+### 5.1 图标整理与撤销
+
+- 扫描用户桌面 + 公共桌面（隐藏项跳过），按扩展名分组：内置表 + 可选 `data\groups.txt`（`扩展名=分组`）覆盖；只接受 应用/文件夹/文档/图片/影音/压缩包/代码/其他 八个组名，非法规则告警后忽略
+- 整理不移动、不删除桌面文件，只生成文件看板入口；同名文件看板原地更新，否则靠主屏右侧两列新建，单板最多 40 项
+- 整理前把 `boards.json` 复制为 `data\undo-organize.json`（只保留最近一步）；「撤销上次整理」用快照覆盖配置、`Store.Load` 重新解析、`RebuildAllWindows` 重建窗口，然后删除快照
+- 取舍：撤销按整文件快照恢复，会把整理后对其它看板的改动一并回退；换来实现简单、可解释，适合“整理错了立刻反悔”的场景
 
 ## 6. 性能预算
 
