@@ -136,13 +136,12 @@ namespace Liuli
         // ---------- 文件 ----------
         void PaintFiles(Color accent, float s)
         {
-            int gap = Util.RoundI(8 * s);
-            int tileH = Util.RoundI(58 * s);
-            int cols = contentRect.Width >= Util.RoundI(250 * s) ? 2 : 1;
+            int gap = Util.RoundI(6 * s);
+            int cols = contentRect.Width >= Util.RoundI(270 * s) ? 4 : (contentRect.Width >= Util.RoundI(200 * s) ? 3 : 2);
             int tileW = (contentRect.Width - gap * (cols - 1)) / cols;
-            int iconSize = Util.RoundI(30 * s);
-            Font f = Theme.Font(10.5f, FontStyle.Regular);
-            Font fsub = Theme.Font(8f, FontStyle.Regular);
+            int tileH = Util.RoundI(88 * s);
+            int iconSize = Util.RoundI(40 * s);
+            Font f = Theme.Font(9.5f, FontStyle.Regular);
 
             int count = B.Items.Count;
             int total = count + 1;
@@ -162,32 +161,27 @@ namespace Liuli
                     Item it = B.Items[i];
                     if (hoverTile == i)
                     {
-                        using (GraphicsPath p = Theme.Round(tile, Util.RoundI(12 * s)))
+                        using (GraphicsPath p = Theme.Round(tile, Util.RoundI(10 * s)))
                         using (SolidBrush b = new SolidBrush(Theme.Hover)) g.FillPath(b, p);
                     }
-                    Rectangle ic = new Rectangle(tile.X + Util.RoundI(10 * s), tile.Y + (tileH - iconSize) / 2, iconSize, iconSize);
+                    Rectangle ic = new Rectangle(tile.X + (tile.Width - iconSize) / 2, tile.Y + Util.RoundI(12 * s), iconSize, iconSize);
                     if (!string.IsNullOrEmpty(it.Path) && System.IO.File.Exists(it.Path) || (!string.IsNullOrEmpty(it.Path) && System.IO.Directory.Exists(it.Path)))
                         Icons.Draw(g, it.Path, ic);
                     else
                         Theme.Glyph(g, Glyph.Folder, ic, Theme.TextFaint, 1.3f * s);
 
-                    int labelW = tile.Width - iconSize - Util.RoundI(26 * s);
-                    Rectangle lr = new Rectangle(ic.Right + Util.RoundI(8 * s), tile.Y + Util.RoundI(12 * s), labelW, Util.RoundI(19 * s));
-                    Theme.Text(g, it.Text.Length > 0 ? it.Text : System.IO.Path.GetFileNameWithoutExtension(it.Path), f, Theme.TextMain, lr, StringAlignment.Near, true);
-                    string sub = it.Path.Length > 0 ? System.IO.Path.GetExtension(it.Path).TrimStart('.').ToUpperInvariant() : "快捷入口";
-                    if (sub.Length == 0) sub = System.IO.Directory.Exists(it.Path) ? "文件夹" : "文件";
-                    Rectangle sr = new Rectangle(lr.X, tile.Y + Util.RoundI(31 * s), labelW, Util.RoundI(16 * s));
-                    Theme.Text(g, sub, fsub, Theme.TextFaint, sr, StringAlignment.Near, true);
+                    Rectangle lr = new Rectangle(tile.X + Util.RoundI(4 * s), ic.Bottom + Util.RoundI(6 * s), tile.Width - Util.RoundI(8 * s), Util.RoundI(18 * s));
+                    Theme.Text(g, it.Text.Length > 0 ? it.Text : System.IO.Path.GetFileNameWithoutExtension(it.Path), f, Theme.TextMain, lr, StringAlignment.Center, true);
                     hits.Add(new Zone(tile, "tile", i));
                 }
                 else
                 {
-                    using (GraphicsPath p = Theme.Round(tile, Util.RoundI(12 * s)))
+                    using (GraphicsPath p = Theme.Round(tile, Util.RoundI(10 * s)))
                     using (Pen pen = new Pen(Color.FromArgb(46, accent), 1f * s)) g.DrawPath(pen, p);
-                    Rectangle plus = new Rectangle(tile.X + Util.RoundI(10 * s), tile.Y + (tileH - iconSize) / 2, iconSize, iconSize);
+                    Rectangle plus = new Rectangle(tile.X + (tile.Width - iconSize) / 2, tile.Y + Util.RoundI(12 * s), iconSize, iconSize);
                     Theme.Glyph(g, Glyph.Plus, plus, Color.FromArgb(170, accent), 1.5f * s);
-                    Rectangle lr = new Rectangle(plus.Right + Util.RoundI(8 * s), tile.Y, tile.Width - iconSize - Util.RoundI(26 * s), tileH);
-                    Theme.TextMiddle(g, "收进文件", f, Theme.TextSub, lr, StringAlignment.Near);
+                    Rectangle lr = new Rectangle(tile.X + Util.RoundI(4 * s), plus.Bottom + Util.RoundI(6 * s), tile.Width - Util.RoundI(8 * s), Util.RoundI(18 * s));
+                    Theme.Text(g, "收进文件", f, Theme.TextSub, lr, StringAlignment.Center, false);
                     hits.Add(new Zone(tile, "add", 0));
                 }
             }

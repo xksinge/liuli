@@ -228,7 +228,12 @@ namespace Liuli
         /// <summary>桌面上的 Liuli 收纳根目录：桌面\Liuli\&lt;分组&gt;。只存原件，不放副本。</summary>
         public static string LiuliRoot
         {
-            get { return Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.DesktopDirectory), "Liuli"); }
+            get
+            {
+                string custom = App.Ws == null ? "" : App.Ws.Set.StoreRoot;
+                if (custom != null && custom.Trim().Length > 0) return custom.Trim().TrimEnd('\\');
+                return Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "Liuli");
+            }
         }
 
         /// <summary>把桌面上的文件/文件夹移进 桌面\Liuli\&lt;group&gt;，返回新路径；失败返回 null。</summary>
