@@ -4,7 +4,8 @@
 
 - 当前任务：Issue #35 / M1 新外壳
 - 状态：Dock 与灵动岛首版代码已实现并构建通过；无界面自检通过；**真机 UI/截图/DPI 验证待做**
-- 分支：`feat/v2-shell`（从 main `19ed1bc` 创建）
+- 分支：`feat/v2-shell`（从 main `19ed1bc` 创建；已推送 origin）
+- PR：`#36` Draft（代码/文档；待真机验证后再标 ready）
 - 下一步：真机启动验证 Dock/灵动岛/任务栏避让与热键，补 `docs/screens/v2/` 截图，再关 Issue #35；之后进入 M2 Dock 完整
 - 阻塞：无；用户此前要求“不运行”，因此未启动 UI，不能声称视觉验收通过
 - 约束：旧看板功能封存；不改动 `boards.json` 与 `Documents\Liuli`

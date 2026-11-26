@@ -48,7 +48,8 @@
 ## 6. 当前仓库状态（2026-11-26）
 
 - `main` 已同步到 `19ed1bc`（PR #34 squash 合并，docs v2 基线）；Issue #33 已关闭。
-- M1 Issue #35 OPEN；工作分支 `feat/v2-shell`，已提交 `3be11bb`、`62ce47c`、`7282f77`、`87c92b7`。
+- M1 Issue #35 OPEN；工作分支 `feat/v2-shell`，已推送；Draft PR #36。
+- 已提交 `3be11bb`、`62ce47c`、`7282f77`、`87c92b7`、`0bbc294`、`92eab42` 及文档提交。
 - v1.6 Dock/灵动岛原型停在 `experiment/v1.6-dock-island`（`28e8cfd`），不合入 main，不作为 v2.0 基线。
 - v2 外壳代码已构建成功；`--selftest` 验证默认 shell.json 与任务栏自动隐藏状态；真机 UI/截图待做。
 - `docs/REQUIREMENTS.md` 已确认；`docs/DESIGN_V2.md`、`docs/TASKS_V2.md` 已合入 main。
