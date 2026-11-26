@@ -106,6 +106,7 @@ namespace Liuli
 
         // 外壳
         public bool DockOn = true;
+        public bool DockAutoHide = false;
         public bool IslandOn = true;
         public bool IslandWeather = true;
         public bool IslandStats = true;
@@ -147,6 +148,7 @@ namespace Liuli
 
                 c.Version = Json.Int(root, "version", 2);
                 c.DockOn = Json.Bool(root, "dockOn", true);
+                c.DockAutoHide = Json.Bool(root, "dockAutoHide", false);
                 c.IslandOn = Json.Bool(root, "islandOn", true);
                 c.IslandWeather = Json.Bool(root, "islandWeather", true);
                 c.IslandStats = Json.Bool(root, "islandStats", true);
@@ -278,6 +280,7 @@ namespace Liuli
                 Dictionary<string, object> root = new Dictionary<string, object>();
                 root["version"] = Version;
                 root["dockOn"] = DockOn;
+                root["dockAutoHide"] = DockAutoHide;
                 root["islandOn"] = IslandOn;
                 root["islandWeather"] = IslandWeather;
                 root["islandStats"] = IslandStats;

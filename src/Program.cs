@@ -66,7 +66,7 @@ namespace Liuli
             {
                 ShellConfig c = ShellConfig.Load();
                 Console.WriteLine("shell.json=" + ShellConfig.FilePath);
-                Console.WriteLine("dockOn=" + c.DockOn + " islandOn=" + c.IslandOn + " taskbarAutoHide=" + c.TaskbarAutoHide);
+                Console.WriteLine("dockOn=" + c.DockOn + " dockAutoHide=" + c.DockAutoHide + " islandOn=" + c.IslandOn + " taskbarAutoHide=" + c.TaskbarAutoHide);
                 Console.WriteLine("dockItems=" + c.DockItems.Count);
                 for (int i = 0; i < c.DockItems.Count; i++)
                 {

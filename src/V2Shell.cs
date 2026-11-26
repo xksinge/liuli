@@ -114,6 +114,7 @@ namespace Liuli
             tray.Visible = true;
             ContextMenuStrip menu = new ContextMenuStrip();
             menu.Items.Add("显示/隐藏 Dock 与灵动岛", null, delegate { ToggleAll(); });
+            menu.Items.Add("Dock 自动隐藏：开/关", null, delegate { ToggleDockAutoHide(); });
             menu.Items.Add("任务栏自动隐藏：开/关", null, delegate { ToggleTaskbarAutoHide(); });
             menu.Items.Add("恢复系统任务栏", null, delegate { RestoreTaskbar(); });
             menu.Items.Add("重载 Dock 默认组合", null, delegate { ResetDock(); });
@@ -160,6 +161,7 @@ namespace Liuli
         {
             List<MenuForm.Item> items = new List<MenuForm.Item>();
             items.Add(new MenuForm.Item("显示/隐藏 Dock 与灵动岛", delegate { ToggleAll(); }));
+            items.Add(new MenuForm.Item("Dock 自动隐藏：开/关", delegate { ToggleDockAutoHide(); }, Glyph.Gear));
             items.Add(new MenuForm.Item("任务栏自动隐藏：开/关", delegate { ToggleTaskbarAutoHide(); }, Glyph.Gear));
             items.Add(new MenuForm.Item("恢复系统任务栏", delegate { RestoreTaskbar(); }, Glyph.Restore));
             items.Add(new MenuForm.Item("重载 Dock 默认组合", delegate { ResetDock(); }, Glyph.Restore));
@@ -181,7 +183,7 @@ namespace Liuli
             if (Config != null && Config.DockOn)
             {
                 if (Dock == null) { Dock = new DockForm(); Dock.Show(); }
-                else { Dock.Show(); Dock.RelayoutPublic(); }
+                else { Dock.Show(); Dock.RelayoutPublic(); Dock.RefreshAutoHide(); }
             }
             if (Config != null && Config.IslandOn)
             {
@@ -195,6 +197,15 @@ namespace Liuli
             allHidden = true;
             if (Dock != null) Dock.Hide();
             if (Island != null) Island.Hide();
+        }
+
+        public static void ToggleDockAutoHide()
+        {
+            if (Config == null) return;
+            Config.DockAutoHide = !Config.DockAutoHide;
+            Config.Save();
+            if (Dock != null) Dock.RefreshAutoHide();
+            Toast(Config.DockAutoHide ? "Dock 已设为自动隐藏，鼠标触底唤出" : "Dock 已设为常显");
         }
 
         public static void ToggleTaskbarAutoHide()

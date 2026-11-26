@@ -12,6 +12,8 @@ namespace Liuli
     {
         Timer positionTimer;
         Timer animTimer;
+        Timer autoTimer;
+        Timer slideTimer;
         DropTarget oleDrop;
         int hoverItem = -1;
         int hoverBtn = -1;
@@ -24,6 +26,14 @@ namespace Liuli
         long flashAt;
         bool down;
         Point downPoint;
+
+        bool autoRevealed = true;
+        long awayAt;
+        int slide;
+        int slideFrom;
+        int slideTo;
+        long slideAt;
+        const int SlideMs = 170;
 
         Rectangle body = Rectangle.Empty;
         List<Rectangle> itemRects = new List<Rectangle>();
@@ -40,6 +50,15 @@ namespace Liuli
             animTimer = new Timer();
             animTimer.Interval = 16;
             animTimer.Tick += delegate { TickAnim(); };
+
+            autoTimer = new Timer();
+            autoTimer.Interval = 55;
+            autoTimer.Tick += delegate { TickAutoHide(); };
+            autoTimer.Start();
+
+            slideTimer = new Timer();
+            slideTimer.Interval = 16;
+            slideTimer.Tick += delegate { TickSlide(); };
         }
 
         protected override void OnReady()
@@ -94,14 +113,14 @@ namespace Liuli
 
             body = new Rectangle(margin, margin + tagH, bodyW, bodyH);
             ClientSize = new Size(bodyW + margin * 2, bodyH + tagH + margin * 2);
+            if (!autoRevealed) slide = HiddenOffset();
             EnsureCanvas();
             ApplyPosition();
             Render();
         }
 
-        public void ApplyPosition()
+        int BaseTopY()
         {
-            if (!IsHandleCreated) return;
             Rectangle work = Screen.PrimaryScreen.WorkingArea;
             int gap = Util.RoundI(8 * UiScale);
             int bodyBottom = work.Bottom - gap;
@@ -110,10 +129,25 @@ namespace Liuli
                 int tb = Taskbar.VisibleHeight();
                 if (tb > 0) bodyBottom = Math.Min(bodyBottom, work.Bottom - tb - gap);
             }
-            int x = work.X + (work.Width - Width) / 2;
             int y = bodyBottom - body.Bottom;
             if (y < work.Top + Util.RoundI(40 * UiScale)) y = work.Top + Util.RoundI(40 * UiScale);
-            Location = new Point(x, y);
+            return y;
+        }
+
+        int HiddenOffset()
+        {
+            // 以屏幕底边为准，保证任务栏露出时也能把整个窗口推出去。
+            int baseY = BaseTopY();
+            int toBottom = Screen.PrimaryScreen.Bounds.Bottom + 2 - baseY;
+            return Math.Max(1, Math.Max(Height, toBottom));
+        }
+
+        public void ApplyPosition()
+        {
+            if (!IsHandleCreated) return;
+            Rectangle work = Screen.PrimaryScreen.WorkingArea;
+            int x = work.X + (work.Width - Width) / 2;
+            Location = new Point(x, BaseTopY() + slide);
             Native.KeepAtTop(Handle);
         }
 
@@ -124,21 +158,108 @@ namespace Liuli
         void TickPosition()
         {
             if (!IsHandleCreated) return;
+            if (!autoRevealed && (slideTimer == null || !slideTimer.Enabled)) slide = HiddenOffset();
             Rectangle work = Screen.PrimaryScreen.WorkingArea;
-            int gap = Util.RoundI(8 * UiScale);
-            int bodyBottom = work.Bottom - gap;
-            if (Taskbar.Visible())
-            {
-                int tb = Taskbar.VisibleHeight();
-                if (tb > 0) bodyBottom = Math.Min(bodyBottom, work.Bottom - tb - gap);
-            }
-            Point target = new Point(work.X + (work.Width - Width) / 2, bodyBottom - body.Bottom);
+            Point target = new Point(work.X + (work.Width - Width) / 2, BaseTopY() + slide);
             if (target != Location)
             {
                 Location = target;
                 Native.KeepAtTop(Handle);
                 Push();
             }
+        }
+
+        // ---------- 自动隐藏 ----------
+        bool AutoHideEnabled()
+        {
+            return V2Shell.Config != null && V2Shell.Config.DockAutoHide;
+        }
+
+        public void RefreshAutoHide()
+        {
+            if (!IsHandleCreated) return;
+            awayAt = 0;
+            if (!AutoHideEnabled()) { SlideTo(true); return; }
+            // 切到自动隐藏时先显示，鼠标不在底部则 650ms 后收起。
+            if (!autoRevealed) SlideTo(true);
+        }
+
+        void TickAutoHide()
+        {
+            if (!IsHandleCreated || !Visible) return;
+            if (!AutoHideEnabled())
+            {
+                if (!autoRevealed) SlideTo(true);
+                return;
+            }
+
+            Point p = Cursor.Position;
+            Rectangle screen = Screen.PrimaryScreen.Bounds;
+            int hot = Math.Max(3, Util.RoundI(6 * UiScale));
+            bool nearBottom = p.Y >= screen.Bottom - hot;
+            bool inDock = Bounds.Contains(p);
+            if (nearBottom || inDock)
+            {
+                awayAt = 0;
+                if (!autoRevealed) SlideTo(true);
+                return;
+            }
+
+            if (!autoRevealed) return;
+            long now = Environment.TickCount;
+            if (awayAt == 0) awayAt = now;
+            else if (now - awayAt > 650) SlideTo(false);
+        }
+
+        void SlideTo(bool visible)
+        {
+            autoRevealed = visible;
+            int target = visible ? 0 : HiddenOffset();
+            if (slide == target)
+            {
+                if (slideTimer != null) slideTimer.Stop();
+                return;
+            }
+            slideFrom = slide;
+            slideTo = target;
+            slideAt = Environment.TickCount;
+            if (slideTimer != null && !slideTimer.Enabled) slideTimer.Start();
+        }
+
+        void TickSlide()
+        {
+            float t = (Environment.TickCount - slideAt) / (float)SlideMs;
+            if (t < 0f) t = 0f;
+            if (t >= 1f)
+            {
+                slide = slideTo;
+                if (slideTimer != null) slideTimer.Stop();
+            }
+            else
+            {
+                float ease = 1f - (1f - t) * (1f - t) * (1f - t);
+                slide = slideFrom + Util.RoundI((slideTo - slideFrom) * ease);
+            }
+            ApplyPosition();
+            Push();
+        }
+
+        public void PreviewReveal()
+        {
+            if (autoTimer != null) autoTimer.Stop();
+            if (slideTimer != null) slideTimer.Stop();
+            autoRevealed = true;
+            slide = 0;
+            ApplyPosition();
+        }
+
+        public void PreviewHide()
+        {
+            if (autoTimer != null) autoTimer.Stop();
+            if (slideTimer != null) slideTimer.Stop();
+            autoRevealed = false;
+            slide = HiddenOffset();
+            ApplyPosition();
         }
 
         void OnDrop(string[] files)
@@ -371,10 +492,20 @@ namespace Liuli
             Render();
         }
 
+        protected override void OnVisibleChanged(EventArgs e)
+        {
+            base.OnVisibleChanged(e);
+            if (autoTimer == null) return;
+            if (!Visible) { autoTimer.Stop(); if (slideTimer != null) slideTimer.Stop(); }
+            else if (!autoTimer.Enabled) autoTimer.Start();
+        }
+
         protected override void OnFormClosed(FormClosedEventArgs e)
         {
             if (positionTimer != null) positionTimer.Stop();
             if (animTimer != null) animTimer.Stop();
+            if (autoTimer != null) autoTimer.Stop();
+            if (slideTimer != null) slideTimer.Stop();
             try { if (oleDrop != null) DropTarget.RevokeDragDrop(Handle); } catch { }
             base.OnFormClosed(e);
         }

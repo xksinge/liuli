@@ -26,6 +26,10 @@ namespace Liuli
 
                 DockForm dock = new DockForm();
                 IntPtr dh = dock.Handle;
+                dock.PreviewReveal();
+                dock.PreviewHide();
+                Console.WriteLine("dockHidden top=" + dock.Top + " screenBottom=" + Screen.PrimaryScreen.Bounds.Bottom);
+                dock.PreviewReveal();
                 dock.Render();
 
                 IslandForm island = new IslandForm();
