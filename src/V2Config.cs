@@ -205,7 +205,9 @@ namespace Liuli
                     if (File.Exists(FilePath)) File.Copy(FilePath, bad, true);
                 }
                 catch { }
-                return Defaults();
+                ShellConfig d = Defaults();
+                try { d.Save(); } catch { }
+                return d;
             }
         }
 
