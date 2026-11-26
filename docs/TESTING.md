@@ -21,6 +21,8 @@
 | 运行状态实时变化/CPU | **部分通过** | 真机可见 explorer/设置下方圆点；启动/退出应用实时增减与 2s 枚举 CPU 未测 |
 | 外部文件拖入 | **未验证** | 需真实拖文件进 Dock，确认与内部排序不冲突、不移动源文件 |
 | 125% DPI | **未验证** | 需改缩放后实测圆点、悬停、插入线与窗口位置 |
+| 外部文件拖入 Dock | **未验证** | 需从资源管理器拖真实文件，验证 COPY 固定与内部排序优先级 |
+| 2s 运行枚举 CPU | **未单独测量** | 只确认功能可用，未测长时占用 |
 
 ### M2 真机验收记录（2026-11-26）
 
@@ -31,7 +33,10 @@
 - 自动隐藏：隐藏 `top=1444` → 底部热区 `top=1344` → 离开 650ms 回到 `1444`。
 - 任务栏共存：任务栏常显时 Dock `top=1296`；修复前 1248，确认 `WorkingArea` 与 `VisibleHeight` 双重扣除（Issue #47）。
 - 状态恢复：验收后已恢复原 `dockItems` 顺序、`dockAutoHide=false`、`taskbarAutoHide=true`，并退出 Liuli。
-- 留档：`m2-real-hover.png`、`m2-real-drag.png`、`m2-real-taskbar.png`。
+- 三档菜单：真机点齿轮 → 菜单第 3 行连续切换，`standard→large→small→standard`，实测 `576×100 / 658×114 / 494×86`；`large` 重启后仍为 `658×114`，再恢复 `standard` 重启回 `576×100`。
+- 运行指示实时增减：启动记事本 3s 后“记事本”图标下方圆点出现；关闭 3s 后圆点消失。截图 `m2-real-running-on.png` / `m2-real-running-off.png`。
+- 按压态：在 Edge 图标上按下并截图，出现按压底色且图标缩小；随后把指针移出 Dock 再松开，取消点击、未启动 Edge。截图 `m2-real-pressed.png`；未逐像素测量 0.94。
+- 留档：`m2-real-hover.png`、`m2-real-drag.png`、`m2-real-taskbar.png`、`m2-real-running-on/off.png`、`m2-real-pressed.png`。
 
 ## v2.0 M1（2026-11-26）
 

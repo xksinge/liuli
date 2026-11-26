@@ -33,8 +33,10 @@
 - 运行指示：`--preview` 检测到 `dockRunning=explorer,SystemSettings`，放大对照图 `docs/screens/v2/m2-dock-running.png`
 - 拖拽排序：`--preview` 生成开头/中间/末尾插入位对照 `docs/screens/v2/m2-dock-reorder.png`
 - 悬停放大：`--preview` 生成普通态/第 4 项悬停态对照 `docs/screens/v2/m2-dock-hover.png`
-- 真机验收：Dock 悬停、拖拽到末尾、自动隐藏 `1444→1344→1444`、任务栏常显 Dock `top=1296`、灵动岛展开/收起通过；截图 `m2-real-hover.png` / `m2-real-drag.png` / `m2-real-taskbar.png`
-- **未验证**：尺寸菜单循环与重启保持、运行状态实时增减与 CPU、外部文件拖入、125% DPI、按压瞬时视觉
+- 三档尺寸：真机菜单循环 `standard→large→small→standard`，实测 `576×100 / 658×114 / 494×86`；`large` 重启保持，恢复 `standard` 后重启保持
+- 运行指示：启动记事本 3s 后圆点出现，关闭 3s 后消失；截图 `m2-real-running-on/off.png`
+- 按压态：Edge 按下出现按压底色并缩小，移出后松开取消、未启动；截图 `m2-real-pressed.png`
+- **未验证**：外部文件拖入、125% DPI、2s 枚举 CPU 长时占用；按压 0.94 未逐像素测量
 
 ## [Unreleased · v2.0 M1]
 
