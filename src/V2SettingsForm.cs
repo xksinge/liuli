@@ -3,13 +3,14 @@ using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Drawing.Drawing2D;
+using System.IO;
 using System.Windows.Forms;
 
 namespace Liuli
 {
     sealed class V2SettingsForm : Form
     {
-        static readonly string[] Nav = { "主题", "配色", "面板", "Dock", "灵动岛", "关于" };
+        static readonly string[] Nav = { "主题", "配色", "面板", "Dock", "灵动岛", "壁纸", "关于" };
         const int MaxThemes = 6;
 
         float S = 1f;
@@ -20,7 +21,7 @@ namespace Liuli
         bool dragging;
         Point dragOff;
         Rectangle closeR;
-        Rectangle[] navRects = new Rectangle[6];
+        Rectangle[] navRects = new Rectangle[7];
         List<Ctl> controls = new List<Ctl>();
         TextBox nameBox;
         Rectangle nameSaveR;
@@ -30,6 +31,8 @@ namespace Liuli
         string pendingDeletePanel = "";
         Timer refresh;
         int initialPage;
+        Bitmap previewBmp;
+        string previewPath = "";
 
         sealed class Ctl
         {
@@ -139,6 +142,7 @@ namespace Liuli
             else if (index == 2) BuildPanelPage();
             else if (index == 3) BuildDockPage();
             else if (index == 4) BuildIslandPage();
+            else if (index == 5) BuildWallpaperPage();
             else BuildAboutPage();
         }
 
@@ -386,6 +390,121 @@ namespace Liuli
                 delegate (int v) { V2Shell.Config.IslandQuick = v == 1; V2Shell.MarkThemeDirty(); V2Shell.Config.Save(); IslandPreview(); });
         }
 
+        void BuildWallpaperPage()
+        {
+            int x = Cx();
+            int w = Cr() - x;
+            int y = Ct();
+            AddSection("当前壁纸", x, y, w); y += Util.RoundI(26 * S);
+            AddPreview(x, y, Math.Min(Util.RoundI(380 * S), w), Util.RoundI(214 * S));
+            y += Util.RoundI(224 * S);
+            string path = Wallpaper.CurrentPath();
+            string current = string.IsNullOrEmpty(path) || !File.Exists(path)
+                ? "未找到当前壁纸文件" : Path.GetFileName(path);
+            AddInfo("当前文件", current + "\n" + (string.IsNullOrEmpty(path) ? "请选择一张本地图片" : path) +
+                "\n系统样式：" + StyleName(), x, y, w); y += Util.RoundI(80 * S);
+
+            AddSection("壁纸压暗", x, y, w); y += Util.RoundI(26 * S);
+            AddSlider("压暗", "0–80%，松手后重烘一次玻璃底", "wallDim", x, y, w, 0, 80, "%",
+                delegate { return V2Shell.Config.WallpaperDim; },
+                delegate (int v)
+                {
+                    V2Shell.Config.WallpaperDim = v;
+                    Theme.WallpaperDim = v;
+                });
+            y += Util.RoundI(64 * S);
+            AddButton("选择本地图片", "jpg / png / bmp / webp；应用后立即更新 Windows 壁纸与玻璃底", "pickWallpaper", x, y, w, false,
+                delegate { PickWallpaper(); });
+            y += Util.RoundI(54 * S);
+            string orig = V2Shell.Config.WallpaperOrig;
+            string restoreDesc = string.IsNullOrEmpty(orig) || !File.Exists(orig)
+                ? "首次换图前会记录原壁纸；当前没有可恢复记录"
+                : "回到 " + Path.GetFileName(orig);
+            AddButton("恢复系统壁纸", restoreDesc, "restoreWallpaper", x, y, w, false,
+                delegate
+                {
+                    if (V2Shell.RestoreSystemWallpaper())
+                    {
+                        EnsurePreview();
+                        BuildPage(5);
+                        Invalidate();
+                    }
+                });
+            y += Util.RoundI(54 * S);
+            AddInfo("说明", "预览从壁纸文件解码，不截屏，不会把窗口或图标烤进玻璃。" +
+                "\nWebP 需系统 WIC 解码器支持；无效图片会保持原壁纸。", x, y, w);
+        }
+
+        void AddPreview(int x, int y, int w, int h)
+        {
+            Ctl c = new Ctl();
+            c.Kind = "preview";
+            c.R = new Rectangle(x, y, w, h);
+            controls.Add(c);
+            EnsurePreview();
+        }
+
+        void EnsurePreview()
+        {
+            string path = Wallpaper.CurrentPath();
+            if (previewBmp != null && string.Equals(previewPath, path, StringComparison.OrdinalIgnoreCase)) return;
+            if (previewBmp != null) { previewBmp.Dispose(); previewBmp = null; }
+            previewPath = path;
+            if (string.IsNullOrEmpty(path) || !File.Exists(path)) return;
+            try
+            {
+                byte[] bytes = File.ReadAllBytes(path);
+                using (MemoryStream ms = new MemoryStream(bytes))
+                using (Image img = Image.FromStream(ms))
+                {
+                    int w = 760, h = 428;
+                    Bitmap bmp = new Bitmap(w, h, System.Drawing.Imaging.PixelFormat.Format32bppPArgb);
+                    using (Graphics g = Graphics.FromImage(bmp))
+                    {
+                        g.Clear(Util.Rgb(18, 22, 30));
+                        g.InterpolationMode = InterpolationMode.HighQualityBicubic;
+                        g.PixelOffsetMode = PixelOffsetMode.HighQuality;
+                        float k = Math.Max(w / (float)img.Width, h / (float)img.Height);
+                        int dw = (int)(img.Width * k), dh = (int)(img.Height * k);
+                        g.DrawImage(img, new Rectangle((w - dw) / 2, (h - dh) / 2, dw, dh));
+                    }
+                    previewBmp = bmp;
+                }
+            }
+            catch (Exception ex)
+            {
+                Log.Warn("wall", "壁纸预览失败 " + ex.Message);
+                previewBmp = null;
+            }
+        }
+
+        string StyleName()
+        {
+            int style = Wallpaper.Style();
+            if (style == 100) return "平铺";
+            if (style == 0) return "居中";
+            if (style == 2) return "拉伸";
+            if (style == 6) return "适应";
+            if (style == 22) return "跨屏";
+            return "填充";
+        }
+
+        void PickWallpaper()
+        {
+            using (OpenFileDialog dlg = new OpenFileDialog())
+            {
+                dlg.Title = "选择壁纸";
+                dlg.Filter = "图片|*.jpg;*.jpeg;*.png;*.bmp;*.webp|所有文件|*.*";
+                if (dlg.ShowDialog(this) != DialogResult.OK) return;
+                if (V2Shell.SetWallpaperImage(dlg.FileName))
+                {
+                    EnsurePreview();
+                    BuildPage(5);
+                    Invalidate();
+                }
+            }
+        }
+
         void BuildAboutPage()
         {
             int x = Cx();
@@ -523,7 +642,7 @@ namespace Liuli
             Rectangle hd = new Rectangle(Util.RoundI(26 * S), Util.RoundI(18 * S), Util.RoundI(420 * S), Util.RoundI(28 * S));
             Theme.Text(g, "Liuli 设置", Theme.Font(15f, FontStyle.Bold, S), Theme.TextMain, hd, StringAlignment.Near, false);
             Rectangle hsub = new Rectangle(hd.X, Util.RoundI(44 * S), Util.RoundI(500 * S), Util.RoundI(20 * S));
-            Theme.Text(g, "v2 桌面层 · 主题 / 配色 / 面板 / Dock / 灵动岛", Theme.Font(9.5f, FontStyle.Regular, S), Theme.TextFaint, hsub, StringAlignment.Near, false);
+            Theme.Text(g, "v2 桌面层 · 主题 / 配色 / 面板 / Dock / 灵动岛 / 壁纸", Theme.Font(9.5f, FontStyle.Regular, S), Theme.TextFaint, hsub, StringAlignment.Near, false);
 
             closeR = new Rectangle(Width - Util.RoundI(50 * S), Util.RoundI(16 * S), Util.RoundI(30 * S), Util.RoundI(30 * S));
             Glass.Button(g, closeR, Glyph.Close, hover == -2, false, Theme.Accent);
@@ -579,6 +698,33 @@ namespace Liuli
             string foot = "配置 " + ShellConfig.FilePath + " · 修改即时生效";
             Theme.Text(g, foot, Theme.Font(9f, FontStyle.Regular, S), Theme.TextFaint,
                 new Rectangle(Util.RoundI(26 * S), by + Util.RoundI(8 * S), Width - Util.RoundI(52 * S), Util.RoundI(18 * S)), StringAlignment.Near, true);
+        }
+
+        void PaintPreview(Graphics g, Ctl c)
+        {
+            using (GraphicsPath p = Theme.Round(c.R, Util.RoundI(14 * S)))
+            using (SolidBrush b = new SolidBrush(Theme.Light ? Color.FromArgb(20, 12, 18, 30) : Color.FromArgb(16, 255, 255, 255)))
+                g.FillPath(b, p);
+            if (previewBmp != null)
+            {
+                using (GraphicsPath p = Theme.Round(c.R, Util.RoundI(14 * S)))
+                {
+                    g.SetClip(p);
+                    float k = Math.Max(c.R.Width / (float)previewBmp.Width, c.R.Height / (float)previewBmp.Height);
+                    int dw = (int)(previewBmp.Width * k), dh = (int)(previewBmp.Height * k);
+                    g.InterpolationMode = InterpolationMode.HighQualityBicubic;
+                    g.DrawImage(previewBmp, new Rectangle(c.R.X + (c.R.Width - dw) / 2, c.R.Y + (c.R.Height - dh) / 2, dw, dh));
+                    g.ResetClip();
+                }
+            }
+            else
+            {
+                Theme.Glyph(g, Glyph.Image, new Rectangle(c.R.X + c.R.Width / 2 - Util.RoundI(15 * S), c.R.Y + Util.RoundI(68 * S), Util.RoundI(30 * S), Util.RoundI(30 * S)), Theme.TextFaint, 2f * S);
+                Theme.TextMiddle(g, "没有可预览的壁纸", Theme.Font(10f, FontStyle.Regular, S), Theme.TextFaint,
+                    new Rectangle(c.R.X, c.R.Y + Util.RoundI(106 * S), c.R.Width, Util.RoundI(22 * S)), StringAlignment.Center);
+            }
+            using (GraphicsPath p = Theme.Round(c.R, Util.RoundI(14 * S)))
+            using (Pen pen = new Pen(Theme.Hair, 1f)) g.DrawPath(pen, p);
         }
 
         void PaintControl(Graphics g, Ctl c, bool hot, int part)
@@ -678,6 +824,9 @@ namespace Liuli
                     Theme.Glyph(g, Glyph.Chevron, new Rectangle(rr.Right - Util.RoundI(26 * S), rr.Y + (rr.Height - Util.RoundI(16 * S)) / 2, Util.RoundI(16 * S), Util.RoundI(16 * S)), Theme.TextSub, 1.3f * S);
                     break;
                 }
+                case "preview":
+                    PaintPreview(g, c);
+                    break;
                 case "swatch":
                 {
                     bool selected = string.Equals(V2Shell.Config.AccentMode, "preset", StringComparison.OrdinalIgnoreCase)
@@ -892,6 +1041,7 @@ namespace Liuli
                 dragSlider = -1;
                 if (V2Shell.Config != null) V2Shell.Config.Save();
                 if (c.Key == "blur") V2Shell.ApplyVisualSettings(true);
+                if (c.Key == "wallDim") V2Shell.ApplyVisualSettings(true);
                 if (page == 4) V2Shell.ApplyIslandSettings();
                 Invalidate();
                 ScheduleRefresh();
@@ -1121,6 +1271,7 @@ namespace Liuli
         {
             if (refresh != null) { refresh.Stop(); refresh.Dispose(); refresh = null; }
             if (nameBox != null) { nameBox.Dispose(); nameBox = null; }
+            if (previewBmp != null) { previewBmp.Dispose(); previewBmp = null; }
             base.OnFormClosed(e);
             V2Shell.SettingsClosed();
         }

@@ -2,6 +2,39 @@
 
 遵循 Keep a Changelog；版本遵循 SemVer。
 
+## [Unreleased · v2.0 M5 壁纸页]
+
+### 新增
+
+- 设置新增“壁纸”页：当前壁纸缩略预览、当前文件名/路径/系统样式、本地图片选择（jpg/jpeg/png/bmp/webp）、0–80% 压暗
+- 首次换图前记录原系统壁纸路径、样式与平铺；“恢复系统壁纸”按原样式写回并清空记录
+- `shell.json` 新增 `wallpaperDim` / `wallpaperOrig` / `wallpaperOrigStyle` / `wallpaperOrigTile`；`ThemeSnapshot` 同步保存壁纸压暗
+- 玻璃底新增黑色 alpha 压暗层，在磨砂/模糊之后、平均色取色之前执行；压暗同时影响自动明暗与自动强调色
+
+### 变更
+
+- 设置由六页增至七页：主题 / 配色 / 面板 / Dock / 灵动岛 / 壁纸 / 关于；关于页索引变为 6
+- `ApplyVisualSettings(true)` 改为“应用主题 → 重烘 → 再应用主题”，让新壁纸的明暗/强调色进入同一轮重绘
+- `LoadTheme` 顺序改为“应用快照 → 写壁纸 → 应用主题 → 重烘 → 再应用主题”，避免压暗没进重烘或重烘后仍用旧 tone
+- 松手才重烘压暗滑杆；拖动中只更新 `Config.WallpaperDim` / `Theme.WallpaperDim`
+
+### 验证
+
+- 构建通过：`bin\Liuli.exe` 268.5 KB；C#5 warning 无新增
+- 壁纸页 7 页导航、预览、路径、样式、滑杆、选择/恢复按钮在 900×720 内完整显示
+- 原生文件对话框实际选中 `_scratch\wallpaper-test.png`：Windows 壁纸切换、`wallpaperOrig` 记录 `img0.jpg`、预览更新
+- 压暗 0→41→79：`wallpaperDim` 落盘；日志 `dim=79 mean=37,41,44 light=0`，设置页自动切深色主题
+- “恢复系统壁纸”按钮：写回 `img0.jpg`、`wallpaperOrig` 清空、预览刷新
+- 主题快照含 `wallpaperDim`：`WallpaperDim=42` → 保存 → 重新加载 → `ApplyTo` 后仍为 42（反射验证）
+- 截图：`docs/screens/v7/settings-wallpaper.png`
+
+### 未验证 / 剩余
+
+- WebP 解码依赖系统 WIC，未用真实 WebP 文件回归
+- 125% DPI、多屏、换壁纸后 5 秒自动重烘计时未测
+- 原生选择对话框的自动化仅在本机用真实鼠标 + 剪贴板粘贴路径验证，未覆盖不同 DPI/输入法
+- 主题快照含压暗的真机保存/加载 UI 未回归
+
 ## [Unreleased · v2.0 M5 配色]
 
 ### 新增

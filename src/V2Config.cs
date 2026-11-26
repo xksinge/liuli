@@ -77,6 +77,7 @@ namespace Liuli
         public string WallpaperPath = "";
         public int WallpaperStyle = 10;
         public int WallpaperTile = 0;
+        public int WallpaperDim = 0;
         public List<PanelConfig> Panels = new List<PanelConfig>();
 
         public static string CleanName(string s)
@@ -124,6 +125,7 @@ namespace Liuli
             int.TryParse(style, out st);
             t.WallpaperStyle = st;
             t.WallpaperTile = tile;
+            t.WallpaperDim = Util.Clamp(c.WallpaperDim, 0, 80);
             t.Panels = new List<PanelConfig>();
             for (int i = 0; i < c.Panels.Count; i++)
                 if (c.Panels[i] != null) t.Panels.Add(c.Panels[i].Copy());
@@ -160,6 +162,7 @@ namespace Liuli
             c.GlassPct = GlassPct;
             c.BlurPct = BlurPct;
             c.Radius = Radius;
+            c.WallpaperDim = Util.Clamp(WallpaperDim, 0, 80);
             c.Panels = new List<PanelConfig>();
             for (int i = 0; i < Panels.Count && c.Panels.Count < 6; i++)
                 if (Panels[i] != null) c.Panels.Add(Panels[i].Copy());
@@ -315,6 +318,10 @@ namespace Liuli
         public int GlassPct = 100;
         public int BlurPct = 62;
         public int Radius = 20;
+        public int WallpaperDim = 0;            // 0–80%
+        public string WallpaperOrig = "";       // 首次换图前的系统壁纸
+        public int WallpaperOrigStyle = 10;
+        public int WallpaperOrigTile = 0;
         public string ActiveTheme = "";
         public List<ThemeSnapshot> Themes = new List<ThemeSnapshot>();
 
@@ -367,6 +374,10 @@ namespace Liuli
                 c.GlassPct = Json.Int(root, "glassPct", 100);
                 c.BlurPct = Json.Int(root, "blurPct", 62);
                 c.Radius = Json.Int(root, "radius", 20);
+                c.WallpaperDim = Util.Clamp(Json.Int(root, "wallpaperDim", 0), 0, 80);
+                c.WallpaperOrig = Json.Str(root, "wallpaperOrig", "");
+                c.WallpaperOrigStyle = Util.Clamp(Json.Int(root, "wallpaperOrigStyle", 10), 0, 100);
+                c.WallpaperOrigTile = Util.Clamp(Json.Int(root, "wallpaperOrigTile", 0), 0, 1);
                 c.ActiveTheme = Json.Str(root, "activeTheme", "");
                 c.Themes = new List<ThemeSnapshot>();
                 List<object> themes = Json.Arr(root.ContainsKey("themes") ? root["themes"] : null);
@@ -545,6 +556,10 @@ namespace Liuli
                 root["glassPct"] = GlassPct;
                 root["blurPct"] = BlurPct;
                 root["radius"] = Radius;
+                root["wallpaperDim"] = WallpaperDim;
+                root["wallpaperOrig"] = WallpaperOrig == null ? "" : WallpaperOrig;
+                root["wallpaperOrigStyle"] = WallpaperOrigStyle;
+                root["wallpaperOrigTile"] = WallpaperOrigTile;
                 root["activeTheme"] = ActiveTheme;
                 List<object> themeArr = new List<object>();
                 for (int i = 0; i < Themes.Count; i++)
@@ -619,6 +634,7 @@ namespace Liuli
             d["glassPct"] = t.GlassPct;
             d["blurPct"] = t.BlurPct;
             d["radius"] = t.Radius;
+            d["wallpaperDim"] = t.WallpaperDim;
             d["wallpaper"] = t.WallpaperPath == null ? "" : t.WallpaperPath;
             d["wallpaperStyle"] = t.WallpaperStyle;
             d["wallpaperTile"] = t.WallpaperTile;
@@ -666,6 +682,7 @@ namespace Liuli
             t.GlassPct = Json.Int(d, "glassPct", 100);
             t.BlurPct = Json.Int(d, "blurPct", 62);
             t.Radius = Json.Int(d, "radius", 20);
+            t.WallpaperDim = Util.Clamp(Json.Int(d, "wallpaperDim", 0), 0, 80);
             t.WallpaperPath = Json.Str(d, "wallpaper", "");
             t.WallpaperStyle = Json.Int(d, "wallpaperStyle", 10);
             t.WallpaperTile = Json.Int(d, "wallpaperTile", 0);
@@ -889,6 +906,7 @@ namespace Liuli
             Theme.GlassPct = Util.Clamp(GlassPct, 20, 140);
             Theme.BlurPct = Util.Clamp(BlurPct, 10, 100);
             Theme.Radius = Radius;
+            Theme.WallpaperDim = Util.Clamp(WallpaperDim, 0, 80);
             bool light = Backdrop.Light;
             if (string.Equals(ThemeMode, "light", StringComparison.OrdinalIgnoreCase)) light = true;
             else if (string.Equals(ThemeMode, "dark", StringComparison.OrdinalIgnoreCase)) light = false;

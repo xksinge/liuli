@@ -146,22 +146,33 @@ M1 实际命名：`V2Shell`、`ShellConfig`、`V2Window`、`DockForm`、`IslandF
 
 ### 7.4 主题快照与 v2 设置面板（REQ-032，Issue #54）
 
-- 主题快照存 `ShellConfig.Themes[]`，最多 6 个；每项含名称、保存时间、Dock 三项、灵动岛八项、玻璃五项（明暗/预设/浓度/磨砂/圆角）、配色三项（来源/预设序号/自定义色）、壁纸路径/样式/平铺、`Panels` 深拷贝。
+- 主题快照存 `ShellConfig.Themes[]`，最多 6 个；每项含名称、保存时间、Dock 三项、灵动岛八项、玻璃五项（明暗/预设/浓度/磨砂/圆角）、配色三项（来源/预设序号/自定义色）、壁纸路径/样式/平铺与压暗、`Panels` 深拷贝。
 - 名称统一 `CleanName`：去首尾空白、限 24 字、空名回“主题”；重名加 ` (2)` 后缀，最多 6 个，超过时保存第 7 个会淘汰最早一个。
 - 保存/覆盖：`SaveTheme` 同名覆盖，`ActiveTheme` 指向当前快照；手动改玻璃、Dock、灵动岛、面板后立刻清空 `ActiveTheme`，避免把已偏离的状态误标成“当前”。
 - 加载：`LoadTheme` 先应用快照，壁纸文件存在时 `Wallpaper.Set` + `Backdrop.Rebuild`，再重建面板、Dock、灵动岛；任一步失败只影响对应窗口，不改快照内容。
 - 删除：二次确认（同一条目点两次），删除当前主题时同步清空 `activeTheme`；坏 JSON 由 `NormalizeThemes` 收敛，空/重复名自动修复。
-- 设置面板 `V2SettingsForm`：900×720 自绘玻璃窗、六页导航、窗口可拖动；滑杆松手保存，磨砂松手才重烘壁纸，开关/内容切换即时写 `shell.json`。
+- 设置面板 `V2SettingsForm`：900×720 自绘玻璃窗、七页导航、窗口可拖动；滑杆松手保存，磨砂/压暗松手才重烘壁纸，开关/内容切换即时写 `shell.json`。
 - 页面职责：
   - 主题：玻璃浓度 20–140、磨砂 10–100、圆角 10–30、自动/深色/浅色、保存当前主题（内嵌原生 TextBox 命名）、恢复外观默认、主题库加载/覆盖/删除。
   - 配色：强调色来源三选一（跟随壁纸 / 预设 / 自定义）、6 个预设色卡、自定义取色（`ColorDialog`，取消不改）、当前配色说明。
   - 面板：最多 6 个、新建、逐面板内容 chip（空容器/时钟/天气/系统）、置顶/置底、删除（二次确认）。
   - Dock：显示开关、自动隐藏、小/标准/大三档；图标拖拽/移除仍在 Dock 本体，设置页明确提示。
   - 灵动岛：显示开关、宽/高/顶部偏移/动画四个滑杆、天气/系统读数/快捷动作三个开关。
+  - 壁纸：当前壁纸预览、文件名/路径/系统样式、0–80% 压暗、选择本地图片、恢复系统壁纸。
   - 关于：版本、运行状态、快捷键、打开数据目录、关闭设置。
 - 入口与上下文：Dock 齿轮 `OpenSettings(3)`、灵动岛齿轮 `OpenSettings(4)`、托盘双击/热键/菜单 `OpenSettings(0)`；已打开时只切换页，不重复创建窗口。
 - 状态刷新：设置页内的主题库“当前”徽标由 `ActiveTheme` 驱动；滑杆/开关改完后 180ms 重建页面，避免徽标停留旧值，同时避开命名输入与拖动过程。
 - 键盘：`Esc` 关闭，`←/→` 切页；命名框内 Enter 保存、Esc 取消。
+
+### 7.5 壁纸页（REQ-050–052，Issue #59）
+
+- 配置：`ShellConfig.WallpaperDim` 0–80、`WallpaperOrig` / `WallpaperOrigStyle` / `WallpaperOrigTile`；Load clamp，Save 落盘，`RestoreVisualDefaults` 只重置压暗、不清原壁纸记录。
+- 预览：`EnsurePreview` 读文件字节 → GDI+ `Image.FromStream` 解码 → 760×428 cover 缩略图缓存在内存；路径不变不重复解码，`OnFormClosed` 释放。预览不截屏，不把窗口/图标烤进玻璃。
+- 换图：`V2Shell.SetWallpaperImage` 校验文件存在；首次换图时捕获当前系统壁纸路径与样式；`Wallpaper.Set(path, 10, 0)` 写系统壁纸，保存配置后重烘 + Toast。
+- 恢复：`V2Shell.RestoreSystemWallpaper` 校验原路径存在，按原 style/tile 写回，清空 `WallpaperOrig`，保存并重烘；设置页收到成功后立刻重建壁纸页，避免预览停留旧图。
+- 压暗：`Backdrop.Rebuild` 在 Frost/Blur 后、`ImageFx.Average` 前调用 `ApplyDim`，用黑色 alpha 覆盖 `pct*255/100`；`RebuildFromFrame` 同样在取平均色前压暗。
+- 重烘与 tone：`ApplyVisualSettings(true)` 先 `Config.ApplyTheme()` 再 `Backdrop.Rebuild()` 再 `Config.ApplyTheme()`；`LoadTheme` 也采取同样二次应用，确保压暗后的 mean/light/accent 进入同一轮绘制。`V2Shell.Boot` 在 `Backdrop.Start()` 前设置 `Theme.WallpaperDim`。
+- 限制：WebP 走系统 WIC/GDI+，解码能力取决于系统组件；无效/不存在图片不写壁纸，保持当前壁纸。
 
 ## 8. 配色
 

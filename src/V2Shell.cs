@@ -38,6 +38,7 @@ namespace Liuli
             Config = ShellConfig.Load();
             Theme.BlurPct = Util.Clamp(Config.BlurPct, 10, 100);
             Theme.GlassPct = Util.Clamp(Config.GlassPct, 20, 140);
+            Theme.WallpaperDim = Util.Clamp(Config.WallpaperDim, 0, 80);
 
             Backdrop.Start();
             Config.ApplyTheme();
@@ -425,7 +426,12 @@ namespace Liuli
             if (Config == null) return;
             MarkThemeDirty();
             Config.ApplyTheme();
-            if (rebake) Backdrop.Rebuild();
+            if (rebake)
+            {
+                Backdrop.Rebuild();
+                // 重烘会更新壁纸明暗与自动强调色，必须再应用一次 Theme token。
+                Config.ApplyTheme();
+            }
             if (Dock != null) { Dock.RelayoutPublic(); Dock.Render(); }
             if (Island != null) Island.RefreshIsland();
             RefreshPanels();
@@ -518,7 +524,8 @@ namespace Liuli
             t.ApplyTo(Config);
             if (!string.IsNullOrEmpty(t.WallpaperPath) && File.Exists(t.WallpaperPath))
                 Wallpaper.Set(t.WallpaperPath, t.WallpaperStyle, t.WallpaperTile);
-            // 主题可能只改磨砂而壁纸路径没有落盘，统一重烘一次，保证玻璃强度与明暗都生效。
+            // 先应用主题 token（含压暗），再重烘玻璃底，最后用新壁纸的明暗重新算一次文字色。
+            Config.ApplyTheme();
             Backdrop.Rebuild();
             Config.ApplyTheme();
             RebuildPanels();
@@ -535,6 +542,7 @@ namespace Liuli
             Config.GlassPct = 100;
             Config.BlurPct = 62;
             Config.Radius = 20;
+            Config.WallpaperDim = 0;
             Config.ThemeMode = "auto";
             Config.ThemePreset = "mist";
             Config.AccentMode = "auto";
@@ -545,6 +553,70 @@ namespace Liuli
             ApplyVisualSettings(true);
             if (Settings != null) Settings.ReloadPage();
             Toast("外观已恢复默认");
+        }
+
+        /// <summary>把一张本地图片设为 Windows 壁纸；首次换图前记住原始路径，供恢复使用。</summary>
+        public static bool SetWallpaperImage(string path)
+        {
+            if (Config == null || string.IsNullOrEmpty(path) || !File.Exists(path)) return false;
+            try
+            {
+                if (string.IsNullOrEmpty(Config.WallpaperOrig))
+                {
+                    Config.WallpaperOrig = Wallpaper.CurrentPath();
+                    int tile = 0;
+                    string raw = Wallpaper.GetStyleRaw(out tile);
+                    int style = 10;
+                    int.TryParse(raw, out style);
+                    Config.WallpaperOrigStyle = Util.Clamp(style, 0, 100);
+                    Config.WallpaperOrigTile = Util.Clamp(tile, 0, 1);
+                }
+                if (!Wallpaper.Set(path, 10, 0))
+                {
+                    Toast("壁纸应用失败");
+                    return false;
+                }
+                Config.Save();
+                ApplyVisualSettings(true);
+                Toast("壁纸已切换：" + Path.GetFileName(path));
+                return true;
+            }
+            catch (Exception ex)
+            {
+                Log.Warn("wall", "切换壁纸失败 " + ex.Message);
+                Toast("壁纸应用失败");
+                return false;
+            }
+        }
+
+        /// <summary>回到首次换图前记录的系统壁纸。</summary>
+        public static bool RestoreSystemWallpaper()
+        {
+            if (Config == null) return false;
+            if (string.IsNullOrEmpty(Config.WallpaperOrig) || !File.Exists(Config.WallpaperOrig))
+            {
+                Toast("没有保存的原始壁纸");
+                return false;
+            }
+            try
+            {
+                if (!Wallpaper.Set(Config.WallpaperOrig, Config.WallpaperOrigStyle, Config.WallpaperOrigTile))
+                {
+                    Toast("恢复壁纸失败");
+                    return false;
+                }
+                Config.WallpaperOrig = "";
+                Config.Save();
+                ApplyVisualSettings(true);
+                Toast("已恢复系统壁纸");
+                return true;
+            }
+            catch (Exception ex)
+            {
+                Log.Warn("wall", "恢复壁纸失败 " + ex.Message);
+                Toast("恢复壁纸失败");
+                return false;
+            }
         }
 
         static void RebuildPanels()
