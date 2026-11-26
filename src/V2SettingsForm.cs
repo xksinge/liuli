@@ -10,7 +10,7 @@ namespace Liuli
 {
     sealed class V2SettingsForm : Form
     {
-        static readonly string[] Nav = { "主题", "配色", "面板", "Dock", "灵动岛", "壁纸", "桌面", "收纳", "关于" };
+        static readonly string[] Nav = { "主题", "配色", "面板", "Dock", "灵动岛", "壁纸", "桌面", "收纳", "系统", "关于" };
         const int MaxThemes = 6;
 
         float S = 1f;
@@ -21,7 +21,7 @@ namespace Liuli
         bool dragging;
         Point dragOff;
         Rectangle closeR;
-        Rectangle[] navRects = new Rectangle[9];
+        Rectangle[] navRects = new Rectangle[10];
         List<Ctl> controls = new List<Ctl>();
         TextBox nameBox;
         Rectangle nameSaveR;
@@ -145,6 +145,7 @@ namespace Liuli
             else if (index == 5) BuildWallpaperPage();
             else if (index == 6) BuildDesktopPage();
             else if (index == 7) BuildCollectorPage();
+            else if (index == 8) BuildSystemPage();
             else BuildAboutPage();
         }
 
@@ -613,6 +614,31 @@ namespace Liuli
                 delegate { ShowPage(6); });
         }
 
+        void BuildSystemPage()
+        {
+            int x = Cx();
+            int w = Cr() - x;
+            int y = Ct();
+            AddSection("启动", x, y, w); y += Util.RoundI(26 * S);
+            AddToggle("开机自启", "写入当前用户 HKCU Run；移动 exe 后下次启动自动修正路径；关闭即删除。",
+                "autoStart", x, y, w,
+                delegate { return V2Shell.Config.AutoStart ? 1 : 0; },
+                delegate (int v)
+                {
+                    V2Shell.SetAutoStart(v == 1);
+                    BuildPage(8);
+                    Invalidate();
+                });
+            y += Util.RoundI(62 * S);
+            string run = AutoStart.ReadValue();
+            AddInfo("启动项", "位置：HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Run\\Liuli\n" +
+                "当前值：" + (run.Length == 0 ? "未写入" : run) +
+                "\n只写当前用户，不写 HKLM；不需要管理员权限。", x, y, w);
+            y += Util.RoundI(104 * S);
+            AddSection("后续", x, y, w); y += Util.RoundI(26 * S);
+            AddInfo("系统模块", "快捷键配置（REQ-063）与日志诊断（REQ-064）将在本页继续补齐；当前快捷键仍为 Ctrl+Alt+L / Ctrl+Alt+G。", x, y, w);
+        }
+
         void BuildAboutPage()
         {
             int x = Cx();
@@ -750,7 +776,7 @@ namespace Liuli
             Rectangle hd = new Rectangle(Util.RoundI(26 * S), Util.RoundI(18 * S), Util.RoundI(420 * S), Util.RoundI(28 * S));
             Theme.Text(g, "Liuli 设置", Theme.Font(15f, FontStyle.Bold, S), Theme.TextMain, hd, StringAlignment.Near, false);
             Rectangle hsub = new Rectangle(hd.X, Util.RoundI(44 * S), Util.RoundI(500 * S), Util.RoundI(20 * S));
-            Theme.Text(g, "v2 桌面层 · 主题 / 配色 / 面板 / Dock / 灵动岛 / 壁纸 / 桌面 / 收纳", Theme.Font(9.5f, FontStyle.Regular, S), Theme.TextFaint, hsub, StringAlignment.Near, false);
+            Theme.Text(g, "v2 桌面层 · 主题 / 配色 / 面板 / Dock / 灵动岛 / 壁纸 / 桌面 / 收纳 / 系统", Theme.Font(9.5f, FontStyle.Regular, S), Theme.TextFaint, hsub, StringAlignment.Near, false);
 
             closeR = new Rectangle(Width - Util.RoundI(50 * S), Util.RoundI(16 * S), Util.RoundI(30 * S), Util.RoundI(30 * S));
             Glass.Button(g, closeR, Glyph.Close, hover == -2, false, Theme.Accent);

@@ -2,6 +2,33 @@
 
 遵循 Keep a Changelog；版本遵循 SemVer。
 
+## [Unreleased · v2.0 M6 开机自启]
+
+### 新增
+
+- 设置新增第 10 页“系统”（索引 8），首项为“开机自启”开关
+- `ShellConfig.AutoStart` 读写 `autoStart`；`--selftest` 输出配置值与当前 Run 值
+- `AutoStart` 写 `HKCU\Software\Microsoft\Windows\CurrentVersion\Run\Liuli`，值为带引号当前 exe；关闭删除，不写 HKLM
+- `V2Shell.Boot` 每次按配置同步 Run 项，移动 exe 后下次启动自动修正路径
+
+### 变更
+
+- 设置导航由九页增至十页：主题 / 配色 / 面板 / Dock / 灵动岛 / 壁纸 / 桌面 / 收纳 / 系统 / 关于；`navRects` 扩为 10
+- 页面索引：系统 8，关于 9；Dock/灵动岛上下文入口仍 3/4，桌面 6，收纳 7
+
+### 验证
+
+- `bin\Liuli.exe` 297 KB；C#5 无新增 error
+- 开启后 Run=`"E:\meihuaDesktop\bin\Liuli.exe"`，`autoStart=True`；关闭后 Run 不存在，`autoStart=False`
+- 把 exe+shell.json 复制到 `_scratch\move-test` 启动，Run 自动改为临时路径；恢复主 exe 启动后回到主路径
+- 系统页十页导航完整，开关、启动项路径、后续说明不裁切；截图 `docs/screens/v8/settings-system.png`
+- `--selftest` 输出 `autoStart=False run=`
+
+### 未验证 / 剩余
+
+- Windows 重启后的实际自启行为、非管理员受限账户、多用户切换、杀软拦截
+- 快捷键配置（REQ-063）、日志诊断（REQ-064）仍待补；TASK-060 仍未完成
+
 ## [Unreleased · v2.0 M5 桌面组件]
 
 ### 新增

@@ -81,6 +81,7 @@ namespace Liuli
                     " items=" + c.CollectorItems.Count + " group=" + c.CollectorGroup +
                     " x=" + c.CollectorX + " y=" + c.CollectorY + " w=" + c.CollectorW + " h=" + c.CollectorH);
                 Console.WriteLine("clock24=" + c.Clock24 + " clockSeconds=" + c.ClockSeconds);
+                Console.WriteLine("autoStart=" + c.AutoStart + " run=" + AutoStart.ReadValue());
                 Console.WriteLine("accent=" + c.AccentMode + " preset=" + c.AccentPreset + " custom=" + c.AccentCustom);
                 for (int i = 0; i < c.Themes.Count; i++)
                 {

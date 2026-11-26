@@ -308,6 +308,9 @@ namespace Liuli
         public bool Clock24 = true;
         public bool ClockSeconds = false;
 
+        // 开机自启（TASK-061）：只写当前用户 HKCU Run。
+        public bool AutoStart = false;
+
         // 任务栏（M1 只做自动隐藏；完全隐藏留到 P1）
         public bool TaskbarAutoHide = true;
         public bool TaskbarOriginalAutoHide = true;
@@ -379,6 +382,7 @@ namespace Liuli
                 c.IslandAnimMs = Util.Clamp(Json.Int(root, "islandAnimMs", 180), 0, 400);
                 c.Clock24 = Json.Bool(root, "clock24", true);
                 c.ClockSeconds = Json.Bool(root, "clockSeconds", false);
+                c.AutoStart = Json.Bool(root, "autoStart", false);
                 c.TaskbarAutoHide = Json.Bool(root, "taskbarAutoHide", true);
                 c.TaskbarOriginalAutoHide = Json.Bool(root, "taskbarOriginalAutoHide", true);
                 c.TaskbarFullHide = Json.Bool(root, "taskbarFullHide", false);
@@ -575,6 +579,7 @@ namespace Liuli
                 root["islandAnimMs"] = IslandAnimMs;
                 root["clock24"] = Clock24;
                 root["clockSeconds"] = ClockSeconds;
+                root["autoStart"] = AutoStart;
                 root["taskbarAutoHide"] = TaskbarAutoHide;
                 root["taskbarOriginalAutoHide"] = TaskbarOriginalAutoHide;
                 root["taskbarFullHide"] = TaskbarFullHide;
