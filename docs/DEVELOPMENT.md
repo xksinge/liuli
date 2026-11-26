@@ -52,6 +52,7 @@
 - M2 Issue #37 OPEN；工作分支 `feat/v2-dock-autohide`，从 `feat/v2-shell` 切出；Draft PR #38（base `feat/v2-shell`）；自动隐藏代码已构建通过，真机热区/动画待验证。
 - TASK-021 Issue #39 OPEN；工作分支 `feat/v2-dock-presets`，从 `feat/v2-dock-autohide` 切出；Draft PR #40（base `feat/v2-dock-autohide`）；三档尺寸与离屏对照已构建通过，真机切换待验证。
 - TASK-022 Issue #41 OPEN；工作分支 `feat/v2-dock-running`，从 `feat/v2-dock-presets` 切出；Draft PR #42（base `feat/v2-dock-presets`）；运行指示已构建通过，真机状态变化待验证。
+- TASK-023 Issue #43 OPEN；工作分支 `feat/v2-dock-reorder`，从 `feat/v2-dock-running` 切出；拖拽排序与插入线已构建通过，真机拖动待验证。
 - 已提交 `3be11bb`、`62ce47c`、`7282f77`、`87c92b7`、`0bbc294`、`92eab42` 及文档提交。
 - v1.6 Dock/灵动岛原型停在 `experiment/v1.6-dock-island`（`28e8cfd`），不合入 main，不作为 v2.0 基线。
 - v2 外壳代码已构建成功（203.5 KB）；`--selftest` 验证默认 shell.json、任务栏自动隐藏状态、`dockAutoHide` 与 `dockPreset`；真机 UI/截图待做。

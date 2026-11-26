@@ -47,11 +47,14 @@ namespace Liuli
                 string pressedFile = Path.Combine(dir, "m1-preview-pressed.png");
                 SaveShot(dock, island, pressedFile);
 
+                string reorderFile = SaveReorderStrip(dock, dir);
+
                 dock.Dispose();
                 island.Dispose();
                 string presetFile = SavePresetStrip(c, dir);
                 Console.WriteLine("preview=" + file + " " + new FileInfo(file).Length + "B");
                 Console.WriteLine("preview=" + pressedFile + " " + new FileInfo(pressedFile).Length + "B");
+                Console.WriteLine("preview=" + reorderFile + " " + new FileInfo(reorderFile).Length + "B");
                 Console.WriteLine("preview=" + presetFile + " " + new FileInfo(presetFile).Length + "B");
                 return 0;
             }
@@ -60,6 +63,54 @@ namespace Liuli
                 Console.WriteLine("preview failed: " + ex);
                 return 2;
             }
+        }
+
+        static string SaveReorderStrip(DockForm dock, string dir)
+        {
+            int[] slots = { 0, 4, 8 };
+            string[] labels = { "插入到开头", "插入到中间", "插入到末尾" };
+            Bitmap[] snaps = new Bitmap[3];
+            for (int i = 0; i < 3; i++)
+            {
+                dock.PreviewDrag(3, slots[i]);
+                snaps[i] = dock.Snapshot();
+            }
+
+            int pad = 20, labelH = 26, scale = 2;
+            int w = (snaps[0] == null ? 0 : snaps[0].Width * scale) + pad * 2;
+            int h = pad + 3 * ((snaps[0] == null ? 0 : snaps[0].Height * scale) + labelH + pad);
+            Bitmap shot = new Bitmap(w, h, PixelFormat.Format32bppPArgb);
+            using (Graphics g = Graphics.FromImage(shot))
+            {
+                g.SmoothingMode = SmoothingMode.AntiAlias;
+                g.InterpolationMode = InterpolationMode.HighQualityBicubic;
+                g.TextRenderingHint = System.Drawing.Text.TextRenderingHint.AntiAliasGridFit;
+                using (LinearGradientBrush b = new LinearGradientBrush(new Rectangle(0, 0, w, h),
+                    Util.Rgb(28, 38, 56), Util.Rgb(10, 14, 22), 90f))
+                    g.FillRectangle(b, new Rectangle(0, 0, w, h));
+                Font font = new Font("Microsoft YaHei UI", 16f, FontStyle.Bold, GraphicsUnit.Pixel);
+                using (StringFormat sf = new StringFormat())
+                {
+                    sf.Alignment = StringAlignment.Center;
+                    using (SolidBrush text = new SolidBrush(Color.FromArgb(225, 255, 255, 255)))
+                    {
+                        int y = pad;
+                        for (int i = 0; i < 3; i++)
+                        {
+                            g.DrawString(labels[i], font, text, new RectangleF(0, y, w, labelH), sf);
+                            if (snaps[i] != null)
+                                g.DrawImage(snaps[i], pad, y + labelH, snaps[i].Width * scale, snaps[i].Height * scale);
+                            y += (snaps[i] == null ? 0 : snaps[i].Height * scale) + labelH + pad;
+                        }
+                    }
+                }
+                font.Dispose();
+            }
+            string file = Path.Combine(dir, "m2-dock-reorder.png");
+            shot.Save(file, ImageFormat.Png);
+            shot.Dispose();
+            for (int i = 0; i < 3; i++) if (snaps[i] != null) snaps[i].Dispose();
+            return file;
         }
 
         static string SavePresetStrip(ShellConfig c, string dir)

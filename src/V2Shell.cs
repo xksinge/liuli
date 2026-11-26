@@ -320,6 +320,21 @@ namespace Liuli
             if (Dock != null) Dock.RelayoutPublic();
         }
 
+        public static int MoveDockItem(int from, int before)
+        {
+            if (Config == null || from < 0 || from >= Config.DockItems.Count) return 0;
+            if (before < 0) before = 0;
+            if (before > Config.DockItems.Count) before = Config.DockItems.Count;
+            int target = before;
+            if (target > from) target--;
+            if (target == from) return 0;
+            DockItem item = Config.DockItems[from];
+            Config.DockItems.RemoveAt(from);
+            Config.DockItems.Insert(target, item);
+            Config.Save();
+            return 1;
+        }
+
         // ---------- 生命周期 / 工具 ----------
         public static void UI(Action a)
         {

@@ -20,6 +20,9 @@ namespace Liuli
         DropTarget oleDrop;
         int hoverItem = -1;
         int hoverBtn = -1;
+        bool dragging;
+        int dragFrom = -1;
+        int dragTo = -1;
         int pressedItem = -1;
         int pressedBtn = -1;
         int bounceItem = -1;
@@ -423,17 +426,19 @@ namespace Liuli
                     PaintIconButton(g, btnRects[i], glyphs[i], hoverBtn == i, pressed, sc);
                 }
 
-                if (hoverItem >= 0 && hoverItem < items.Count)
+                if (!dragging && hoverItem >= 0 && hoverItem < items.Count)
                 {
                     PaintTag(g, items[hoverItem].DisplayName, itemRects[hoverItem].X + itemRects[hoverItem].Width / 2,
                         Util.RoundI(1 * UiScale), Util.RoundI(220 * UiScale));
                 }
-                else if (hoverBtn >= 0)
+                else if (!dragging && hoverBtn >= 0)
                 {
                     string[] tips = { "应用面板（M4）", "桌面图标（M5）", "设置" };
                     PaintTag(g, tips[hoverBtn], btnRects[hoverBtn].X + btnRects[hoverBtn].Width / 2,
                         Util.RoundI(1 * UiScale), Util.RoundI(180 * UiScale));
                 }
+
+                if (dragging && dragTo >= 0) PaintInsert(g);
 
                 Native.PushLayered(Handle, Canvas, Location, (byte)255);
             }
@@ -441,6 +446,26 @@ namespace Liuli
         }
 
         // ---------- 点击反馈 ----------
+        void PaintInsert(Graphics g)
+        {
+            if (itemRects.Count == 0) return;
+            int slot = dragTo;
+            if (slot < 0) slot = 0;
+            if (slot > itemRects.Count) slot = itemRects.Count;
+            int gap = Util.RoundI(8 * UiScale);
+            int x;
+            if (slot == 0) x = itemRects[0].Left - gap / 2;
+            else if (slot >= itemRects.Count) x = itemRects[itemRects.Count - 1].Right + gap / 2;
+            else x = (itemRects[slot - 1].Right + itemRects[slot].Left) / 2;
+            int top = body.Y + Util.RoundI(9 * UiScale);
+            int bottom = body.Bottom - Util.RoundI(9 * UiScale);
+            using (Pen pen = new Pen(Color.FromArgb(220, Theme.Accent), Math.Max(2, Util.RoundI(2 * UiScale))))
+                g.DrawLine(pen, x, top, x, bottom);
+            int cap = Math.Max(2, Util.RoundI(3 * UiScale));
+            using (SolidBrush b = new SolidBrush(Color.FromArgb(230, Theme.Accent)))
+                g.FillEllipse(b, x - cap / 2, top - cap / 2, cap, cap);
+        }
+
         float BounceScale()
         {
             if (bounceAt == 0) return 1f;
@@ -478,10 +503,54 @@ namespace Liuli
             Render();
         }
 
+        public void PreviewDrag(int from, int slot)
+        {
+            dragging = true;
+            dragFrom = from;
+            dragTo = slot;
+            pressedItem = -1;
+            pressedBtn = -1;
+            hoverItem = -1;
+            hoverBtn = -1;
+            Render();
+        }
+
+        int InsertSlot(int x)
+        {
+            if (itemRects.Count == 0) return 0;
+            for (int i = 0; i < itemRects.Count; i++)
+                if (x < itemRects[i].X + itemRects[i].Width / 2) return i;
+            return itemRects.Count;
+        }
+
         // ---------- 交互 ----------
         protected override void OnMouseMove(MouseEventArgs e)
         {
             base.OnMouseMove(e);
+            if (down && dragFrom >= 0 && e.Button == MouseButtons.Left)
+            {
+                if (!dragging && (Math.Abs(e.X - downPoint.X) > 8 || Math.Abs(e.Y - downPoint.Y) > 8))
+                {
+                    dragging = true;
+                    hoverItem = -1;
+                    hoverBtn = -1;
+                    pressedItem = -1;
+                    dragTo = InsertSlot(e.X);
+                    Render();
+                }
+                if (dragging)
+                {
+                    int slot = InsertSlot(e.X);
+                    if (slot != dragTo)
+                    {
+                        dragTo = slot;
+                        Render();
+                    }
+                    Cursor = Cursors.Hand;
+                    return;
+                }
+            }
+
             int hi = -1, hb = -1;
             for (int i = 0; i < itemRects.Count; i++) if (Util.Inflate(itemRects[i], Util.RoundI(3 * UiScale)).Contains(e.Location)) hi = i;
             for (int i = 0; i < btnRects.Length; i++) if (btnRects[i].Contains(e.Location)) hb = i;
@@ -497,6 +566,13 @@ namespace Liuli
         protected override void OnMouseLeave(EventArgs e)
         {
             base.OnMouseLeave(e);
+            if (dragging && Control.MouseButtons == MouseButtons.None)
+            {
+                dragging = false;
+                dragFrom = -1;
+                dragTo = -1;
+                Render();
+            }
             if (hoverItem >= 0 || hoverBtn >= 0)
             {
                 hoverItem = -1;
@@ -526,12 +602,16 @@ namespace Liuli
             {
                 down = true;
                 downPoint = e.Location;
+                dragging = false;
+                dragFrom = -1;
+                dragTo = -1;
                 pressedItem = -1;
                 pressedBtn = -1;
                 for (int i = 0; i < itemRects.Count; i++)
                     if (Util.Inflate(itemRects[i], Util.RoundI(3 * UiScale)).Contains(e.Location)) { pressedItem = i; break; }
                 for (int i = 0; i < btnRects.Length; i++)
                     if (btnRects[i].Contains(e.Location)) { pressedBtn = i; break; }
+                if (pressedItem >= 0) dragFrom = pressedItem;
                 if (pressedItem >= 0 || pressedBtn >= 0) Render();
             }
         }
@@ -541,6 +621,19 @@ namespace Liuli
             base.OnMouseUp(e);
             if (!down || e.Button != MouseButtons.Left) return;
             down = false;
+            if (dragging)
+            {
+                int from = dragFrom;
+                int to = dragTo;
+                dragging = false;
+                dragFrom = -1;
+                dragTo = -1;
+                pressedItem = -1;
+                pressedBtn = -1;
+                if (from >= 0 && to >= 0 && V2Shell.MoveDockItem(from, to) > 0) Relayout();
+                Render();
+                return;
+            }
             int pi = pressedItem;
             int pb = pressedBtn;
             pressedItem = -1;
