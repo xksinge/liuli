@@ -1,5 +1,17 @@
 # 测试记录
 
+## v2.0 M1（2026-11-26）
+
+| 项 | 结果 | 说明 |
+| --- | --- | --- |
+| 构建 | 通过 | `pwsh -File tools\build.ps1` → `bin\Liuli.exe` 193 KB |
+| 配置自检 | 通过 | `Liuli.exe --selftest`：`shell.json` 生成，默认 8 个 Dock 项 |
+| 任务栏状态 | 通过（只读） | `ABM_GETSTATE=1`；隐藏时 `Shell_TrayWnd rect.top=1438`，`Visible=false` |
+| UI 启动 | **未验证** | 用户要求先不运行；不能算视觉/交互验收 |
+| 125% DPI | **未验证** | 代码按句柄 DPI 缩放，需改缩放后实测 |
+| Dock 点击/拖入/右键移除 | **未验证** | 需真机操作 |
+| 任务栏开关/恢复 | **未验证** | 需真机操作并对比 `ABM_GETSTATE` |
+
 ## 环境
 
 | 项 | 值 |

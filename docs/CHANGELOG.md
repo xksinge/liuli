@@ -2,6 +2,29 @@
 
 遵循 Keep a Changelog；版本遵循 SemVer。
 
+## [Unreleased · v2.0 M1]
+
+### 新增
+
+- 新外壳 `V2Shell`：启动不再创建旧看板窗口；托盘菜单与 `Ctrl+Alt+L` / `Ctrl+Alt+G` 热键
+- 底部玻璃 Dock：默认 3 个系统入口 + 5 个 Windows 内置应用；左键启动、拖入固定（COPY）、右键移除、配置持久化
+- 顶部灵动岛：收起时间/天气，悬停展开日期、天气、CPU/内存/磁盘与三个快捷动作；不抢焦点
+- `bin\data\shell.json` 独立配置：默认生成、原子写入、坏文件备份回退
+- `Taskbar`：读取/设置 `ABS_AUTOHIDE`，托盘内切换与恢复；Dock 检测任务栏露出时上移避让
+- `Liuli.exe --selftest` 无界面自检入口
+
+### 变更
+
+- `Program.Main` 从 `App.Boot()` 切换到 `V2Shell.Boot()`；旧 `App`/`BoardWindow` 仍编译但不创建
+- `DropTarget` 增加可指定 COPY/MOVE 的重载，Dock 固定不再移动源文件
+- `Theme` 增加按窗口缩放取字的 `Font(px, style, scale)` 重载
+
+### 验证
+
+- `pwsh tools/build.ps1` 构建成功（193 KB）
+- `Liuli.exe --selftest`：`shell.json` 生成成功，默认 8 个 Dock 项；任务栏 `ABS_AUTOHIDE=1`、隐藏状态 `rect.top=1438`
+- **未验证**：真机 UI 启动/截图、125% DPI、Dock 点击/拖入/右键移除、任务栏开关恢复、热键与退出清理
+
 ## [1.5.0] - 2026-11-26
 
 ### 新增
