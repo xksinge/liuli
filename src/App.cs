@@ -22,6 +22,7 @@ namespace Liuli
         public static readonly List<BoardWindow> Windows = new List<BoardWindow>();
         public static SettingsForm Settings;
         public static BarWindow Bar;
+        public static IslandWindow Island;
         public static WeatherService Weather = new WeatherService();
         public static StatsNow StatsNow = new StatsNow();
         public static AppHost Host;
@@ -83,6 +84,10 @@ namespace Liuli
             Bar = new BarWindow();
             Bar.EnsureCanvas();
             if (Ws.Set.ShowBar) { Bar.Show(); Bar.Render(); Log.Info("bar", "show=" + Bar.Visible + " rect=" + Bar.Bounds); }
+
+            Island = new IslandWindow();
+            Island.EnsureCanvas();
+            if (Ws.Set.IslandOn) { Island.Show(); Island.Render(); Log.Info("island", "show=" + Island.Visible + " rect=" + Island.Bounds); }
 
             Host = new AppHost();
             ActivateMessage = Native.RegisterWindowMessage(ActivateMessageName);
@@ -451,7 +456,12 @@ namespace Liuli
             if (Bar != null)
             {
                 if (allHidden) Bar.Hide();
-                else if (Ws.Set.ShowBar) { Bar.Show(); Bar.Render(); }
+                else if (Ws.Set.ShowBar) { Bar.Show(); Bar.RefreshMode(); }
+            }
+            if (Island != null)
+            {
+                if (allHidden) Island.Hide();
+                else if (Ws.Set.IslandOn && Ws.Set.ShowBar) { Island.Show(); Island.Render(); }
             }
             Toast(allHidden ? "看板已收起，Ctrl+Alt+L 唤回" : "看板回来了");
         }
@@ -518,16 +528,40 @@ namespace Liuli
             RestoreBar();
         }
 
-        /// <summary>模态/大面板期间收起控制条，避免胶囊压住编辑窗或设置页按钮。</summary>
+        /// <summary>模态/大面板期间收起控制条与灵动岛，避免胶囊压住编辑窗或设置页按钮。</summary>
         public static void HideBar()
         {
             try { if (Bar != null && Bar.Visible) Bar.Hide(); }
+            catch { }
+            try { if (Island != null && Island.Visible) Island.Hide(); }
             catch { }
         }
 
         public static void RestoreBar()
         {
             try { ApplyBarVisible(); }
+            catch { }
+            try
+            {
+                if (Island == null) return;
+                if (Ws.Set.IslandOn && Ws.Set.ShowBar) { Island.Show(); Island.Render(); }
+                else Island.Hide();
+            }
+            catch { }
+        }
+
+        /// <summary>设置里切换 Dock / 灵动岛后即时应用；设置页打开时不抢焦点弹出来。</summary>
+        public static void ApplyShell()
+        {
+            try { if (Bar != null) Bar.RefreshMode(); }
+            catch { }
+            try
+            {
+                if (Island == null) return;
+                bool want = Ws.Set.IslandOn && Ws.Set.ShowBar && Settings == null;
+                if (want) { Island.Show(); Island.Render(); }
+                else Island.Hide();
+            }
             catch { }
         }
 
@@ -598,6 +632,11 @@ namespace Liuli
             if (Bar == null) return;
             if (Ws.Set.ShowBar) { Bar.Show(); Bar.Render(); }
             else Bar.Hide();
+            if (Island != null)
+            {
+                if (Ws.Set.IslandOn && Ws.Set.ShowBar) { Island.Show(); Island.Render(); }
+                else Island.Hide();
+            }
         }
 
         public static void ResetLayout()

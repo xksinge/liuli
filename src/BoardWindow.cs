@@ -126,7 +126,7 @@ namespace Liuli
             {
                 if (oleDrop != null) DropTarget.RevokeDragDrop(Handle);
                 DropTarget.EnsureOle();
-                oleDrop = new DropTarget(B.Title, delegate(string[] fs) { OnFilesDropped(new List<string>(fs)); });
+                oleDrop = new DropTarget(B.Title, delegate(string[] fs) { OnFilesDropped(new List<string>(fs)); }, DropTarget.MOVE);
                 int hr = DropTarget.RegisterDragDrop(Handle, oleDrop);
                 if (hr != 0) Log.Warn("drop", "OLE 注册失败 " + B.Title + " hr=" + hr);
             }

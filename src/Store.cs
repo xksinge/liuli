@@ -114,6 +114,9 @@ namespace Liuli
             d["hideOnFullscreen"] = s.HideOnFullscreen;
             d["organizeMove"] = s.OrganizeMove;
             d["storeRoot"] = s.StoreRoot;
+            d["dockOn"] = s.DockOn;
+            d["dockApps"] = s.DockApps;
+            d["islandOn"] = s.IslandOn;
             return d;
         }
 
@@ -143,6 +146,9 @@ namespace Liuli
             s.HideOnFullscreen = Json.Bool(d, "hideOnFullscreen", s.HideOnFullscreen);
             s.OrganizeMove = Json.Bool(d, "organizeMove", s.OrganizeMove);
             s.StoreRoot = Json.Str(d, "storeRoot", s.StoreRoot);
+            s.DockOn = Json.Bool(d, "dockOn", s.DockOn);
+            s.DockApps = Json.Str(d, "dockApps", s.DockApps);
+            s.IslandOn = Json.Bool(d, "islandOn", s.IslandOn);
         }
 
         // ---------- 看板 ----------

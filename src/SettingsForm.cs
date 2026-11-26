@@ -14,7 +14,7 @@ namespace Liuli
     {
         [DllImport("user32.dll")] static extern bool SetForegroundWindow(IntPtr h);
 
-        static readonly string[] nav = { "外观", "看板", "壁纸", "数据", "关于" };
+        static readonly string[] nav = { "外观", "看板", "壁纸", "数据", "桌面", "关于" };
 
         int page;
         int hoverNav = -1;
@@ -23,7 +23,7 @@ namespace Liuli
         bool dragging;
         Point dragOff;
         Rectangle closeR;
-        Rectangle[] navRects = new Rectangle[5];
+        Rectangle[] navRects = new Rectangle[6];
         int contentX, contentRight, contentTop;
         List<Row> rows = new List<Row>();
         readonly Timer perfTimer;
@@ -214,6 +214,31 @@ namespace Liuli
                 AddButton("清理图标缓存", "图标按路径+时间缓存，异常时清一次", y, false, delegate { Icons.Clear(); App.RefreshAllBoards(); App.Toast("图标缓存已清理"); });
                 AddButton("恢复默认布局", "只重置看板位置与默认四块，不删你的内容", y, true, delegate { App.ResetLayout(); });
             }
+            else if (index == 4)
+            {
+                AddToggle("应用 Dock", "屏幕底部居中的应用胶囊；关掉回到原来的三键控制条", y,
+                    delegate { return App.Ws.Set.DockOn ? 1 : 0; },
+                    delegate (int v) { App.Ws.Set.DockOn = v == 1; App.Save(); App.ApplyShell(); });
+                AddToggle("灵动岛", "屏幕顶部居中；收起显示时间天气，悬停展开系统读数", y,
+                    delegate { return App.Ws.Set.IslandOn ? 1 : 0; },
+                    delegate (int v) { App.Ws.Set.IslandOn = v == 1; App.Save(); App.ApplyShell(); });
+                AddButton("恢复默认 Dock 应用", "取任务栏固定快捷方式 + 资源管理器", y, false, delegate
+                {
+                    App.Ws.Set.DockApps = "";
+                    App.Save();
+                    App.ApplyShell();
+                    App.Toast("Dock 已恢复默认应用");
+                });
+                AddButton("清空 Dock 固定应用", "只留新建/整理/设置三个按钮", y, true, delegate
+                {
+                    App.Ws.Set.DockApps = "none";
+                    App.Save();
+                    App.ApplyShell();
+                    App.Toast("Dock 已清空");
+                });
+                AddInfo("Dock 用法", "把 .lnk 快捷方式、exe 或任意文件直接拖到 Dock 上就能固定；右键 Dock 里的图标可以移除。左键图标用系统默认方式打开。", y);
+                AddInfo("灵动岛", "收起时只占一枚小胶囊；鼠标移上去展开时间/日期、天气、CPU/内存/磁盘，以及新建、整理、设置三个快捷按钮。点其他位置打开设置。", y);
+            }
             else
             {
                 AddInfo("版本", V.Name + " v" + V.Version + "\n" + V.Tagline + "\n\nMIT 许可 · 完全本地 · 不联网也能用核心功能", y);
@@ -222,7 +247,7 @@ namespace Liuli
                 AddButton("打开日志目录", Paths.Logs, y, false, delegate { Native.ShellOpen(Paths.Logs); });
                 AddButton("退出 Liuli", "看板与图标状态会先保存", y, true, delegate { App.Quit(); });
             }
-            if (index == 4 && rows.Count >= 2) rows[1].Text = "运行时";
+            if (index == 5 && rows.Count >= 2) rows[1].Text = "运行时";
         }
 
         void AddSlider(string title, string desc, int y0, int min, int max, string unit, Func<int> get, Action<int> set)

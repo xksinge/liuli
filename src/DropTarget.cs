@@ -17,11 +17,13 @@ namespace Liuli
 
         readonly Action<string[]> onDrop;
         readonly string tag;
+        readonly uint effect;
 
-        public DropTarget(string tag, Action<string[]> onDrop)
+        public DropTarget(string tag, Action<string[]> onDrop, uint effect)
         {
             this.tag = tag;
             this.onDrop = onDrop;
+            this.effect = effect;
         }
 
         static string[] Files(IDataObject data)
@@ -72,7 +74,7 @@ namespace Liuli
             string[] files = Files(pDataObj);
             if (files != null && files.Length > 0)
             {
-                pdwEffect = MOVE;
+                pdwEffect = effect;
                 Log.Info("drop", "OLE 进入 " + tag + "，" + files.Length + " 项");
             }
             else pdwEffect = 0;
@@ -80,7 +82,7 @@ namespace Liuli
 
         public void DragOver(uint grfKeyState, POINTL pt, ref uint pdwEffect)
         {
-            pdwEffect = MOVE;
+            pdwEffect = effect;
         }
 
         public void DragLeave()
@@ -94,7 +96,7 @@ namespace Liuli
             {
                 Log.Info("drop", "OLE 放下 " + tag + "，" + files.Length + " 项");
                 onDrop(files);
-                pdwEffect = MOVE;
+                pdwEffect = effect;
             }
             else pdwEffect = 0;
         }
