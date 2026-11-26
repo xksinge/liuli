@@ -146,6 +146,7 @@ namespace Liuli
         public int BarX = -1, BarY = -1;
         public bool Diagnose;
         public bool HideOnFullscreen = true;
+        public bool OrganizeMove;           // 整理时真实移动桌面原件（桌面不再保留副本）
 
         public int GlassAlphaPct { get { return Util.Clamp(GlassPct, 0, 100); } }
         public int BlurRadius { get { return Util.Clamp(BlurPct, 0, 100); } }
