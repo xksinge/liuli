@@ -120,7 +120,7 @@
   - 实现：设置新增“配色”页；`accentMode=auto/preset/custom`、`accentPreset 0–5`、`accentCustom #RRGGBB`；`ShellConfig.ResolveAccent` 统一写入 `Theme.Accent`；6 套预设（雾蓝/青瓷/紫雾/暖砂/绯红/石墨）+ `ColorDialog` 自定义；主题快照保存/恢复配色三项。
   - 验证：6 预设逐一点击 `accentPreset` 0→5；自定义取色 `#FF80FF` 全局生效、取消不改；坏值收敛 `auto/5/#7EB2FF`；主题保存后加载恢复 `custom/#FF80FF`；重启保持；截图 `docs/screens/v6/`。
   - 剩余：REQ-054 每套预设独立玻璃染色/描边/文字层级、REQ-055 描边强度与文字对比滑杆、REQ-056 全组件 token 审查、REQ-057 重算耗时实测。
-- [x] **TASK-053** [REQ-080–082] 桌面图标默认隐藏、系统图标桌面开关、退出恢复（Issue #61）
+- [x] **TASK-053** [REQ-080–082] 桌面图标默认隐藏、系统图标桌面开关、退出恢复（Issue #61 / PR #62）
   - 实现：设置新增“桌面”页；启动默认隐藏全部桌面图标（只对 `SysListView32` 做 `ShowWindow`，运行期状态）；五个系统图标独立开关写 `HideDesktopIcons\NewStartPanel` + `ClassicStartMenu`，`SHChangeNotify` 刷新；`desktop-icons.runtime` 标记异常退出校准；正常 `Quit` 恢复启动前可见状态。
   - 验证：启动 `hidden=True visible=False`；切显示 `visible=True`；此电脑/回收站/用户文件夹/网络逐个 69↔70；隐藏状态菜单退出后图标恢复、标记删除、配置保留；Explorer 重启后已显示系统图标保持（项数 70）。截图 `docs/screens/v7/settings-desktop.png`。
   - 限制：Windows 11 25H2 桌面不再绘制“控制面板”图标，开关写偏好但无可见项（项数 69→69）；Win10 1903、125% DPI、多屏未真机回归。
