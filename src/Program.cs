@@ -13,9 +13,11 @@ namespace Liuli
         static int Main(string[] args)
         {
             Paths.Ensure();
+            Native.EnablePerMonitorDpi();
             if (args.Length > 0 && string.Equals(args[0], "--selftest", StringComparison.OrdinalIgnoreCase))
                 return SelfTest();
-            Native.EnablePerMonitorDpi();
+            if (args.Length > 0 && string.Equals(args[0], "--preview", StringComparison.OrdinalIgnoreCase))
+                return V2Preview.Run(args);
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
             Application.SetUnhandledExceptionMode(UnhandledExceptionMode.CatchException);

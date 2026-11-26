@@ -75,6 +75,13 @@ namespace Liuli
             Native.PushLayered(Handle, Canvas, Location, (byte)255);
         }
 
+        /// <summary>离屏预览用：返回画布副本，不改变窗口可见性。</summary>
+        public Bitmap Snapshot()
+        {
+            if (Canvas == null) return null;
+            return new Bitmap(Canvas);
+        }
+
         /// <summary>统一玻璃：磨砂壁纸切片 + 色调纱 + 顶边高光 + 1px 渐变描边。</summary>
         protected void PaintGlass(Graphics g, Rectangle body, int radius)
         {
@@ -91,9 +98,15 @@ namespace Liuli
 
                 using (LinearGradientBrush top = new LinearGradientBrush(
                     new Rectangle(body.X, body.Y, body.Width, Math.Max(1, body.Height / 2)),
-                    Color.FromArgb(Theme.Light ? 34 : 24, 255, 255, 255), Color.FromArgb(0, 255, 255, 255), 90f))
+                    Color.FromArgb(Theme.Light ? 30 : 14, 255, 255, 255), Color.FromArgb(0, 255, 255, 255), 90f))
                 {
                     g.FillRectangle(top, new Rectangle(body.X, body.Y, body.Width, Math.Max(1, body.Height / 2)));
+                }
+                using (LinearGradientBrush bottom = new LinearGradientBrush(
+                    new Rectangle(body.X, body.Bottom - body.Height / 3, body.Width, Math.Max(1, body.Height / 3)),
+                    Color.FromArgb(0, 0, 0, 0), Color.FromArgb(Theme.Light ? 8 : 30, 0, 0, 0), 90f))
+                {
+                    g.FillRectangle(bottom, new Rectangle(body.X, body.Bottom - body.Height / 3, body.Width, Math.Max(1, body.Height / 3)));
                 }
 
                 using (GraphicsPath glowPath = new GraphicsPath())
@@ -131,9 +144,9 @@ namespace Liuli
 
         int PlotVeil()
         {
-            int veil = (int)(12 + Theme.GlassPct * 0.44f);
-            if (veil < 18) veil = 18;
-            if (veil > 92) veil = 92;
+            int veil = 24 + (int)(Theme.GlassPct * 0.66f);
+            if (veil < 36) veil = 36;
+            if (veil > 112) veil = 112;
             return veil;
         }
 

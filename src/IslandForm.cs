@@ -43,13 +43,13 @@ namespace Liuli
         Size CollapsedSize()
         {
             int m = Util.RoundI(12 * UiScale);
-            return new Size(Util.RoundI(230 * UiScale) + m * 2, Util.RoundI(38 * UiScale) + m * 2);
+            return new Size(Util.RoundI(240 * UiScale) + m * 2, Util.RoundI(40 * UiScale) + m * 2);
         }
 
         Size ExpandedSize()
         {
             int m = Util.RoundI(12 * UiScale);
-            return new Size(Util.RoundI(352 * UiScale) + m * 2, Util.RoundI(106 * UiScale) + m * 2);
+            return new Size(Util.RoundI(380 * UiScale) + m * 2, Util.RoundI(112 * UiScale) + m * 2);
         }
 
         Rectangle CurrentBody()
@@ -61,8 +61,8 @@ namespace Liuli
         Rectangle[] QuickButtons()
         {
             Rectangle body = CurrentBody();
-            int bs = Util.RoundI(22 * UiScale), gap = Util.RoundI(4 * UiScale);
-            int y = body.Bottom - Util.RoundI(31 * UiScale);
+            int bs = Util.RoundI(24 * UiScale), gap = Util.RoundI(4 * UiScale);
+            int y = body.Bottom - Util.RoundI(34 * UiScale);
             int right = body.Right - Util.RoundI(15 * UiScale);
             return new Rectangle[] {
                 new Rectangle(right - bs * 3 - gap * 2, y, bs, bs),
@@ -138,6 +138,17 @@ namespace Liuli
             if (IsHandleCreated) Render();
         }
 
+        /// <summary>离屏预览用：强制展开并重排。</summary>
+        public void ExpandForPreview()
+        {
+            if (!IsHandleCreated) return;
+            expanded = true;
+            ClientSize = ExpandedSize();
+            EnsureCanvas();
+            ApplyPosition();
+            Render();
+        }
+
         // ---------- 绘制 ----------
         public void Render()
         {
@@ -180,7 +191,7 @@ namespace Liuli
             string info = wx.Has ? (wx.Temp + "° " + wx.Cond) : ("CPU " + (int)V2Shell.Stats.Cpu + "%");
             Rectangle ir = new Rectangle(dx + Util.RoundI(10 * UiScale), body.Y,
                 body.Width - (dx - body.X) - Util.RoundI(16 * UiScale), body.Height);
-            Theme.TextMiddle(g, info, Theme.Font(9.5f, FontStyle.Regular, UiScale), Theme.TextSub, ir, StringAlignment.Near);
+            Theme.TextMiddle(g, info, Theme.Font(10.5f, FontStyle.Regular, UiScale), Theme.TextSub, ir, StringAlignment.Near);
         }
 
         void PaintExpanded(Graphics g, Rectangle body)
@@ -189,29 +200,29 @@ namespace Liuli
             StatsNow st = V2Shell.Stats;
 
             Rectangle tr = new Rectangle(body.X + Util.RoundI(20 * UiScale), body.Y + Util.RoundI(8 * UiScale),
-                Util.RoundI(110 * UiScale), Util.RoundI(34 * UiScale));
-            Theme.TextMiddle(g, DateTime.Now.ToString("HH:mm"), Theme.Font(24f, FontStyle.Bold, UiScale), Theme.TextMain, tr, StringAlignment.Near);
-            Rectangle dr = new Rectangle(body.X + Util.RoundI(22 * UiScale), body.Y + Util.RoundI(42 * UiScale),
+                Util.RoundI(118 * UiScale), Util.RoundI(36 * UiScale));
+            Theme.TextMiddle(g, DateTime.Now.ToString("HH:mm"), Theme.Font(26f, FontStyle.Bold, UiScale), Theme.TextMain, tr, StringAlignment.Near);
+            Rectangle dr = new Rectangle(body.X + Util.RoundI(22 * UiScale), body.Y + Util.RoundI(46 * UiScale),
                 body.Width - Util.RoundI(44 * UiScale), Util.RoundI(16 * UiScale));
-            Theme.TextMiddle(g, DateLine(), Theme.Font(8.5f, FontStyle.Regular, UiScale), Theme.TextSub, dr, StringAlignment.Near);
+            Theme.TextMiddle(g, DateLine(), Theme.Font(10.5f, FontStyle.Regular, UiScale), Theme.TextSub, dr, StringAlignment.Near);
 
-            int wxX = body.Right - Util.RoundI(130 * UiScale);
+            int wxX = body.Right - Util.RoundI(138 * UiScale);
             if (wx.Has)
             {
-                WeatherService.Glyph(g, wx.Code, new Rectangle(wxX, body.Y + Util.RoundI(12 * UiScale),
+                WeatherService.Glyph(g, wx.Code, new Rectangle(wxX, body.Y + Util.RoundI(14 * UiScale),
                     Util.RoundI(27 * UiScale), Util.RoundI(27 * UiScale)), Theme.Accent);
-                Rectangle tempr = new Rectangle(wxX + Util.RoundI(31 * UiScale), body.Y + Util.RoundI(7 * UiScale),
+                Rectangle tempr = new Rectangle(wxX + Util.RoundI(31 * UiScale), body.Y + Util.RoundI(9 * UiScale),
                     Util.RoundI(88 * UiScale), Util.RoundI(34 * UiScale));
-                Theme.TextMiddle(g, wx.Temp + "°", Theme.Font(19f, FontStyle.Bold, UiScale), Theme.TextMain, tempr, StringAlignment.Near);
-                Rectangle cond = new Rectangle(wxX + Util.RoundI(32 * UiScale), body.Y + Util.RoundI(38 * UiScale),
-                    Util.RoundI(94 * UiScale), Util.RoundI(14 * UiScale));
+                Theme.TextMiddle(g, wx.Temp + "°", Theme.Font(20f, FontStyle.Bold, UiScale), Theme.TextMain, tempr, StringAlignment.Near);
+                Rectangle cond = new Rectangle(wxX + Util.RoundI(32 * UiScale), body.Y + Util.RoundI(41 * UiScale),
+                    Util.RoundI(102 * UiScale), Util.RoundI(14 * UiScale));
                 Theme.TextMiddle(g, wx.Cond + " · " + wx.Humidity + "% · " + wx.Wind.ToString("0.0") + "m/s",
-                    Theme.Font(7.5f, FontStyle.Regular, UiScale), Theme.TextSub, cond, StringAlignment.Near);
+                    Theme.Font(9.5f, FontStyle.Regular, UiScale), Theme.TextSub, cond, StringAlignment.Near);
             }
             else
             {
                 Rectangle nowr = new Rectangle(wxX, body.Y + Util.RoundI(14 * UiScale), Util.RoundI(120 * UiScale), Util.RoundI(28 * UiScale));
-                Theme.TextMiddle(g, "天气离线", Theme.Font(9f, FontStyle.Regular, UiScale), Theme.TextSub, nowr, StringAlignment.Near);
+                Theme.TextMiddle(g, "天气离线", Theme.Font(10f, FontStyle.Regular, UiScale), Theme.TextSub, nowr, StringAlignment.Near);
             }
 
             using (Pen pen = new Pen(Color.FromArgb(38, Theme.TextSub), 1f))
@@ -222,8 +233,8 @@ namespace Liuli
             if (V2Shell.Config == null || V2Shell.Config.IslandStats)
             {
                 Stat(g, body.X + Util.RoundI(22 * UiScale), y, "CPU", st.CpuText, st.Cpu / 100f);
-                Stat(g, body.X + Util.RoundI(99 * UiScale), y, "内存", st.MemText, st.MemPct / 100f);
-                Stat(g, body.X + Util.RoundI(177 * UiScale), y, "磁盘", st.DiskText, st.DiskPct / 100f);
+                Stat(g, body.X + Util.RoundI(101 * UiScale), y, "内存", st.MemPct + "%", st.MemPct / 100f);
+                Stat(g, body.X + Util.RoundI(180 * UiScale), y, "磁盘", st.DiskPct + "%", st.DiskPct / 100f);
             }
 
             Rectangle[] rs = QuickButtons();
@@ -233,9 +244,9 @@ namespace Liuli
 
         void Stat(Graphics g, int x, int y, string label, string text, float pct)
         {
-            Rectangle lr = new Rectangle(x, y, Util.RoundI(70 * UiScale), Util.RoundI(13 * UiScale));
-            Theme.TextMiddle(g, label + "  " + text, Theme.Font(8f, FontStyle.Regular, UiScale), Theme.TextSub, lr, StringAlignment.Near);
-            Rectangle bar = new Rectangle(x, y + Util.RoundI(16 * UiScale), Util.RoundI(64 * UiScale), Math.Max(2, Util.RoundI(3 * UiScale)));
+            Rectangle lr = new Rectangle(x, y, Util.RoundI(74 * UiScale), Util.RoundI(14 * UiScale));
+            Theme.TextMiddle(g, label + "  " + text, Theme.Font(10f, FontStyle.Regular, UiScale), Theme.TextSub, lr, StringAlignment.Near);
+            Rectangle bar = new Rectangle(x, y + Util.RoundI(17 * UiScale), Util.RoundI(68 * UiScale), Math.Max(2, Util.RoundI(3 * UiScale)));
             using (GraphicsPath p = Theme.Round(bar, Math.Max(1, bar.Height / 2)))
             using (SolidBrush b = new SolidBrush(Color.FromArgb(46, Theme.TextSub))) g.FillPath(b, p);
             float fp = pct; if (fp < 0f) fp = 0f; if (fp > 1f) fp = 1f;

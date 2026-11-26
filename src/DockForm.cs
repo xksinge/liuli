@@ -52,13 +52,13 @@ namespace Liuli
         {
             if (!IsHandleCreated) return;
             UiScale = DpiUiScale();
-            int pad = Util.RoundI(14 * UiScale);
-            int icon = Util.RoundI(40 * UiScale);
-            int gap = Util.RoundI(4 * UiScale);
+            int pad = Util.RoundI(16 * UiScale);
+            int icon = Util.RoundI(44 * UiScale);
+            int gap = Util.RoundI(5 * UiScale);
             int sep = Items().Count > 0 ? Util.RoundI(10 * UiScale) : 0;
-            int btn = Util.RoundI(34 * UiScale);
-            int bgap = Util.RoundI(4 * UiScale);
-            int bodyH = Util.RoundI(56 * UiScale);
+            int btn = Util.RoundI(36 * UiScale);
+            int bgap = Util.RoundI(5 * UiScale);
+            int bodyH = Util.RoundI(60 * UiScale);
             int margin = Util.RoundI(12 * UiScale);
             int tagH = Util.RoundI(16 * UiScale);
             int n = Items().Count;
