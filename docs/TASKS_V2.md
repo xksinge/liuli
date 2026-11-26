@@ -2,7 +2,7 @@
 
 - 关联：Issue #33、`docs/DESIGN_V2.md`
 - 规则：每个任务一个提交或一组小提交；完成勾选前必须有验证记录。
-- 当前聚焦：M3 灵动岛配置（Issue #50，分支 `feat/v3-island-config`）；REQ-025 已实现并真机验收，待提交/PR。M2 已通过集成 PR #49 合入 `main`（`c222f91`）。
+- 当前聚焦：M3 灵动岛配置（Issue #50）已通过 PR #51 合入 `main`（`4091f8f`）；下一步 M4 面板与主题待开 Issue。M2 已通过集成 PR #49 合入 `main`（`c222f91`）。
 
 ## Phase 0 · 需求与设计（已完成）
 
@@ -88,7 +88,7 @@
 
 ## Phase 3 · M3 灵动岛
 
-- Issue #50（P0）：尺寸/偏移/动画/内容开关可配置；分支 `feat/v3-island-config`。
+- Issue #50（P0）：尺寸/偏移/动画/内容开关可配置；分支 `feat/v3-island-config`，已通过 PR #51 合入 `main`。
 - [x] **TASK-032** [REQ-025] 宽度/高度/偏移/动画/内容可配置
   - 实现：`islandWidth` / `islandHeight` / `islandTop` / `islandAnimMs` / `islandQuick`；设置子菜单与恢复默认；收起尺寸派生。
   - 验证：档位循环、即时应用、重启保持、越界收敛、动画 0/180/260ms、真机截图均已记录；菜单项改为 MouseUp 触发并延迟打开子菜单。

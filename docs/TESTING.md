@@ -29,6 +29,7 @@
 - 复位：点“恢复灵动岛默认”后 `shell.json` 回到 `380/112/6/180`，三开关为 true；测试后 Dock 仍为 `standard`、`dockAutoHide=false`。
 - 截图：`docs/screens/v3/m3-default-collapsed.png`、`m3-default-expanded.png`、`m3-main-menu.png`、`m3-island-menu.png`、`m3-quick-off.png`、`m3-weather-off.png`、`m3-stats-off.png`。
 - 已知：菜单点击在极快连续操作下仍可能丢一次；未系统记录所有命中边界；动画 260ms 的观感未主观验收。
+- 集成：PR #51 以 merge commit `4091f8f` 合入 `main`；Issue #50 关闭。
 
 ## v2.0 M2（2026-11-26）
 
