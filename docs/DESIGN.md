@@ -95,6 +95,12 @@ Program.cs     入口、单实例、DPI、异常兜底
 - 整理前把 `boards.json` 复制为 `data\undo-organize.json`（只保留最近一步）；「撤销上次整理」用快照覆盖配置、`Store.Load` 重新解析、`RebuildAllWindows` 重建窗口，然后删除快照
 - 取舍：撤销按整文件快照恢复，会把整理后对其它看板的改动一并回退；换来实现简单、可解释，适合“整理错了立刻反悔”的场景
 
+### 5.2 开机自启
+
+- 只用当前用户 `Run` 项（不需要管理员）：`HKCU\Software\Microsoft\Windows\CurrentVersion\Run`，值名 `Liuli`，内容为带引号的 `Application.ExecutablePath`
+- 开关改配置后立即写/删注册表并落盘；启动时 `SyncAutoStart()` 以配置为准补写或清除，防止 exe 移动后仍指向旧路径
+- 不做计划任务、不写 HKLM，卸载/删除 exe 后最多残留一个指向不存在路径的 Run 值，用户可在任务管理器启动项里关掉
+
 ## 6. 性能预算
 
 | 指标 | 目标 | 手段 |
