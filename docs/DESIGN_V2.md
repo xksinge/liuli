@@ -50,6 +50,7 @@ M1 实际命名：`V2Shell`、`ShellConfig`、`V2Window`、`DockForm`、`IslandF
   "version": 2,
   "dockOn": true,
   "dockAutoHide": false,
+  "dockPreset": "standard",
   "islandOn": true,
   "islandWeather": true,
   "islandStats": true,
@@ -94,6 +95,7 @@ M1 实际命名：`V2Shell`、`ShellConfig`、`V2Window`、`DockForm`、`IslandF
 - 布局：系统入口段 → 分隔线 → 固定应用段 → 右侧三个快捷动作（面板/桌面图标/设置），M1 不预留弹性空白。
 - 交互：左键启动；拖入固定（COPY effect，不移动源文件）；右键取消固定；`P1` 拖拽排序。
 - 自动隐藏（M2）：`dockAutoHide` 默认关闭；全局 55ms 轮询鼠标，底部 6 逻辑像素热区唤出，离开约 650ms 收起；窗口向下滑出，170ms `1-(1-t)^3` ease-out，动画目标可变、可中途反向；隐藏位置以屏幕底边为准，任务栏露出时也能完全推出屏幕。
+- 尺寸预设（M2）：`dockPreset` 为 `small` / `standard` / `large`，整体缩放系数 0.86 / 1.0 / 1.14；缩放图标、间距、圆按钮、内边距、窗口与文字；切换后立即重排并持久化。
 - 任务栏避让：M1 每 320ms 检测任务栏是否露出；露出则整体上移任务栏高度，收起回底；M2 的滑入/滑出只叠加在基础位置上，不改变任务栏避让判定。
 - 图标：`Icons` 取 256px Shell 图标；开关控制是否绘制快捷方式箭头。
 
