@@ -10,7 +10,7 @@ namespace Liuli
 {
     sealed class V2SettingsForm : Form
     {
-        static readonly string[] Nav = { "主题", "配色", "面板", "Dock", "灵动岛", "壁纸", "桌面", "关于" };
+        static readonly string[] Nav = { "主题", "配色", "面板", "Dock", "灵动岛", "壁纸", "桌面", "收纳", "关于" };
         const int MaxThemes = 6;
 
         float S = 1f;
@@ -21,7 +21,7 @@ namespace Liuli
         bool dragging;
         Point dragOff;
         Rectangle closeR;
-        Rectangle[] navRects = new Rectangle[8];
+        Rectangle[] navRects = new Rectangle[9];
         List<Ctl> controls = new List<Ctl>();
         TextBox nameBox;
         Rectangle nameSaveR;
@@ -144,6 +144,7 @@ namespace Liuli
             else if (index == 4) BuildIslandPage();
             else if (index == 5) BuildWallpaperPage();
             else if (index == 6) BuildDesktopPage();
+            else if (index == 7) BuildCollectorPage();
             else BuildAboutPage();
         }
 
@@ -566,6 +567,52 @@ namespace Liuli
             else c.HideShellControlPanel = hidden;
         }
 
+        void BuildCollectorPage()
+        {
+            int x = Cx();
+            int w = Cr() - x;
+            int y = Ct();
+            AddSection("桌面收纳", x, y, w); y += Util.RoundI(26 * S);
+            AddToggle("启用桌面收纳", "单面板 + 分组标签；入口只存原路径，不移动/复制/删除桌面文件",
+                "collectorOn", x, y, w,
+                delegate { return V2Shell.Config.CollectorOn ? 1 : 0; },
+                delegate (int v) { V2Shell.SetCollectorOn(v == 1); BuildPage(7); Invalidate(); });
+            y += Util.RoundI(62 * S);
+            AddToggle("自动收集新图标", "每 2 秒扫描用户桌面与公共桌面；新增/删除/重命名在 5 秒内对齐",
+                "collectorAutoScan", x, y, w,
+                delegate { return V2Shell.Config.CollectorAutoScan ? 1 : 0; },
+                delegate (int v)
+                {
+                    V2Shell.Config.CollectorAutoScan = v == 1;
+                    V2Shell.Config.Save();
+                    if (v == 1) V2Shell.ScanCollectorNow();
+                });
+            y += Util.RoundI(62 * S);
+            AddButton("重新扫描桌面", "立即同步桌面入口；不会移动或删除文件", "collectorScan", x, y, w, false,
+                delegate { V2Shell.ScanCollectorNow(); BuildPage(7); Invalidate(); });
+            y += Util.RoundI(54 * S);
+            AddButton("恢复移出的图标", "只把入口恢复显示；原文件一直都在", "collectorRestore", x, y, w, false,
+                delegate
+                {
+                    int n = CollectorState.RestoreHidden();
+                    V2Shell.Toast(n > 0 ? "已恢复 " + n + " 个入口" : "没有移出的图标");
+                    BuildPage(7);
+                    Invalidate();
+                });
+            y += Util.RoundI(54 * S);
+            AddButton("打开收纳面板", "面板可拖动、滚轮翻页；双击打开，拖动图标换组", "collectorOpen", x, y, w, false,
+                delegate { V2Shell.SetCollectorOn(true); });
+            y += Util.RoundI(54 * S);
+            AddInfo("当前收纳", "入口 " + CollectorState.VisibleCount() + " 个（隐藏 " +
+                (V2Shell.Config.CollectorItems.Count - CollectorState.VisibleCount()) + " 个）\n" +
+                "原生桌面图标：" + (V2Shell.Config.DesktopIconsHidden ? "已隐藏（推荐）" : "仍显示，会和面板重复") + "\n" +
+                (V2Shell.Config.CollectorOn ? "" : "收纳已关闭；桌面图标仍按桌面页设置隐藏。\n") +
+                "自定义分组：编辑 data\\groups.txt，格式 ext=分组", x, y, w);
+            y += Util.RoundI(104 * S);
+            AddButton("去桌面页设置原生图标", "隐藏全部桌面图标，避免面板与桌面重复", "collectorDesktop", x, y, w, false,
+                delegate { ShowPage(6); });
+        }
+
         void BuildAboutPage()
         {
             int x = Cx();
@@ -574,9 +621,9 @@ namespace Liuli
             AddInfo("版本", "Liuli 琉璃 v" + V.Version + "\n" + V.Tagline + "\n\nMIT 许可 · 完全本地 · 不联网也能用核心功能", x, y, w);
             y += Util.RoundI(116 * S);
             AddInfo("运行状态", "Dock " + (V2Shell.Dock != null ? "运行" : "关闭") + " · 灵动岛 " + (V2Shell.Island != null ? "运行" : "关闭") +
-                "\n面板 " + V2Shell.Panels.Count + " 个 · 主题 " + V2Shell.Config.Themes.Count + " 个 · 当前 " +
+                "\n收纳 " + (V2Shell.Collector != null ? "运行" : "关闭") + " · 面板 " + V2Shell.Panels.Count + " 个 · 主题 " + V2Shell.Config.Themes.Count + " 个 · 当前 " +
                 (string.IsNullOrEmpty(V2Shell.Config.ActiveTheme) ? "未加载自定义主题" : V2Shell.Config.ActiveTheme), x, y, w);
-            y += Util.RoundI(88 * S);
+            y += Util.RoundI(96 * S);
             AddInfo("快捷键", "Ctrl+Alt+L 显示/隐藏桌面层\nCtrl+Alt+G 打开设置\nEsc 关闭设置，←/→ 切换页面", x, y, w);
             y += Util.RoundI(96 * S);
             AddButton("打开数据目录", Paths.Data, "dataDir", x, y, w, false, delegate { Native.ShellOpenFolder(Paths.Data); });
@@ -703,7 +750,7 @@ namespace Liuli
             Rectangle hd = new Rectangle(Util.RoundI(26 * S), Util.RoundI(18 * S), Util.RoundI(420 * S), Util.RoundI(28 * S));
             Theme.Text(g, "Liuli 设置", Theme.Font(15f, FontStyle.Bold, S), Theme.TextMain, hd, StringAlignment.Near, false);
             Rectangle hsub = new Rectangle(hd.X, Util.RoundI(44 * S), Util.RoundI(500 * S), Util.RoundI(20 * S));
-            Theme.Text(g, "v2 桌面层 · 主题 / 配色 / 面板 / Dock / 灵动岛 / 壁纸 / 桌面", Theme.Font(9.5f, FontStyle.Regular, S), Theme.TextFaint, hsub, StringAlignment.Near, false);
+            Theme.Text(g, "v2 桌面层 · 主题 / 配色 / 面板 / Dock / 灵动岛 / 壁纸 / 桌面 / 收纳", Theme.Font(9.5f, FontStyle.Regular, S), Theme.TextFaint, hsub, StringAlignment.Near, false);
 
             closeR = new Rectangle(Width - Util.RoundI(50 * S), Util.RoundI(16 * S), Util.RoundI(30 * S), Util.RoundI(30 * S));
             Glass.Button(g, closeR, Glyph.Close, hover == -2, false, Theme.Accent);

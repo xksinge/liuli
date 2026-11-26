@@ -333,6 +333,16 @@ namespace Liuli
         public bool HideShellNetwork = true;
         public bool HideShellControlPanel = true;
 
+        // 桌面收纳（TASK-054）：只存路径，不搬文件。默认开启，接住桌面页隐藏后的图标。
+        public bool CollectorOn = true;
+        public bool CollectorAutoScan = true;
+        public int CollectorX = -1;
+        public int CollectorY = -1;
+        public int CollectorW = 620;
+        public int CollectorH = 430;
+        public string CollectorGroup = "全部";
+        public List<CollectorItem> CollectorItems = new List<CollectorItem>();
+
         public List<DockItem> DockItems = new List<DockItem>();
         public List<PanelConfig> Panels = new List<PanelConfig>();
 
@@ -397,6 +407,17 @@ namespace Liuli
                 c.HideShellUserFiles = Json.Bool(root, "hideShellUserFiles", true);
                 c.HideShellNetwork = Json.Bool(root, "hideShellNetwork", true);
                 c.HideShellControlPanel = Json.Bool(root, "hideShellControlPanel", true);
+
+                c.CollectorOn = Json.Bool(root, "collectorOn", true);
+                c.CollectorAutoScan = Json.Bool(root, "collectorAutoScan", true);
+                c.CollectorX = Json.Int(root, "collectorX", -1);
+                c.CollectorY = Json.Int(root, "collectorY", -1);
+                c.CollectorW = Json.Int(root, "collectorW", 620);
+                c.CollectorH = Json.Int(root, "collectorH", 430);
+                c.CollectorGroup = Json.Str(root, "collectorGroup", "全部");
+                List<object> collectorArr = Json.Arr(root.ContainsKey("collectorItems") ? root["collectorItems"] : null);
+                c.CollectorItems = CollectorState.ReadItems(collectorArr);
+                CollectorState.Normalize(c);
 
                 object itemsObj = root.ContainsKey("dockItems") ? root["dockItems"] : null;
                 List<object> items = Json.Arr(itemsObj);
@@ -532,6 +553,7 @@ namespace Liuli
             {
                 NormalizeIsland();
                 NormalizePanels();
+                CollectorState.Normalize(this);
                 Dictionary<string, object> root = new Dictionary<string, object>();
                 root["version"] = Version;
                 root["dockOn"] = DockOn;
@@ -575,6 +597,14 @@ namespace Liuli
                 root["hideShellUserFiles"] = HideShellUserFiles;
                 root["hideShellNetwork"] = HideShellNetwork;
                 root["hideShellControlPanel"] = HideShellControlPanel;
+                root["collectorOn"] = CollectorOn;
+                root["collectorAutoScan"] = CollectorAutoScan;
+                root["collectorX"] = CollectorX;
+                root["collectorY"] = CollectorY;
+                root["collectorW"] = CollectorW;
+                root["collectorH"] = CollectorH;
+                root["collectorGroup"] = CollectorGroup;
+                root["collectorItems"] = CollectorState.WriteItems(CollectorItems);
 
                 List<object> arr = new List<object>();
                 for (int i = 0; i < DockItems.Count; i++)

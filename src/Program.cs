@@ -77,6 +77,9 @@ namespace Liuli
                         " w=" + p.W + " h=" + p.H + " topMost=" + p.TopMostPanel);
                 }
                 Console.WriteLine("themes=" + c.Themes.Count + " active=" + c.ActiveTheme);
+                Console.WriteLine("collectorOn=" + c.CollectorOn + " autoScan=" + c.CollectorAutoScan +
+                    " items=" + c.CollectorItems.Count + " group=" + c.CollectorGroup +
+                    " x=" + c.CollectorX + " y=" + c.CollectorY + " w=" + c.CollectorW + " h=" + c.CollectorH);
                 Console.WriteLine("accent=" + c.AccentMode + " preset=" + c.AccentPreset + " custom=" + c.AccentCustom);
                 for (int i = 0; i < c.Themes.Count; i++)
                 {
