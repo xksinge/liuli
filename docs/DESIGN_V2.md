@@ -139,7 +139,7 @@ M1 实际命名：`V2Shell`、`ShellConfig`、`V2Window`、`DockForm`、`IslandF
 - 内容与容器解耦：`PanelContent.Paint` 只读 `content` 与全局 `Weather/Stats`；切换内容不重建窗口，位置尺寸不变。
 - 置顶/置底：`V2Window` 仅在 `TopMost=true` 时设置 `WS_EX_TOPMOST`；面板可降为普通 z 序，被普通窗口覆盖。
 - 入口：Dock 左侧“+”快捷动作、灵动岛“+”快捷动作、托盘/主菜单“新建面板”；没有面板时默认空，不自动创建。
-- 主题保存/加载（REQ-032）留到 Issue #53；本阶段只保存面板布局本身。
+- 主题保存/加载（REQ-032）留到 Issue #54；本阶段只保存面板布局本身。
 
 ## 8. 配色
 
