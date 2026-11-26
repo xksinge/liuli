@@ -141,7 +141,7 @@
 
 - [ ] **TASK-060** [REQ-060] `SettingsV2` 分模块页面
   - M4 已完成主题/面板/Dock/灵动岛/关于五页与统一入口，M5 加入配色、壁纸、桌面、收纳四页，M6 加入系统页后为十页；快捷键配置、日志诊断等 M6 项仍待补。
-- [x] **TASK-061** [REQ-061] 开机自启（Issue #66）
+- [x] **TASK-061** [REQ-061] 开机自启（Issue #66 / PR #67）
   - 实现：设置第 10 页“系统”（索引 8）；`ShellConfig.AutoStart` 读写 `autoStart`；`AutoStart` 只写 `HKCU\Software\Microsoft\Windows\CurrentVersion\Run\Liuli`，值带引号指向当前 exe；`V2Shell.Boot` 每次按配置写入/删除，移动 exe 后下次启动自动修正。
   - 验证：构建 `bin\Liuli.exe` 297 KB；系统页开关开启后 Run=`"E:\meihuaDesktop\bin\Liuli.exe"`，关闭后值不存在；把 exe+shell.json 复制到 `_scratch\move-test` 启动，Run 更新为临时路径；恢复主 exe 后 Run 回到主路径；`--selftest` 输出 `autoStart=False run=`；截图 `docs/screens/v8/settings-system.png`。
   - 未验证：Windows 重启后的实际自启行为、非管理员受限账户、多用户切换、杀软拦截。
