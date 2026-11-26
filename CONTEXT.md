@@ -5,7 +5,7 @@
 - 当前任务：Issue #41 / M2 Dock 运行指示点
 - 状态：M1 在 `feat/v2-shell`（PR #36 Draft）；M2 自动隐藏 `feat/v2-dock-autohide`（PR #38 Draft）；尺寸预设 `feat/v2-dock-presets`（PR #40 Draft）；运行指示 `feat/v2-dock-running` 已实现并构建通过（205 KB）；**真机热区/动画/尺寸切换/运行状态变化/DPI 未验证**
 - 分支：`feat/v2-dock-running`（从 `feat/v2-dock-presets` 切出）
-- PR：自动隐藏 `#38`、尺寸预设 `#40`；运行指示 PR 待创建；M1 PR #36 仍 Draft
+- PR：自动隐藏 `#38`、尺寸预设 `#40`；运行指示 `#42` Draft（base `feat/v2-dock-presets`）；M1 PR #36 仍 Draft
 - 下一步：提交运行指示并开 Draft PR（base `feat/v2-dock-presets`），再真机验收运行圆点与自动隐藏/尺寸组合
 - 阻塞：无；用户此前要求“不运行”，因此未启动 UI，不能声称视觉验收通过
 - 约束：旧看板功能封存；不改动 `boards.json` 与 `Documents\Liuli`

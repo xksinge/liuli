@@ -54,7 +54,7 @@
 
 - Issue #37；分支 `feat/v2-dock-autohide`（从 `feat/v2-shell` 切出，堆叠在 M1 之后）；Draft PR #38。
 - Issue #39；分支 `feat/v2-dock-presets`（从 `feat/v2-dock-autohide` 切出）；Draft PR #40。
-- Issue #41；分支 `feat/v2-dock-running`（从 `feat/v2-dock-presets` 切出）；PR 待创建。
+- Issue #41；分支 `feat/v2-dock-running`（从 `feat/v2-dock-presets` 切出）；Draft PR #42（base `feat/v2-dock-presets`）。
 - 已实现：`shell.json` 增加 `dockAutoHide`（默认 false）；托盘/快捷菜单增加切换；Dock 全局 55ms 鼠标轮询、底部 6px 热区、离开 650ms 收起；170ms cubic ease-out 滑入/滑出；隐藏位置按屏幕底边计算，任务栏露出时也能完全推出；切换开关、显示全部、重排时刷新状态。
 - 已验证：构建通过（205 KB）；`--selftest` 读取 `dockAutoHide=False`；临时写入 `true` 后读取为 `True`，已恢复原文件；离屏 `--preview` 打印隐藏态 `dockHidden top=1442`，`screenBottom=1440`，窗口完全移出屏幕。
 - 未验证：真机热区唤出、650ms 收起、动画中途反向、任务栏唤出共存、125% DPI。需要用真实鼠标事件验收。
