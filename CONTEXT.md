@@ -16,6 +16,7 @@
 | 2026-11-26 | 发现产品方向偏离，重建 v2.0 GlassBoard 功能对齐需求 | `docs/REQUIREMENTS.md`、Issue #33 |
 | 2026-11-26 | 补充 Dock 系统入口、桌面图标默认隐藏、任务栏自动隐藏、壁纸取色、屏幕/文字适配、UI 视觉闸门 | Requirements / Issue #33 评论 |
 | 2026-11-26 | 建立项目开发流程执行清单 | `docs/DEVELOPMENT.md` |
+| 2026-11-26 | 需求文档落分支；v1.6 原型停到 experiment 分支，工作区恢复干净 | `docs/v2-requirements` @ adbcd6f；`experiment/v1.6-dock-island` @ 28e8cfd |
 
 ## Key Decisions
 
@@ -39,6 +40,8 @@
 
 ## Divergences
 
-- v1.6 Dock/灵动岛原型已写在工作区但未提交，不作为 v2.0 实现基线。
+- v1.6 Dock/灵动岛原型已停在 `experiment/v1.6-dock-island`（28e8cfd），不作为 v2.0 实现基线，不合入 main。
+- 当前工作分支为 `docs/v2-requirements`（adbcd6f），工作区干净。
 - 本地 `main` 领先 `origin/main` 11 个提交，远程同步待补。
 - `docs/REQUIREMENTS.md` 仍是 Draft，未进入设计阶段。
+- 当前运行的 `bin\Liuli.exe` 仍是 v1.6 原型构建，与源码分支不一致。
