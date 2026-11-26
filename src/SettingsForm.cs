@@ -140,6 +140,8 @@ namespace Liuli
                 {
                     App.ShowKindMenu(new Point(Left + Width / 2, Top + Util.RoundI(160 * Theme.S)));
                 });
+                AddToggle("整理时移动原件", "真实把桌面文件移进 桌面\\Liuli\\分组，桌面不再保留副本；可撤销", y,
+                    delegate { return App.Ws.Set.OrganizeMove ? 1 : 0; }, delegate (int v) { App.Ws.Set.OrganizeMove = v == 1; App.Save(); });
                 AddButton("一键整理桌面图标", "按类型分组成看板，只收入口，不动桌面原件", y, false, delegate { App.OrganizeDesktop(); });
                 AddButton("撤销上次整理", "恢复到上一次整理之前的看板布局（只保留一步）", y, false, delegate { App.UndoOrganize(); });
                 AddInfo("自定义分组", "在 data\\groups.txt 里按 ext=分组 写规则，分组名用 应用/文件夹/文档/图片/影音/压缩包/代码/其他，重启 Liuli 后生效。", y);

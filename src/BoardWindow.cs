@@ -760,19 +760,43 @@ namespace Liuli
             base.WndProc(ref m);
         }
 
+        static bool IsOnDesktop(string p)
+        {
+            try
+            {
+                string dir = System.IO.Path.GetDirectoryName(p.TrimEnd('\\'));
+                string d1 = Environment.GetFolderPath(Environment.SpecialFolder.DesktopDirectory);
+                string d2 = Environment.GetFolderPath(Environment.SpecialFolder.CommonDesktopDirectory);
+                return string.Equals(dir, d1, StringComparison.OrdinalIgnoreCase) || string.Equals(dir, d2, StringComparison.OrdinalIgnoreCase);
+            }
+            catch { return false; }
+        }
+
+        static bool IsUnderLiuli(string p)
+        {
+            try { return p.StartsWith(Icons.LiuliRoot + "\\", StringComparison.OrdinalIgnoreCase); }
+            catch { return false; }
+        }
+
         void OnFilesDropped(List<string> files)
         {
             if (files == null || files.Count == 0) return;
             if (B.Kind == BoardKind.Files)
             {
+                int moved = 0;
                 for (int i = 0; i < files.Count; i++)
                 {
                     string p = files[i];
+                    string dest = null;
+                    if (IsOnDesktop(p) && !IsUnderLiuli(p)) dest = Icons.MoveIntoGroup(p, B.Title);
+                    if (dest != null) { p = dest; moved++; }
                     Item it = new Item(System.IO.Path.GetFileNameWithoutExtension(p), p);
                     if (System.IO.Directory.Exists(p)) it.Text = new System.IO.DirectoryInfo(p).Name;
+                    else it.Text = System.IO.Path.GetFileNameWithoutExtension(p);
                     B.Items.Add(it);
                 }
-                dirty = true; App.Save(); App.Toast("已收进 " + files.Count + " 个入口");
+                dirty = true; App.Save();
+                App.Toast(moved > 0 ? "已移入 " + moved + " 个原件到 桌面\\Liuli\\" + B.Title : "已收进 " + files.Count + " 个入口");
             }
             else if (B.Kind == BoardKind.Note)
             {

@@ -603,8 +603,16 @@ namespace Liuli
         {
             List<DeskItem> items = Icons.ScanDesktop();
             if (items.Count == 0) { Toast("桌面没有可整理的图标"); return; }
-            int created = Icons.OrganizeToBoards(items, Screen.PrimaryScreen.WorkingArea);
-            Toast(created > 0 ? "整理了 " + items.Count + " 个入口，生成 " + created + " 块看板" : "入口已更新到文件看板");
+            bool move = Ws.Set.OrganizeMove;
+            if (move)
+            {
+                DialogResult r = MessageBox.Show(
+                    "整理会把桌面文件/文件夹真正移动到：\n" + Icons.LiuliRoot + "\\<分组>\n桌面不再保留副本。\n\n可点「撤销上次整理」把原文件移回桌面。继续？",
+                    "Liuli · 真实整理桌面", MessageBoxButtons.YesNo, MessageBoxIcon.Warning);
+                if (r != DialogResult.Yes) return;
+            }
+            int created = Icons.OrganizeToBoards(items, Screen.PrimaryScreen.WorkingArea, move);
+            Toast(move ? "已移动原件并整理成 " + created + " 块看板" : (created > 0 ? "整理了 " + items.Count + " 个入口，生成 " + created + " 块看板" : "入口已更新到文件看板"));
         }
 
         public static void UndoOrganize()
@@ -612,6 +620,7 @@ namespace Liuli
             if (!File.Exists(Paths.UndoFile)) { Toast("还没有可撤销的整理"); return; }
             try
             {
+                Icons.MoveBackAll();
                 File.Copy(Paths.UndoFile, Paths.BoardsFile, true);
                 Ws = Store.Load(ScreenRects());
                 RebuildAllWindows();

@@ -1,5 +1,5 @@
 ﻿// Liuli · 图标：桌面扫描 + Shell 图标提取（按路径+mtime 缓存，绘制帧不碰磁盘）。
-// 图标整理只创建“入口”，不移动、不删除用户的桌面文件。
+// 图标整理默认只创建“入口”，不移动、不删除用户的桌面文件；开启“整理时移动原件”后才真实移动（可撤销）。
 using System;
 using System.Collections.Generic;
 using System.Drawing;
@@ -17,6 +17,7 @@ namespace Liuli
         public string Name = "";
         public string Ext = "";
         public string Group = "";
+        public bool Public;   // 来自公共桌面（C:\Users\Public\Desktop），真实整理时不移动
     }
 
     static class Icons
@@ -102,6 +103,7 @@ namespace Liuli
                     {
                         try
                         {
+                            if (string.Equals(p, LiuliRoot, StringComparison.OrdinalIgnoreCase)) continue;
                             FileAttributes at = File.GetAttributes(p);
                             if ((at & FileAttributes.Hidden) != 0) continue;
                             if (seen.Contains(System.IO.Path.GetFileName(p))) continue;
@@ -110,6 +112,7 @@ namespace Liuli
                             it.Path = p;
                             it.Name = Directory.Exists(p) ? new DirectoryInfo(p).Name : System.IO.Path.GetFileNameWithoutExtension(p);
                             it.Ext = Directory.Exists(p) ? "" : System.IO.Path.GetExtension(p).TrimStart('.').ToLowerInvariant();
+                            it.Public = (d == 1);
                             it.Group = GroupOf(p);
                             list.Add(it);
                         }
@@ -222,8 +225,150 @@ namespace Liuli
             lock (gate) ClearLocked();
         }
 
+        /// <summary>桌面上的 Liuli 收纳根目录：桌面\Liuli\&lt;分组&gt;。只存原件，不放副本。</summary>
+        public static string LiuliRoot
+        {
+            get { return Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.DesktopDirectory), "Liuli"); }
+        }
+
+        /// <summary>把桌面上的文件/文件夹移进 桌面\Liuli\&lt;group&gt;，返回新路径；失败返回 null。</summary>
+        public static string MoveIntoGroup(string path, string group)
+        {
+            try
+            {
+                if (string.IsNullOrEmpty(path) || !File.Exists(path) && !Directory.Exists(path)) return null;
+                string dir = Path.Combine(LiuliRoot, string.IsNullOrEmpty(group) ? "其他" : group);
+                Directory.CreateDirectory(dir);
+                string dest = UniqueDest(dir, Path.GetFileName(path));
+                if (Directory.Exists(path)) Directory.Move(path, dest);
+                else File.Move(path, dest);
+                Log.Info("icons", "移入 " + Path.GetFileName(path) + " -> " + dest);
+                return dest;
+            }
+            catch (Exception ex)
+            {
+                Log.Warn("icons", "移入失败 " + path + " " + ex.Message);
+                return null;
+            }
+        }
+
+        static string UniqueDest(string dir, string name)
+        {
+            string dest = Path.Combine(dir, name);
+            if (!File.Exists(dest) && !Directory.Exists(dest)) return dest;
+            string stem = Path.GetFileNameWithoutExtension(name);
+            string ext = Path.GetExtension(name);
+            for (int i = 2; i < 999; i++)
+            {
+                dest = Path.Combine(dir, stem + " (" + i + ")" + ext);
+                if (!File.Exists(dest) && !Directory.Exists(dest)) return dest;
+            }
+            return Path.Combine(dir, stem + " (" + DateTime.Now.ToString("HHmmss") + ")" + ext);
+        }
+
+        /// <summary>真实整理：把桌面条目移到 桌面\Liuli\分组，并把“原路径→新路径”写进 manifest 供撤销。</summary>
+        static int MoveAll(List<DeskItem> items)
+        {
+            List<object> moves = new List<object>();
+            int moved = 0;
+            for (int i = 0; i < items.Count; i++)
+            {
+                DeskItem it = items[i];
+                if (it.Public) continue; // 公共桌面条目只收入口，不动文件（避免权限问题）
+                string dest = MoveIntoGroup(it.Path, it.Group);
+                if (dest == null) continue;
+                Dictionary<string, object> m = new Dictionary<string, object>();
+                m["from"] = it.Path;
+                m["to"] = dest;
+                moves.Add(m);
+                it.Path = dest;
+                moved++;
+                SaveManifest(moves);
+            }
+            return moved;
+        }
+
+        static void SaveManifest(List<object> moves)
+        {
+            try
+            {
+                Dictionary<string, object> root = new Dictionary<string, object>();
+                root["moves"] = moves;
+                Util.WriteAllTextAtomic(Paths.MoveManifestFile, Json.Write(root, true));
+            }
+            catch (Exception ex) { Log.Warn("icons", "写移动清单失败 " + ex.Message); }
+        }
+
+        /// <summary>撤销真实整理：把 manifest 里的文件按“新→原”移回桌面。</summary>
+        public static void MoveBackAll()
+        {
+            try
+            {
+                if (!File.Exists(Paths.MoveManifestFile)) return;
+                string text = Util.ReadAllTextSafe(Paths.MoveManifestFile);
+                Dictionary<string, object> root = Json.Obj(Json.Parse(text));
+                List<object> moves = Json.Arr(root == null ? null : root["moves"]);
+                int back = 0, failed = 0;
+                if (moves != null)
+                {
+                    for (int i = 0; i < moves.Count; i++)
+                    {
+                        Dictionary<string, object> m = Json.Obj(moves[i]);
+                        if (m == null) continue;
+                        string from = Json.Str(m, "from", "");
+                        string to = Json.Str(m, "to", "");
+                        if (from.Length == 0 || to.Length == 0) continue;
+                        if (!File.Exists(to) && !Directory.Exists(to)) continue;
+                        if (File.Exists(from) || Directory.Exists(from)) continue;
+                        try
+                        {
+                            string dir = Path.GetDirectoryName(from);
+                            if (!Directory.Exists(dir)) Directory.CreateDirectory(dir);
+                            if (Directory.Exists(to)) Directory.Move(to, from);
+                            else File.Move(to, from);
+                            back++;
+                        }
+                        catch (Exception ex)
+                        {
+                            // 目标目录不可写（如公共桌面）时，退回用户桌面，至少不丢原件
+                            try
+                            {
+                                string desktop = Environment.GetFolderPath(Environment.SpecialFolder.DesktopDirectory);
+                                string alt = UniqueDest(desktop, Path.GetFileName(to));
+                                if (Directory.Exists(to)) Directory.Move(to, alt);
+                                else File.Move(to, alt);
+                                Log.Warn("icons", "撤销时无法回到原路径，已放回桌面 " + alt + "（" + ex.Message + "）");
+                                back++;
+                            }
+                            catch (Exception ex2)
+                            {
+                                failed++;
+                                Log.Error("icons", "撤销移回失败 " + to + " " + ex2.Message);
+                            }
+                        }
+                    }
+                }
+                Log.Info("icons", "撤销移动 " + back + " 项" + (failed > 0 ? "，失败 " + failed + " 项（清单保留，可重试）" : ""));
+                if (failed == 0) File.Delete(Paths.MoveManifestFile);
+                CleanupRoot();
+            }
+            catch (Exception ex) { Log.Warn("icons", "撤销移动失败 " + ex.Message); }
+        }
+
+        static void CleanupRoot()
+        {
+            try
+            {
+                if (!Directory.Exists(LiuliRoot)) return;
+                // 撤销后只剩空分组目录，整棵树一起清掉（有文件则保留，绝不递归删用户文件）
+                if (Directory.GetFiles(LiuliRoot, "*", SearchOption.AllDirectories).Length == 0)
+                    Directory.Delete(LiuliRoot, true);
+            }
+            catch { }
+        }
+
         /// <summary>一键整理：按分组生成/更新看板（不移动桌面文件），返回新建的看板数。</summary>
-        public static int OrganizeToBoards(List<DeskItem> items, Rectangle work)
+        public static int OrganizeToBoards(List<DeskItem> items, Rectangle work, bool move)
         {
             if (items == null || items.Count == 0) return 0;
             try
@@ -233,6 +378,8 @@ namespace Liuli
                 Log.Info("icons", "整理前快照 " + Paths.UndoFile);
             }
             catch (Exception ex) { Log.Warn("icons", "整理前快照失败 " + ex.Message); }
+            if (File.Exists(Paths.MoveManifestFile)) try { File.Delete(Paths.MoveManifestFile); } catch { }
+            int moved = move ? MoveAll(items) : 0;
             int created = 0;
             Dictionary<string, List<DeskItem>> byGroup = new Dictionary<string, List<DeskItem>>();
             for (int k = 0; k < items.Count; k++)
@@ -280,7 +427,7 @@ namespace Liuli
                 created++;
             }
             App.Save();
-            Log.Info("icons", "整理 " + items.Count + " 个图标，新建 " + created + " 块文件看板");
+            Log.Info("icons", "整理 " + items.Count + " 个图标，新建 " + created + " 块文件看板" + (moved > 0 ? "，移动原件 " + moved + " 项" : ""));
             return created;
         }
     }
