@@ -299,6 +299,27 @@ namespace Liuli
             catch (Exception ex) { Log.Warn("icons", "写移动清单失败 " + ex.Message); }
         }
 
+        /// <summary>把一次拖入移动追加到清单，保证「撤销上次整理」也能把它移回。</summary>
+        public static void RecordMove(string from, string to)
+        {
+            try
+            {
+                List<object> moves = new List<object>();
+                if (File.Exists(Paths.MoveManifestFile))
+                {
+                    Dictionary<string, object> root = Json.Obj(Json.Parse(Util.ReadAllTextSafe(Paths.MoveManifestFile)));
+                    List<object> old = Json.Arr(root == null ? null : root["moves"]);
+                    if (old != null) for (int i = 0; i < old.Count; i++) moves.Add(old[i]);
+                }
+                Dictionary<string, object> m = new Dictionary<string, object>();
+                m["from"] = from;
+                m["to"] = to;
+                moves.Add(m);
+                SaveManifest(moves);
+            }
+            catch (Exception ex) { Log.Warn("icons", "追加移动清单失败 " + ex.Message); }
+        }
+
         /// <summary>撤销真实整理：把 manifest 里的文件按“新→原”移回桌面。</summary>
         public static void MoveBackAll()
         {
