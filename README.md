@@ -1,6 +1,6 @@
 # Liuli 琉璃
 
-> **v2.0 重构进行中。** 产品基线已确认为 GlassBoard 功能对齐（Dock + 顶部灵动岛 + 玻璃面板 + 桌面组件），见 [docs/REQUIREMENTS.md](docs/REQUIREMENTS.md)。M1 已实现底部 Dock、顶部灵动岛、任务栏自动隐藏与 `shell.json` 独立配置；v1.5.0 的“看板 + 文件收纳”功能整体封存，保留代码与用户数据，不再默认创建窗口。
+> **v2.0 重构进行中。** 产品基线已确认为 GlassBoard 功能对齐（Dock + 顶部灵动岛 + 玻璃面板 + 桌面组件），见 [docs/REQUIREMENTS.md](docs/REQUIREMENTS.md)。M1 已实现底部 Dock、顶部灵动岛、任务栏自动隐藏与 `shell.json` 独立配置；M2 已补 Dock 自动隐藏、三档尺寸、运行指示、拖拽排序与悬停放大。v1.5.0 的“看板 + 文件收纳”功能整体封存，保留代码与用户数据，不再默认创建窗口。
 
 ## v2.0 M1 当前能力
 
@@ -73,6 +73,15 @@ bin\            构建产物（data\ 为运行时数据，均不入库）
 ```
 
 运行时数据在 `bin\data\`：`boards.json`、`weather.json`、`logs\liuli.log`、`backups\`、`icons\`；可选 `groups.txt`（自定义图标分组）。收纳文件默认放 `文档\Liuli\<看板标题>`（可在设置「数据 → 收纳位置」改），桌面不再多一个 Liuli 文件夹。整理时写 `undo-organize.json`（撤销用，撤销后自动删除）；开启「整理时移动原件」时另有 `move-manifest.json`（原路径→新路径，撤销全部成功后自动删除）。
+
+## 文档
+
+- [文档目录索引](docs/目录索引.md)
+- [需求基线](docs/REQUIREMENTS.md)
+- [v2 设计](docs/DESIGN_V2.md)
+- [任务与 M1/M2 状态](docs/TASKS_V2.md)
+- [测试与未验证项](docs/TESTING.md)
+- [踩坑记录](docs/踩坑记录.md)
 
 ## 快捷键
 
