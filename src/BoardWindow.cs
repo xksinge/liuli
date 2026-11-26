@@ -65,6 +65,7 @@ namespace Liuli
 
         // 菜单
         MenuForm menu;
+        DropTarget oleDrop;
 
         // 双击判定（分层窗不一定拿到 DBLCLK，自己做时间窗）
         long lastClickTick;
@@ -113,12 +114,24 @@ namespace Liuli
         protected override void OnHandleCreated(EventArgs e)
         {
             base.OnHandleCreated(e);
+            try { Native.DragAcceptFiles(Handle, true); }
+            catch (Exception ex) { Log.Warn("drop", "DragAcceptFiles 失败 " + ex.Message); }
             try
             {
-                Native.DragAcceptFiles(Handle, true);
-                ApplyAccent();
+                if (oleDrop != null) DropTarget.RevokeDragDrop(Handle);
+                DropTarget.EnsureOle();
+                oleDrop = new DropTarget(B.Title, delegate(string[] fs) { OnFilesDropped(new List<string>(fs)); });
+                int hr = DropTarget.RegisterDragDrop(Handle, oleDrop);
+                if (hr != 0) Log.Warn("drop", "OLE 注册失败 " + B.Title + " hr=" + hr);
             }
-            catch { }
+            catch (Exception ex) { Log.Warn("drop", "OLE 注册失败 " + ex.Message); }
+            try { ApplyAccent(); } catch (Exception ex) { Log.Warn("glass", "玻璃应用失败 " + ex.Message); }
+        }
+
+        protected override void OnFormClosed(FormClosedEventArgs e)
+        {
+            try { if (oleDrop != null) DropTarget.RevokeDragDrop(Handle); } catch { }
+            base.OnFormClosed(e);
         }
 
         public void ApplyAccent()

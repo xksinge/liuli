@@ -135,7 +135,7 @@ namespace Liuli
         [DllImport("user32.dll")] public static extern bool RegisterHotKey(IntPtr h, int id, uint mods, uint vk);
         [DllImport("user32.dll")] public static extern bool UnregisterHotKey(IntPtr h, int id);
 
-        [DllImport("user32.dll")] public static extern bool DragAcceptFiles(IntPtr h, bool accept);
+        [DllImport("shell32.dll")] public static extern bool DragAcceptFiles(IntPtr h, bool accept);
         [DllImport("shell32.dll", CharSet = CharSet.Unicode)] public static extern uint DragQueryFile(IntPtr drop, uint index, StringBuilder file, uint len);
         [DllImport("shell32.dll")] public static extern void DragFinish(IntPtr drop);
 
