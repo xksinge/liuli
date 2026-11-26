@@ -28,9 +28,10 @@ namespace Liuli
         {
             EditorForm f = new EditorForm(title, initial, multiline);
             f.PlaceNear(owner);
-            f.ShowDialog(owner);
-            string r = f.result;
-            f.Dispose();
+            string r = null;
+            App.HideBar();
+            try { f.ShowDialog(owner); r = f.result; }
+            finally { f.Dispose(); App.RestoreBar(); }
             return r;
         }
 
