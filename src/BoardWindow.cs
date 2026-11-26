@@ -852,7 +852,7 @@ namespace Liuli
                     B.Items.Add(it);
                 }
                 dirty = true; App.Save();
-                App.Toast(moved > 0 ? "已移入 " + moved + " 个原件到 桌面\\Liuli\\" + B.Title : "已收进 " + files.Count + " 个入口");
+                App.Toast(moved > 0 ? "已移入 " + moved + " 个原件到 " + Icons.LiuliRoot + "\\" + B.Title : "已收进 " + files.Count + " 个入口");
             }
             else if (B.Kind == BoardKind.Note)
             {

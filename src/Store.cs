@@ -113,6 +113,7 @@ namespace Liuli
             d["diagnose"] = s.Diagnose;
             d["hideOnFullscreen"] = s.HideOnFullscreen;
             d["organizeMove"] = s.OrganizeMove;
+            d["storeRoot"] = s.StoreRoot;
             return d;
         }
 
@@ -141,6 +142,7 @@ namespace Liuli
             s.Diagnose = Json.Bool(d, "diagnose", s.Diagnose);
             s.HideOnFullscreen = Json.Bool(d, "hideOnFullscreen", s.HideOnFullscreen);
             s.OrganizeMove = Json.Bool(d, "organizeMove", s.OrganizeMove);
+            s.StoreRoot = Json.Str(d, "storeRoot", s.StoreRoot);
         }
 
         // ---------- 看板 ----------

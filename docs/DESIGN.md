@@ -92,10 +92,11 @@ Program.cs     入口、单实例、DPI、异常兜底
 
 - 扫描用户桌面 + 公共桌面（隐藏项跳过），按扩展名分组：内置表 + 可选 `data\groups.txt`（`扩展名=分组`）覆盖；只接受 应用/文件夹/文档/图片/影音/压缩包/代码/其他 八个组名，非法规则告警后忽略
 - 默认整理不移动、不删除桌面文件，只生成文件看板入口；同名文件看板原地更新，否则靠主屏右侧两列新建，单板最多 40 项
-- 可选真实移动（`settings.organizeMove=true`）：整理前弹确认框，确认后把用户桌面文件/文件夹移入 `Desktop\Liuli\<分组>`，桌面不留副本；公共桌面（`C:\Users\Public\Desktop`）条目只收入口、不移动，避免系统目录写权限导致中断
+- 可选真实移动（`settings.organizeMove=true`）：整理前弹确认框，确认后把用户桌面文件/文件夹移入 `文档\Liuli\<分组>`（收纳根可用 `settings.storeRoot` 改，默认 `Environment.SpecialFolder.MyDocuments\Liuli`），桌面不留副本；公共桌面（`C:\Users\Public\Desktop`）条目只收入口、不移动，避免系统目录写权限导致中断
 - 移动逐项写 `data\move-manifest.json`（`{"moves":[{"from":…,"to":…}]}`），每移一项原子重写一次，崩溃/断电后可再次撤销或按清单恢复
-- 整理前把 `boards.json` 复制为 `data\undo-organize.json`（只保留最近一步）；「撤销上次整理」先按清单把原件移回（逐项 try/catch，原目录不可写时退回用户桌面并记警告），再覆盖配置、`Store.Load` 重新解析、`RebuildAllWindows` 重建窗口；只有全部移回成功才删除清单与 `Liuli` 空目录
-- 文件看板拖入：开启移动时，桌面文件拖入会把原件移入 `Desktop\Liuli\<看板标题>` 后入库；已在 `Liuli` 内或非桌面路径的文件只加入口，避免二次移动
+- 整理前把 `boards.json` 复制为 `data\undo-organize.json`（只保留最近一步）；「撤销上次整理」先按清单把原件移回（逐项 try/catch，原目录不可写时退回用户桌面并记警告），再覆盖配置、`Store.Load` 重新解析、`RebuildAllWindows` 重建窗口；只有全部移回成功才删除清单与收纳根空目录
+- 文件看板采用图标网格（按宽度 4/3/2 列，40px 图标 + 下方单行文件名），视觉接近酷呆/Fences 盒子；单击 tile 打开，按住超过阈值才启动 `DoDragDrop`，拖到资源管理器即移出
+- 文件看板拖入：开启移动时，桌面文件拖入会把原件移入 `文档\Liuli\<看板标题>` 后入库；已在收纳根内或非桌面路径的文件只加入口，避免二次移动
 - 拖放实现：`DragAcceptFiles`（`shell32.dll`）+ OLE `IDropTarget`（`OleInitialize` + `RegisterDragDrop`）双通道，分层窗口优先走 OLE；两条通道都汇到 `OnFilesDropped`
 - 取舍：撤销按整文件快照恢复，会把整理后对其它看板的改动一并回退；换来实现简单、可解释，适合“整理错了立刻反悔”的场景
 

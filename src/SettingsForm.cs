@@ -140,7 +140,7 @@ namespace Liuli
                 {
                     App.ShowKindMenu(new Point(Left + Width / 2, Top + Util.RoundI(160 * Theme.S)));
                 });
-                AddToggle("整理时移动原件", "真实把桌面文件移进 桌面\\Liuli\\分组，桌面不再保留副本；可撤销", y,
+                AddToggle("整理时移动原件", "真实把桌面文件移进 " + Icons.LiuliRoot + "\\分组，桌面不再保留副本；可撤销", y,
                     delegate { return App.Ws.Set.OrganizeMove ? 1 : 0; }, delegate (int v) { App.Ws.Set.OrganizeMove = v == 1; App.Save(); });
                 AddButton("一键整理桌面图标", "按类型分组成看板，只收入口，不动桌面原件", y, false, delegate { App.OrganizeDesktop(); });
                 AddButton("撤销上次整理", "恢复到上一次整理之前的看板布局（只保留一步）", y, false, delegate { App.UndoOrganize(); });
@@ -189,6 +189,20 @@ namespace Liuli
             }
             else if (index == 3)
             {
+                AddButton("收纳位置", (App.Ws.Set.StoreRoot.Length > 0 ? "自定义：" : "默认：") + Icons.LiuliRoot, y, false, delegate
+                {
+                    using (FolderBrowserDialog d = new FolderBrowserDialog())
+                    {
+                        d.Description = "选择 Liuli 收纳文件的根目录（下面会按看板分组建子文件夹）";
+                        d.SelectedPath = Icons.LiuliRoot;
+                        if (d.ShowDialog() == DialogResult.OK)
+                        {
+                            App.Ws.Set.StoreRoot = d.SelectedPath;
+                            App.Save();
+                            BuildPage(3);
+                        }
+                    }
+                });
                 AddButton("导出备份", "把看板与设置打成一个 zip，默认放 data\\backups", y, false, delegate { App.ExportBackup(); });
                 AddButton("导入备份", "会先给当前状态留一份再覆盖", y, false, delegate { App.ImportBackup(); });
                 AddButton("打开数据目录", Paths.Data, y, false, delegate { Native.ShellOpen(Paths.Data); });
