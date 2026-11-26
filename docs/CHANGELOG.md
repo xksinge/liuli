@@ -23,6 +23,7 @@
 
 - `pwsh tools/build.ps1` 构建成功（193 KB）
 - `Liuli.exe --selftest`：`shell.json` 生成成功，默认 8 个 Dock 项；任务栏 `ABS_AUTOHIDE=1`、隐藏状态 `rect.top=1438`
+- 坏 JSON 回退：写入非对象 JSON 后自检生成 `.bad-*` 备份并重建默认 8 项
 - **未验证**：真机 UI 启动/截图、125% DPI、Dock 点击/拖入/右键移除、任务栏开关恢复、热键与退出清理
 
 ## [1.5.0] - 2026-11-26

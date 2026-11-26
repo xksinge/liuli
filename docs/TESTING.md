@@ -6,6 +6,7 @@
 | --- | --- | --- |
 | 构建 | 通过 | `pwsh -File tools\build.ps1` → `bin\Liuli.exe` 193 KB |
 | 配置自检 | 通过 | `Liuli.exe --selftest`：`shell.json` 生成，默认 8 个 Dock 项 |
+| 坏配置回退 | 通过 | 写入 `not a json object` 后自检：备份 `shell.json.bad-20261126-171933`，重建默认 8 项 |
 | 任务栏状态 | 通过（只读） | `ABM_GETSTATE=1`；隐藏时 `Shell_TrayWnd rect.top=1438`，`Visible=false` |
 | UI 启动 | **未验证** | 用户要求先不运行；不能算视觉/交互验收 |
 | 125% DPI | **未验证** | 代码按句柄 DPI 缩放，需改缩放后实测 |
