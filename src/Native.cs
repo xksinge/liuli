@@ -138,6 +138,7 @@ namespace Liuli
         [DllImport("shell32.dll")] public static extern bool DragAcceptFiles(IntPtr h, bool accept);
         [DllImport("shell32.dll", CharSet = CharSet.Unicode)] public static extern uint DragQueryFile(IntPtr drop, uint index, StringBuilder file, uint len);
         [DllImport("shell32.dll")] public static extern void DragFinish(IntPtr drop);
+        [DllImport("shell32.dll")] public static extern void SHChangeNotify(int evt, uint flags, IntPtr item1, IntPtr item2);
 
         [DllImport("user32.dll")] public static extern int SetWindowCompositionAttribute(IntPtr hwnd, ref WCADATA data);
 
@@ -274,6 +275,24 @@ namespace Liuli
                 if (list != IntPtr.Zero) nowVisible = IsWindowVisible(list);
                 else nowVisible = !before;
                 return true;
+            }
+            catch { return false; }
+        }
+
+        /// <summary>设置桌面图标可见性；只动 SysListView32，不写注册表，属于运行期状态。</summary>
+        public static bool SetDesktopIconsVisible(bool visible)
+        {
+            try
+            {
+                IntPtr defView = DesktopDefView();
+                if (defView == IntPtr.Zero) return false;
+                IntPtr list = DesktopIconList(defView);
+                if (list == IntPtr.Zero) return false;
+                if (IsWindowVisible(list) == visible) return true;
+                ShowWindow(list, visible ? 5 : 0);
+                System.Threading.Thread.Sleep(150);
+                list = DesktopIconList(defView);
+                return list != IntPtr.Zero && IsWindowVisible(list) == visible;
             }
             catch { return false; }
         }
