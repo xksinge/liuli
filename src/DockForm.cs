@@ -20,6 +20,7 @@ namespace Liuli
         DropTarget oleDrop;
         int hoverItem = -1;
         int hoverBtn = -1;
+        long hoverAt;
         bool dragging;
         int dragFrom = -1;
         int dragTo = -1;
@@ -375,7 +376,7 @@ namespace Liuli
                 {
                     bool pressed = pressedItem == i;
                     bool bouncing = bounceItem == i;
-                    float sc = pressed ? 0.94f : (bouncing ? BounceScale() : 1f);
+                    float sc = pressed ? 0.94f : (bouncing ? BounceScale() : HoverScale(i));
                     Rectangle baseRect = itemRects[i];
                     Rectangle r = ScaleRect(baseRect, sc);
                     if (hoverItem == i || pressed)
@@ -466,6 +467,16 @@ namespace Liuli
                 g.FillEllipse(b, x - cap / 2, top - cap / 2, cap, cap);
         }
 
+        float HoverScale(int index)
+        {
+            if (dragging || hoverItem != index || hoverAt == 0) return 1f;
+            float t = (Environment.TickCount - hoverAt) / 140f;
+            if (t < 0f) t = 0f;
+            if (t > 1f) t = 1f;
+            float e = 1f - (1f - t) * (1f - t) * (1f - t);
+            return 1f + 0.08f * e;
+        }
+
         float BounceScale()
         {
             if (bounceAt == 0) return 1f;
@@ -490,6 +501,10 @@ namespace Liuli
                 bounceBtn = -1;
                 flashItem = -1;
                 bounceAt = 0;
+            }
+            bool animating = bounceAt != 0 || (hoverAt != 0 && now - hoverAt < 150);
+            if (!animating)
+            {
                 if (animTimer != null) animTimer.Stop();
                 Render();
                 return;
@@ -500,6 +515,19 @@ namespace Liuli
         public void PreviewPress(int index)
         {
             pressedItem = index;
+            Render();
+        }
+
+        public void PreviewHover(int index)
+        {
+            dragging = false;
+            dragFrom = -1;
+            dragTo = -1;
+            pressedItem = -1;
+            pressedBtn = -1;
+            hoverItem = index;
+            hoverAt = index >= 0 ? Environment.TickCount - 1000 : 0;
+            if (index >= 0) StartAnim();
             Render();
         }
 
@@ -534,6 +562,7 @@ namespace Liuli
                     dragging = true;
                     hoverItem = -1;
                     hoverBtn = -1;
+                    hoverAt = 0;
                     pressedItem = -1;
                     dragTo = InsertSlot(e.X);
                     Render();
@@ -556,6 +585,11 @@ namespace Liuli
             for (int i = 0; i < btnRects.Length; i++) if (btnRects[i].Contains(e.Location)) hb = i;
             if (hi != hoverItem || hb != hoverBtn)
             {
+                if (hi != hoverItem)
+                {
+                    hoverAt = hi >= 0 ? Environment.TickCount : 0;
+                    if (hi >= 0) StartAnim();
+                }
                 hoverItem = hi;
                 hoverBtn = hb;
                 Render();
@@ -573,6 +607,7 @@ namespace Liuli
                 dragTo = -1;
                 Render();
             }
+            hoverAt = 0;
             if (hoverItem >= 0 || hoverBtn >= 0)
             {
                 hoverItem = -1;

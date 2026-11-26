@@ -48,6 +48,7 @@ namespace Liuli
                 SaveShot(dock, island, pressedFile);
 
                 string reorderFile = SaveReorderStrip(dock, dir);
+                string hoverFile = SaveHoverCompare(dock, dir);
 
                 dock.Dispose();
                 island.Dispose();
@@ -55,6 +56,7 @@ namespace Liuli
                 Console.WriteLine("preview=" + file + " " + new FileInfo(file).Length + "B");
                 Console.WriteLine("preview=" + pressedFile + " " + new FileInfo(pressedFile).Length + "B");
                 Console.WriteLine("preview=" + reorderFile + " " + new FileInfo(reorderFile).Length + "B");
+                Console.WriteLine("preview=" + hoverFile + " " + new FileInfo(hoverFile).Length + "B");
                 Console.WriteLine("preview=" + presetFile + " " + new FileInfo(presetFile).Length + "B");
                 return 0;
             }
@@ -63,6 +65,53 @@ namespace Liuli
                 Console.WriteLine("preview failed: " + ex);
                 return 2;
             }
+        }
+
+        static string SaveHoverCompare(DockForm dock, string dir)
+        {
+            dock.PreviewHover(-1);
+            Bitmap normal = dock.Snapshot();
+            dock.PreviewHover(3);
+            Bitmap hovered = dock.Snapshot();
+
+            int pad = 20, labelH = 26, scale = 2;
+            int w = (normal == null ? 0 : normal.Width * scale) + pad * 2;
+            int h = pad + 2 * ((normal == null ? 0 : normal.Height * scale) + labelH + pad);
+            Bitmap shot = new Bitmap(w, h, PixelFormat.Format32bppPArgb);
+            string[] labels = { "普通态", "悬停态 · 第 4 项" };
+            using (Graphics g = Graphics.FromImage(shot))
+            {
+                g.SmoothingMode = SmoothingMode.AntiAlias;
+                g.InterpolationMode = InterpolationMode.HighQualityBicubic;
+                g.TextRenderingHint = System.Drawing.Text.TextRenderingHint.AntiAliasGridFit;
+                using (LinearGradientBrush b = new LinearGradientBrush(new Rectangle(0, 0, w, h),
+                    Util.Rgb(28, 38, 56), Util.Rgb(10, 14, 22), 90f))
+                    g.FillRectangle(b, new Rectangle(0, 0, w, h));
+                Font font = new Font("Microsoft YaHei UI", 16f, FontStyle.Bold, GraphicsUnit.Pixel);
+                using (StringFormat sf = new StringFormat())
+                {
+                    sf.Alignment = StringAlignment.Center;
+                    using (SolidBrush text = new SolidBrush(Color.FromArgb(225, 255, 255, 255)))
+                    {
+                        int y = pad;
+                        for (int i = 0; i < 2; i++)
+                        {
+                            g.DrawString(labels[i], font, text, new RectangleF(0, y, w, labelH), sf);
+                            Bitmap bmp = i == 0 ? normal : hovered;
+                            if (bmp != null)
+                                g.DrawImage(bmp, pad, y + labelH, bmp.Width * scale, bmp.Height * scale);
+                            y += (normal == null ? 0 : normal.Height * scale) + labelH + pad;
+                        }
+                    }
+                }
+                font.Dispose();
+            }
+            string file = Path.Combine(dir, "m2-dock-hover.png");
+            shot.Save(file, ImageFormat.Png);
+            shot.Dispose();
+            if (normal != null) normal.Dispose();
+            if (hovered != null) hovered.Dispose();
+            return file;
         }
 
         static string SaveReorderStrip(DockForm dock, string dir)
