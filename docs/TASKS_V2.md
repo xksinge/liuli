@@ -110,7 +110,13 @@
 
 ## Phase 5 · M5 组件、壁纸、配色、桌面图标
 
-- [ ] **TASK-050** [REQ-040–042] 时钟/天气/系统组件
+- [x] **TASK-050** [REQ-040–042] 时钟/天气/系统组件（Issue #64）
+  - 实现：时钟面板右键新增“时间制：24/12 小时”“显示秒：开/关”，配置 `clock24` / `clockSeconds`；`PanelContent.ClockText` 统一 24/12 小时与秒格式；12 小时制顶部显示上午/下午。
+  - 天气：`Weather.Offline` 时在“城市 · 天气”后追加“离线缓存”，无缓存仍显示“天气离线”。
+  - 刷新：`PanelForm.ApplyTickInterval` 秒显示 1 秒、系统 2 秒、其它 5 秒；`V2Shell` 系统读数保持 2 秒采样上限。
+  - 验证：构建 `bin\Liuli.exe` 295.5 KB；测试面板 12 小时+秒显示 `01:10:34`、24 小时+秒 `01:11:41`、24 小时无秒，右键菜单切换落盘 `clock24=true/false`、`clockSeconds=true/false`；秒显示两帧哈希不同，系统面板两帧哈希不同；截图 `docs/screens/v8/clock-12h-seconds.png`、`clock-24h-seconds.png`、`clock-24h.png`、`panel-stats.png`。
+  - 未验证：真实断网时的天气缓存标记、12 小时制跨中午、125% DPI、小面板极窄宽度。
+
 - [x] **TASK-051** [REQ-050–052] 壁纸读取/切换/压暗（Issue #59 / PR #60）
   - 实现：设置新增“壁纸”页；当前壁纸预览（文件解码，不截屏）、文件名/路径/系统样式、选择本地图片、0–80% 压暗、恢复首次换图前的系统壁纸；`ShellConfig` 增加 `wallpaperDim` / `wallpaperOrig` / `wallpaperOrigStyle` / `wallpaperOrigTile`，`ThemeSnapshot` 同步保存压暗。
   - 玻璃底：`Backdrop.ApplyDim` 在磨砂后、取平均色前压暗；`ApplyVisualSettings` / `LoadTheme` 二次 `ApplyTheme`，让新壁纸的明暗与自动强调色进入重烘。

@@ -304,6 +304,10 @@ namespace Liuli
         public int IslandTop = 6;           // 顶部偏移
         public int IslandAnimMs = 180;      // 展开/收起时长
 
+        // 桌面组件（TASK-050）：时钟格式全局生效，天气/系统刷新频率由内容决定。
+        public bool Clock24 = true;
+        public bool ClockSeconds = false;
+
         // 任务栏（M1 只做自动隐藏；完全隐藏留到 P1）
         public bool TaskbarAutoHide = true;
         public bool TaskbarOriginalAutoHide = true;
@@ -373,6 +377,8 @@ namespace Liuli
                 c.IslandHeight = Util.Clamp(Json.Int(root, "islandHeight", 112), 100, 180);
                 c.IslandTop = Util.Clamp(Json.Int(root, "islandTop", 6), 0, 80);
                 c.IslandAnimMs = Util.Clamp(Json.Int(root, "islandAnimMs", 180), 0, 400);
+                c.Clock24 = Json.Bool(root, "clock24", true);
+                c.ClockSeconds = Json.Bool(root, "clockSeconds", false);
                 c.TaskbarAutoHide = Json.Bool(root, "taskbarAutoHide", true);
                 c.TaskbarOriginalAutoHide = Json.Bool(root, "taskbarOriginalAutoHide", true);
                 c.TaskbarFullHide = Json.Bool(root, "taskbarFullHide", false);
@@ -567,6 +573,8 @@ namespace Liuli
                 root["islandHeight"] = IslandHeight;
                 root["islandTop"] = IslandTop;
                 root["islandAnimMs"] = IslandAnimMs;
+                root["clock24"] = Clock24;
+                root["clockSeconds"] = ClockSeconds;
                 root["taskbarAutoHide"] = TaskbarAutoHide;
                 root["taskbarOriginalAutoHide"] = TaskbarOriginalAutoHide;
                 root["taskbarFullHide"] = TaskbarFullHide;

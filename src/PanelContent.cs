@@ -58,26 +58,57 @@ namespace Liuli
 
         static void PaintClock(Graphics g, Rectangle area, float scale)
         {
-            if (area.Height < 80)
+            bool use24 = V2Shell.Config == null || V2Shell.Config.Clock24;
+            bool showSeconds = V2Shell.Config != null && V2Shell.Config.ClockSeconds;
+            DateTime now = DateTime.Now;
+            if (!use24)
             {
-                int small = Math.Max(16, Math.Min(Util.RoundI(30 * scale), area.Height - Util.RoundI(4 * scale)));
-                Theme.TextMiddle(g, DateTime.Now.ToString("HH:mm"), Theme.Font(small, FontStyle.Bold, scale),
-                    Theme.TextMain, area, StringAlignment.Near);
-                return;
+                string period = now.Hour < 12 ? "上午" : "下午";
+                if (area.Height < 80)
+                {
+                    int small = Math.Max(16, Math.Min(Util.RoundI(30 * scale), area.Height - Util.RoundI(4 * scale)));
+                    if (showSeconds) small = Math.Min(small, Util.RoundI(22 * scale));
+                    Theme.TextMiddle(g, period + " " + ClockText(now),
+                        Theme.Font(small, FontStyle.Bold, scale), Theme.TextMain, area, StringAlignment.Near);
+                    return;
+                }
+                Theme.TextMiddle(g, period, Theme.Font(9.5f, FontStyle.Regular, scale), Theme.TextSub,
+                    new Rectangle(area.X, area.Y, area.Width, Util.RoundI(18 * scale)), StringAlignment.Near);
             }
-            Theme.TextMiddle(g, "本地时间", Theme.Font(9f, FontStyle.Regular, scale), Theme.TextFaint,
-                new Rectangle(area.X, area.Y, area.Width, Util.RoundI(18 * scale)), StringAlignment.Near);
+            else
+            {
+                if (area.Height < 80)
+                {
+                    int small = Math.Max(16, Math.Min(Util.RoundI(30 * scale), area.Height - Util.RoundI(4 * scale)));
+                    if (showSeconds) small = Math.Min(small, Util.RoundI(22 * scale));
+                    Theme.TextMiddle(g, ClockText(now), Theme.Font(small, FontStyle.Bold, scale),
+                        Theme.TextMain, area, StringAlignment.Near);
+                    return;
+                }
+                Theme.TextMiddle(g, "本地时间", Theme.Font(9f, FontStyle.Regular, scale), Theme.TextFaint,
+                    new Rectangle(area.X, area.Y, area.Width, Util.RoundI(18 * scale)), StringAlignment.Near);
+            }
+
             int big = Math.Max(18, Math.Min(Util.RoundI(42 * scale), area.Height - Util.RoundI(42 * scale)));
+            if (showSeconds) big = Math.Min(big, Util.RoundI(32 * scale));
             Rectangle time = new Rectangle(area.X, area.Y + Util.RoundI(15 * scale), area.Width,
                 Math.Min(area.Height - Util.RoundI(20 * scale), big + Util.RoundI(8 * scale)));
-            Theme.TextMiddle(g, DateTime.Now.ToString("HH:mm"), Theme.Font(big, FontStyle.Bold, scale),
+            Theme.TextMiddle(g, ClockText(now), Theme.Font(big, FontStyle.Bold, scale),
                 Theme.TextMain, time, StringAlignment.Near);
-            DateTime d = DateTime.Now;
             string[] wd = { "日", "一", "二", "三", "四", "五", "六" };
             Rectangle date = new Rectangle(area.X, time.Bottom - Util.RoundI(2 * scale), area.Width,
                 Util.RoundI(20 * scale));
-            Theme.TextMiddle(g, d.Month + "月" + d.Day + "日 星期" + wd[(int)d.DayOfWeek],
+            Theme.TextMiddle(g, now.Month + "月" + now.Day + "日 星期" + wd[(int)now.DayOfWeek],
                 Theme.Font(10.5f, FontStyle.Regular, scale), Theme.TextSub, date, StringAlignment.Near);
+        }
+
+        public static string ClockText(DateTime now)
+        {
+            bool use24 = V2Shell.Config == null || V2Shell.Config.Clock24;
+            bool showSeconds = V2Shell.Config != null && V2Shell.Config.ClockSeconds;
+            string text = now.ToString(use24 ? "HH:mm" : "hh:mm");
+            if (showSeconds) text += now.ToString(":ss");
+            return text;
         }
 
         static void PaintWeather(Graphics g, Rectangle area, float scale)
@@ -99,7 +130,8 @@ namespace Liuli
             Rectangle temp = new Rectangle(textX, area.Y, area.Right - textX, Math.Min(area.Height, big + Util.RoundI(10 * scale)));
             Theme.TextMiddle(g, w.Temp + "°", Theme.Font(big, FontStyle.Bold, scale), Theme.TextMain, temp, StringAlignment.Near);
             Rectangle cond = new Rectangle(textX, temp.Bottom, area.Right - textX, Util.RoundI(18 * scale));
-            Theme.TextMiddle(g, city + " · " + w.Cond, Theme.Font(10f, FontStyle.Regular, scale),
+            string caveat = V2Shell.Weather != null && V2Shell.Weather.Offline ? " · 离线缓存" : "";
+            Theme.TextMiddle(g, city + " · " + w.Cond + caveat, Theme.Font(10f, FontStyle.Regular, scale),
                 Theme.TextSub, cond, StringAlignment.Near);
             Rectangle detail = new Rectangle(textX, cond.Bottom + Util.RoundI(2 * scale), area.Right - textX,
                 Util.RoundI(18 * scale));

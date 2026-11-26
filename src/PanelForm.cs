@@ -28,6 +28,7 @@ namespace Liuli
             tick = new Timer();
             tick.Interval = 5000;
             tick.Tick += delegate { Render(); };
+            ApplyTickInterval();
         }
 
         protected override void OnReady()
@@ -58,8 +59,19 @@ namespace Liuli
         public void ApplyConfig()
         {
             if (Cfg == null) return;
+            ApplyTickInterval();
             TopMost = Cfg.TopMostPanel;
             ApplyBounds();
+        }
+
+        public void ApplyTickInterval()
+        {
+            if (Cfg == null || tick == null) return;
+            int interval = 5000;
+            string mode = PanelConfig.NormalizeContent(Cfg.Content);
+            if (mode == "stats") interval = 2000;
+            else if (mode == "clock" && V2Shell.Config != null && V2Shell.Config.ClockSeconds) interval = 1000;
+            if (tick.Interval != interval) tick.Interval = interval;
         }
 
         public void SaveBounds()
@@ -177,6 +189,13 @@ namespace Liuli
                 if (string.Equals(Cfg.Content, mode, StringComparison.OrdinalIgnoreCase)) label = label + "（当前）";
                 items.Add(new MenuForm.Item("内容：" + label, delegate { SetContent(mode); }, Glyph.Dot));
             }
+            if (PanelConfig.NormalizeContent(Cfg.Content) == "clock")
+            {
+                bool use24 = V2Shell.Config == null || V2Shell.Config.Clock24;
+                bool seconds = V2Shell.Config != null && V2Shell.Config.ClockSeconds;
+                items.Add(new MenuForm.Item("时间制：" + (use24 ? "24 小时" : "12 小时"), delegate { V2Shell.ToggleClock24(); }, Glyph.Clock));
+                items.Add(new MenuForm.Item("显示秒：" + (seconds ? "开" : "关"), delegate { V2Shell.ToggleClockSeconds(); }, Glyph.Clock));
+            }
             items.Add(new MenuForm.Item(Cfg.TopMostPanel ? "置底显示" : "置顶显示", delegate { ToggleTop(); }, Glyph.Pin));
             items.Add(new MenuForm.Item("新建面板", delegate { V2Shell.AddPanel(); }, Glyph.Plus));
             items.Add(new MenuForm.Item("删除此面板", delegate { V2Shell.RemovePanel(this); }, Glyph.Close, true));
@@ -187,6 +206,7 @@ namespace Liuli
         {
             if (Cfg == null) return;
             Cfg.Content = PanelConfig.NormalizeContent(mode);
+            ApplyTickInterval();
             SaveBounds();
             Render();
             V2Shell.Toast("面板内容：" + PanelConfig.ContentName(Cfg.Content));
