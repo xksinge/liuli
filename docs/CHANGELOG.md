@@ -2,6 +2,32 @@
 
 遵循 Keep a Changelog；版本遵循 SemVer。
 
+## [Unreleased · v2.0 M5 桌面组件]
+
+### 新增
+
+- 时钟面板支持 24/12 小时制与秒显示开关：右键菜单“时间制：24/12 小时”“显示秒：开/关”，`clock24` / `clockSeconds` 落盘
+- 12 小时制显示上午/下午，24 小时制保持 `HH:mm`；秒显示为 `HH:mm:ss`
+- 天气离线且仍有缓存时，面板在“城市 · 天气”后追加“离线缓存”；无缓存仍显示“天气离线”
+
+### 变更
+
+- `PanelForm.ApplyTickInterval`：秒显示 1 秒、系统读数 2 秒、其它内容 5 秒；系统采样仍为 `V2Shell` 2 秒一次
+- 系统面板每 2 秒重绘，CPU/内存/磁盘变化更及时；时钟秒显示字号上限 32，避免窄面板裁切
+- `--selftest` 输出 `clock24` / `clockSeconds`
+
+### 验证
+
+- 构建通过：`bin\Liuli.exe` 295.5 KB；C#5 无新增 error
+- 12 小时+秒面板显示 `01:10:34`，24 小时+秒 `01:11:41`，24 小时无秒正常
+- 右键菜单实际切换并写 `clock24=true/false`、`clockSeconds=true/false`；秒显示两帧哈希不同，系统面板两帧哈希不同
+- 截图：`docs/screens/v8/clock-12h-seconds.png`、`clock-24h-seconds.png`、`clock-24h.png`、`panel-stats.png`
+
+### 未验证 / 剩余
+
+- 真实断网时天气缓存标记未强制回归；离屏反射已验证 `Weather.Offline=true` 时显示“离线缓存”。12 小时制跨中午、125% DPI、极窄面板未回归
+- 主题快照不包含时钟格式/秒开关（外壳级偏好）
+
 ## [Unreleased · v2.0 M5 桌面收纳]
 
 ### 新增

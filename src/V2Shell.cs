@@ -418,6 +418,46 @@ namespace Liuli
             }
         }
 
+        public static void ToggleClock24()
+        {
+            if (Config == null) return;
+            SetClock24(!Config.Clock24);
+        }
+
+        public static void SetClock24(bool use24)
+        {
+            if (Config == null) return;
+            Config.Clock24 = use24;
+            Config.Save();
+            for (int i = 0; i < Panels.Count; i++)
+            {
+                if (Panels[i] == null) continue;
+                Panels[i].ApplyTickInterval();
+                Panels[i].Render();
+            }
+            Toast(use24 ? "时钟已切到 24 小时制" : "时钟已切到 12 小时制");
+        }
+
+        public static void ToggleClockSeconds()
+        {
+            if (Config == null) return;
+            SetClockSeconds(!Config.ClockSeconds);
+        }
+
+        public static void SetClockSeconds(bool on)
+        {
+            if (Config == null) return;
+            Config.ClockSeconds = on;
+            Config.Save();
+            for (int i = 0; i < Panels.Count; i++)
+            {
+                if (Panels[i] == null) continue;
+                Panels[i].ApplyTickInterval();
+                Panels[i].Render();
+            }
+            Toast(on ? "时钟已显示秒" : "时钟已隐藏秒");
+        }
+
         public static void OpenSettings()
         {
             OpenSettings(0);
