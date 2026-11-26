@@ -49,7 +49,7 @@
 
 - `main` 已同步到 `19ed1bc`（PR #34 squash 合并，docs v2 基线）；Issue #33 已关闭。
 - M1 Issue #35 OPEN；工作分支 `feat/v2-shell`，已推送；Draft PR #36。
-- M2 Issue #37 OPEN；工作分支 `feat/v2-dock-autohide`，从 `feat/v2-shell` 切出；自动隐藏代码已构建通过，真机热区/动画待验证。
+- M2 Issue #37 OPEN；工作分支 `feat/v2-dock-autohide`，从 `feat/v2-shell` 切出；Draft PR #38（base `feat/v2-shell`）；自动隐藏代码已构建通过，真机热区/动画待验证。
 - 已提交 `3be11bb`、`62ce47c`、`7282f77`、`87c92b7`、`0bbc294`、`92eab42` 及文档提交。
 - v1.6 Dock/灵动岛原型停在 `experiment/v1.6-dock-island`（`28e8cfd`），不合入 main，不作为 v2.0 基线。
 - v2 外壳代码已构建成功（201.5 KB）；`--selftest` 验证默认 shell.json、任务栏自动隐藏状态与 `dockAutoHide`；真机 UI/截图待做。

@@ -5,7 +5,7 @@
 - 当前任务：Issue #37 / M2 Dock 自动隐藏与唤出
 - 状态：M1 首版与点击/图标反馈在 `feat/v2-shell`（PR #36 Draft）；M2 自动隐藏代码已实现并构建通过（201.5 KB），配置读写与隐藏几何通过；**真机热区/收起/动画/任务栏共存/DPI 未验证**
 - 分支：`feat/v2-dock-autohide`（从 `feat/v2-shell` 切出，堆叠在 M1 之后）
-- PR：M2 尚未创建（待提交后开 Draft，base 暂定 `feat/v2-shell`）；M1 PR #36 仍 Draft
+- PR：M2 `#38` Draft（base 暂定 `feat/v2-shell`，堆叠在 M1 之后）；M1 PR #36 仍 Draft
 - 下一步：真机启动验证 M1 Dock/灵动岛/点击反馈，再验证 M2 底部热区、650ms 收起、170ms 动画与任务栏共存；补截图和 Issue 评论
 - 阻塞：无；用户此前要求“不运行”，因此未启动 UI，不能声称视觉验收通过
 - 约束：旧看板功能封存；不改动 `boards.json` 与 `Documents\Liuli`
