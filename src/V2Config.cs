@@ -68,6 +68,9 @@ namespace Liuli
         public int IslandAnimMs = 180;
         public string ThemeMode = "auto";
         public string ThemePreset = "mist";
+        public string AccentMode = "auto";
+        public int AccentPreset = 0;
+        public string AccentCustom = "#7EB2FF";
         public int GlassPct = 100;
         public int BlurPct = 62;
         public int Radius = 20;
@@ -108,6 +111,9 @@ namespace Liuli
             t.IslandAnimMs = c.IslandAnimMs;
             t.ThemeMode = c.ThemeMode;
             t.ThemePreset = c.ThemePreset;
+            t.AccentMode = c.AccentMode;
+            t.AccentPreset = c.AccentPreset;
+            t.AccentCustom = c.AccentCustom;
             t.GlassPct = c.GlassPct;
             t.BlurPct = c.BlurPct;
             t.Radius = c.Radius;
@@ -148,6 +154,9 @@ namespace Liuli
             c.IslandAnimMs = IslandAnimMs;
             c.ThemeMode = ThemeMode;
             c.ThemePreset = ThemePreset;
+            c.AccentMode = AccentMode;
+            c.AccentPreset = AccentPreset;
+            c.AccentCustom = AccentCustom;
             c.GlassPct = GlassPct;
             c.BlurPct = BlurPct;
             c.Radius = Radius;
@@ -297,9 +306,12 @@ namespace Liuli
         public bool TaskbarOriginalAutoHide = true;
         public bool TaskbarFullHide = false;
 
-        // 主题（M1 只消费壁纸色；预设/自定义留给 M5）
+        // 主题（M1 只消费壁纸色；M5 加入强调色来源）
         public string ThemeMode = "auto";
         public string ThemePreset = "mist";
+        public string AccentMode = "auto";      // auto / preset / custom
+        public int AccentPreset = 0;            // 0–5
+        public string AccentCustom = "#7EB2FF"; // #RRGGBB
         public int GlassPct = 100;
         public int BlurPct = 62;
         public int Radius = 20;
@@ -349,6 +361,9 @@ namespace Liuli
                 c.TaskbarFullHide = Json.Bool(root, "taskbarFullHide", false);
                 c.ThemeMode = Json.Str(root, "themeMode", "auto");
                 c.ThemePreset = Json.Str(root, "themePreset", "mist");
+                c.AccentMode = NormalizeAccentMode(Json.Str(root, "accentMode", "auto"));
+                c.AccentPreset = Util.Clamp(Json.Int(root, "accentPreset", 0), 0, 5);
+                c.AccentCustom = NormalizeHexColor(Json.Str(root, "accentCustom", "#7EB2FF"), "#7EB2FF");
                 c.GlassPct = Json.Int(root, "glassPct", 100);
                 c.BlurPct = Json.Int(root, "blurPct", 62);
                 c.Radius = Json.Int(root, "radius", 20);
@@ -524,6 +539,9 @@ namespace Liuli
                 root["taskbarFullHide"] = TaskbarFullHide;
                 root["themeMode"] = ThemeMode;
                 root["themePreset"] = ThemePreset;
+                root["accentMode"] = AccentMode;
+                root["accentPreset"] = AccentPreset;
+                root["accentCustom"] = AccentCustom;
                 root["glassPct"] = GlassPct;
                 root["blurPct"] = BlurPct;
                 root["radius"] = Radius;
@@ -595,6 +613,9 @@ namespace Liuli
             d["islandAnimMs"] = t.IslandAnimMs;
             d["themeMode"] = t.ThemeMode;
             d["themePreset"] = t.ThemePreset;
+            d["accentMode"] = t.AccentMode;
+            d["accentPreset"] = t.AccentPreset;
+            d["accentCustom"] = t.AccentCustom;
             d["glassPct"] = t.GlassPct;
             d["blurPct"] = t.BlurPct;
             d["radius"] = t.Radius;
@@ -639,6 +660,9 @@ namespace Liuli
             t.IslandAnimMs = Json.Int(d, "islandAnimMs", 180);
             t.ThemeMode = Json.Str(d, "themeMode", "auto");
             t.ThemePreset = Json.Str(d, "themePreset", "mist");
+            t.AccentMode = ShellConfig.NormalizeAccentMode(Json.Str(d, "accentMode", "auto"));
+            t.AccentPreset = Util.Clamp(Json.Int(d, "accentPreset", 0), 0, 5);
+            t.AccentCustom = ShellConfig.NormalizeHexColor(Json.Str(d, "accentCustom", "#7EB2FF"), "#7EB2FF");
             t.GlassPct = Json.Int(d, "glassPct", 100);
             t.BlurPct = Json.Int(d, "blurPct", 62);
             t.Radius = Json.Int(d, "radius", 20);
@@ -689,6 +713,9 @@ namespace Liuli
                 t.GlassPct = Util.Clamp(t.GlassPct, 20, 140);
                 t.BlurPct = Util.Clamp(t.BlurPct, 10, 100);
                 t.Radius = Util.Clamp(t.Radius, 10, 30);
+                t.AccentMode = NormalizeAccentMode(t.AccentMode);
+                t.AccentPreset = Util.Clamp(t.AccentPreset, 0, 5);
+                t.AccentCustom = NormalizeHexColor(t.AccentCustom, "#7EB2FF");
                 t.IslandWidth = Util.Clamp(t.IslandWidth, 360, 520);
                 t.IslandHeight = Util.Clamp(t.IslandHeight, 100, 180);
                 t.IslandTop = Util.Clamp(t.IslandTop, 0, 80);
@@ -816,6 +843,47 @@ namespace Liuli
             if (p.Y > work.Bottom - 60) p.Y = work.Bottom - 60;
         }
 
+        public static string NormalizeAccentMode(string s)
+        {
+            string v = (s == null ? "" : s.Trim().ToLowerInvariant());
+            if (v == "preset" || v == "custom") return v;
+            return "auto";
+        }
+
+        public static string NormalizeHexColor(string s, string fallback)
+        {
+            string v = s == null ? "" : s.Trim();
+            if (v.StartsWith("#")) v = v.Substring(1);
+            if (v.Length != 6) return fallback;
+            for (int i = 0; i < v.Length; i++)
+            {
+                char ch = v[i];
+                bool hex = (ch >= '0' && ch <= '9') || (ch >= 'a' && ch <= 'f') || (ch >= 'A' && ch <= 'F');
+                if (!hex) return fallback;
+            }
+            return "#" + v.ToUpperInvariant();
+        }
+
+        public static Color ParseHexColor(string s, Color fallback)
+        {
+            try
+            {
+                string v = NormalizeHexColor(s, "");
+                if (v.Length != 7) return fallback;
+                return ColorTranslator.FromHtml(v);
+            }
+            catch { return fallback; }
+        }
+
+        public Color ResolveAccent(bool light)
+        {
+            if (string.Equals(AccentMode, "preset", StringComparison.OrdinalIgnoreCase))
+                return Palette.Get(AccentPreset, light);
+            if (string.Equals(AccentMode, "custom", StringComparison.OrdinalIgnoreCase))
+                return ParseHexColor(AccentCustom, Backdrop.Accent);
+            return Backdrop.Accent;
+        }
+
         public void ApplyTheme()
         {
             Theme.GlassPct = Util.Clamp(GlassPct, 20, 140);
@@ -825,7 +893,7 @@ namespace Liuli
             if (string.Equals(ThemeMode, "light", StringComparison.OrdinalIgnoreCase)) light = true;
             else if (string.Equals(ThemeMode, "dark", StringComparison.OrdinalIgnoreCase)) light = false;
             Theme.Light = light;
-            Theme.Accent = Backdrop.Accent;
+            Theme.Accent = ResolveAccent(light);
             if (!Backdrop.Mean.IsEmpty) Theme.WallMean = Backdrop.Mean;
             Theme.ApplyTone();
         }

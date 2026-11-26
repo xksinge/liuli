@@ -9,7 +9,7 @@ namespace Liuli
 {
     sealed class V2SettingsForm : Form
     {
-        static readonly string[] Nav = { "主题", "面板", "Dock", "灵动岛", "关于" };
+        static readonly string[] Nav = { "主题", "配色", "面板", "Dock", "灵动岛", "关于" };
         const int MaxThemes = 6;
 
         float S = 1f;
@@ -20,7 +20,7 @@ namespace Liuli
         bool dragging;
         Point dragOff;
         Rectangle closeR;
-        Rectangle[] navRects = new Rectangle[5];
+        Rectangle[] navRects = new Rectangle[6];
         List<Ctl> controls = new List<Ctl>();
         TextBox nameBox;
         Rectangle nameSaveR;
@@ -135,9 +135,10 @@ namespace Liuli
             controls.Clear();
             if (nameBox != null && index != 0) nameBox.Visible = false;
             if (index == 0) BuildThemePage();
-            else if (index == 1) BuildPanelPage();
-            else if (index == 2) BuildDockPage();
-            else if (index == 3) BuildIslandPage();
+            else if (index == 1) BuildPalettePage();
+            else if (index == 2) BuildPanelPage();
+            else if (index == 3) BuildDockPage();
+            else if (index == 4) BuildIslandPage();
             else BuildAboutPage();
         }
 
@@ -228,6 +229,56 @@ namespace Liuli
             }
         }
 
+        void BuildPalettePage()
+        {
+            int x = Cx();
+            int w = Cr() - x;
+            int y = Ct();
+
+            AddSection("强调色来源", x, y, w); y += Util.RoundI(30 * S);
+            AddSeg("来源", "跟随壁纸会随壁纸主色自动变化；预设/自定义则保持固定", "accentSource", x, y, w,
+                new string[] { "跟随壁纸", "预设", "自定义" },
+                delegate
+                {
+                    string mode = V2Shell.Config.AccentMode;
+                    if (string.Equals(mode, "preset", StringComparison.OrdinalIgnoreCase)) return 1;
+                    if (string.Equals(mode, "custom", StringComparison.OrdinalIgnoreCase)) return 2;
+                    return 0;
+                },
+                delegate (int v)
+                {
+                    if (v == 2) { PickCustomAccent(); return; }
+                    V2Shell.Config.AccentMode = v == 1 ? "preset" : "auto";
+                    V2Shell.ApplyVisualSettings(false);
+                    V2Shell.Config.Save();
+                });
+            y += Util.RoundI(92 * S);
+
+            AddSection("内置预设", x, y, w); y += Util.RoundI(30 * S);
+            int gap = Util.RoundI(10 * S);
+            int cw = (w - gap * 2) / 3;
+            int ch = Util.RoundI(54 * S);
+            for (int i = 0; i < 6; i++)
+            {
+                int col = i % 3;
+                int row = i / 3;
+                AddSwatch(i, Palette.Name(i), x + col * (cw + gap), y + row * (ch + Util.RoundI(8 * S)), cw, ch);
+            }
+            y += (ch + Util.RoundI(8 * S)) * 2 + Util.RoundI(18 * S);
+
+            AddSection("自定义", x, y, w); y += Util.RoundI(30 * S);
+            string custom = ShellConfig.NormalizeHexColor(V2Shell.Config.AccentCustom, "#7EB2FF");
+            AddButton("自定义强调色 · " + custom, "打开系统取色器；取消不会改变当前配色", "customAccent", x, y, w, false,
+                delegate { PickCustomAccent(); });
+            y += Util.RoundI(62 * S);
+
+            AddSection("当前配色", x, y, w); y += Util.RoundI(30 * S);
+            string modeText = string.Equals(V2Shell.Config.AccentMode, "preset", StringComparison.OrdinalIgnoreCase)
+                ? "预设 · " + Palette.Name(V2Shell.Config.AccentPreset)
+                : (string.Equals(V2Shell.Config.AccentMode, "custom", StringComparison.OrdinalIgnoreCase) ? "自定义 · " + custom : "跟随壁纸");
+            AddInfo("当前强调色", modeText + "\nDock、灵动岛、面板、设置窗共用同一个 Theme.Accent；换壁纸、切预设或改自定义值时才重算一次。", x, y, w);
+        }
+
         void BuildPanelPage()
         {
             int x = Cx();
@@ -241,7 +292,7 @@ namespace Liuli
                     if (!full)
                     {
                         PanelForm pf = V2Shell.AddPanel();
-                        BuildPage(1);
+                        BuildPage(2);
                         Invalidate();
                     }
                 });
@@ -284,7 +335,7 @@ namespace Liuli
                 delegate (int v)
                 {
                     V2Shell.SetDockPreset(v == 0 ? "small" : (v == 2 ? "large" : "standard"));
-                    BuildPage(2);
+                    BuildPage(3);
                     Invalidate();
                 });
             y += Util.RoundI(92 * S);
@@ -405,6 +456,30 @@ namespace Liuli
             controls.Add(c);
         }
 
+        void AddSwatch(int index, string name, int x, int y, int w, int h)
+        {
+            Ctl c = new Ctl();
+            c.Kind = "swatch"; c.Title = name; c.Index = index;
+            c.R = new Rectangle(x, y, w, h);
+            controls.Add(c);
+        }
+
+        void PickCustomAccent()
+        {
+            using (ColorDialog dlg = new ColorDialog())
+            {
+                dlg.FullOpen = true;
+                dlg.Color = ShellConfig.ParseHexColor(V2Shell.Config.AccentCustom, Theme.Accent);
+                if (dlg.ShowDialog(this) != DialogResult.OK) return;
+                V2Shell.Config.AccentMode = "custom";
+                V2Shell.Config.AccentCustom = "#" + dlg.Color.R.ToString("X2") + dlg.Color.G.ToString("X2") + dlg.Color.B.ToString("X2");
+                V2Shell.ApplyVisualSettings(false);
+                V2Shell.Config.Save();
+                BuildPage(1);
+                Invalidate();
+            }
+        }
+
         void AddThemeRow(ThemeSnapshot t, int x, int y, int w, int index)
         {
             Ctl c = new Ctl();
@@ -448,7 +523,7 @@ namespace Liuli
             Rectangle hd = new Rectangle(Util.RoundI(26 * S), Util.RoundI(18 * S), Util.RoundI(420 * S), Util.RoundI(28 * S));
             Theme.Text(g, "Liuli 设置", Theme.Font(15f, FontStyle.Bold, S), Theme.TextMain, hd, StringAlignment.Near, false);
             Rectangle hsub = new Rectangle(hd.X, Util.RoundI(44 * S), Util.RoundI(500 * S), Util.RoundI(20 * S));
-            Theme.Text(g, "v2 桌面层 · 主题 / 面板 / Dock / 灵动岛", Theme.Font(9.5f, FontStyle.Regular, S), Theme.TextFaint, hsub, StringAlignment.Near, false);
+            Theme.Text(g, "v2 桌面层 · 主题 / 配色 / 面板 / Dock / 灵动岛", Theme.Font(9.5f, FontStyle.Regular, S), Theme.TextFaint, hsub, StringAlignment.Near, false);
 
             closeR = new Rectangle(Width - Util.RoundI(50 * S), Util.RoundI(16 * S), Util.RoundI(30 * S), Util.RoundI(30 * S));
             Glass.Button(g, closeR, Glyph.Close, hover == -2, false, Theme.Accent);
@@ -601,6 +676,25 @@ namespace Liuli
                     Theme.Text(g, c.Desc, Theme.Font(8.8f, FontStyle.Regular, S), Theme.TextFaint,
                         new Rectangle(rr.X + Util.RoundI(12 * S), rr.Y + Util.RoundI(26 * S), rr.Width - Util.RoundI(36 * S), Util.RoundI(16 * S)), StringAlignment.Near, true);
                     Theme.Glyph(g, Glyph.Chevron, new Rectangle(rr.Right - Util.RoundI(26 * S), rr.Y + (rr.Height - Util.RoundI(16 * S)) / 2, Util.RoundI(16 * S), Util.RoundI(16 * S)), Theme.TextSub, 1.3f * S);
+                    break;
+                }
+                case "swatch":
+                {
+                    bool selected = string.Equals(V2Shell.Config.AccentMode, "preset", StringComparison.OrdinalIgnoreCase)
+                        && V2Shell.Config.AccentPreset == c.Index;
+                    using (GraphicsPath p = Theme.Round(c.R, Util.RoundI(12 * S)))
+                    using (SolidBrush b = new SolidBrush(selected ? Color.FromArgb(48, Theme.Accent) : (hot ? Theme.Hover : (Theme.Light ? Color.FromArgb(18, 12, 18, 30) : Color.FromArgb(16, 255, 255, 255))))) g.FillPath(b, p);
+                    using (GraphicsPath p = Theme.Round(c.R, Util.RoundI(12 * S)))
+                    using (Pen pen = new Pen(selected ? Color.FromArgb(150, Theme.Accent) : Theme.Hair, 1f)) g.DrawPath(pen, p);
+                    int dot = Util.RoundI(20 * S);
+                    Rectangle dotR = new Rectangle(c.R.X + Util.RoundI(14 * S), c.R.Y + (c.R.Height - dot) / 2, dot, dot);
+                    using (SolidBrush b = new SolidBrush(Palette.Get(c.Index, Theme.Light)))
+                        g.FillEllipse(b, dotR);
+                    if (selected)
+                        using (Pen pen = new Pen(Theme.TextMain, 1.2f)) g.DrawEllipse(pen, dotR.X - 2, dotR.Y - 2, dotR.Width + 4, dotR.Height + 4);
+                    Theme.TextMiddle(g, c.Title, Theme.Font(10.5f, selected ? FontStyle.Bold : FontStyle.Regular, S),
+                        selected ? Theme.TextMain : Theme.TextSub,
+                        new Rectangle(dotR.Right + Util.RoundI(10 * S), c.R.Y, c.R.Width - dotR.Width - Util.RoundI(34 * S), c.R.Height), StringAlignment.Near);
                     break;
                 }
                 case "theme":
@@ -798,7 +892,7 @@ namespace Liuli
                 dragSlider = -1;
                 if (V2Shell.Config != null) V2Shell.Config.Save();
                 if (c.Key == "blur") V2Shell.ApplyVisualSettings(true);
-                if (page == 3) V2Shell.ApplyIslandSettings();
+                if (page == 4) V2Shell.ApplyIslandSettings();
                 Invalidate();
                 ScheduleRefresh();
             }
@@ -852,6 +946,15 @@ namespace Liuli
                     Invalidate();
                 }
             }
+            else if (c.Kind == "swatch")
+            {
+                V2Shell.Config.AccentMode = "preset";
+                V2Shell.Config.AccentPreset = c.Index;
+                V2Shell.ApplyVisualSettings(false);
+                V2Shell.Config.Save();
+                BuildPage(1);
+                Invalidate();
+            }
             else if (c.Kind == "theme") ThemeClick(c, e.Location);
             else if (c.Kind == "panel") PanelClick(c, e.Location);
         }
@@ -903,7 +1006,7 @@ namespace Liuli
                 {
                     V2Shell.RemovePanel(FindPanel(cfg));
                     pendingDeletePanel = "";
-                    BuildPage(1);
+                    BuildPage(2);
                     Invalidate();
                 }
                 else

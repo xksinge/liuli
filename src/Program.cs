@@ -77,11 +77,12 @@ namespace Liuli
                         " w=" + p.W + " h=" + p.H + " topMost=" + p.TopMostPanel);
                 }
                 Console.WriteLine("themes=" + c.Themes.Count + " active=" + c.ActiveTheme);
+                Console.WriteLine("accent=" + c.AccentMode + " preset=" + c.AccentPreset + " custom=" + c.AccentCustom);
                 for (int i = 0; i < c.Themes.Count; i++)
                 {
                     ThemeSnapshot t = c.Themes[i];
                     Console.WriteLine("  theme." + (i + 1) + " name=" + t.Name + " glass=" + t.GlassPct + " blur=" + t.BlurPct +
-                        " radius=" + t.Radius + " panels=" + t.Panels.Count + " wallpaper=" + t.WallpaperPath);
+                        " radius=" + t.Radius + " accent=" + t.AccentMode + "/" + t.AccentPreset + " panels=" + t.Panels.Count + " wallpaper=" + t.WallpaperPath);
                 }
                 Console.WriteLine("dockItems=" + c.DockItems.Count);
                 for (int i = 0; i < c.DockItems.Count; i++)

@@ -226,6 +226,14 @@ namespace Liuli
             Util.Rgb(176, 190, 208)   // 石墨
         };
 
+        static readonly string[] names = { "雾蓝", "青瓷", "紫雾", "暖砂", "绯红", "石墨" };
+
+        public static string Name(int index)
+        {
+            int i = Util.Clamp(index, 0, names.Length - 1);
+            return names[i];
+        }
+
         public static Color Get(int index, bool light)
         {
             if (index < 0) return Theme.Accent;

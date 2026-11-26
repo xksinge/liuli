@@ -2,6 +2,37 @@
 
 遵循 Keep a Changelog；版本遵循 SemVer。
 
+## [Unreleased · v2.0 M5 配色]
+
+### 新增
+
+- 设置新增“配色”页：强调色来源三选一（跟随壁纸 / 预设 / 自定义），6 个预设色卡，自定义取色（系统 `ColorDialog`，取消不改）
+- `shell.json` 新增 `accentMode` / `accentPreset` / `accentCustom`；`ShellConfig.ResolveAccent` 按模式统一写入 `Theme.Accent`
+- 6 套预设：雾蓝 / 青瓷 / 紫雾 / 暖砂 / 绯红 / 石墨；浅色主题自动压暗
+- `ThemeSnapshot` 增加配色三项，保存/加载主题时一并恢复；手动改配色清空 `activeTheme`
+- `--selftest` 输出 `accent=mode preset=N custom=#...`
+
+### 变更
+
+- 设置由五页增至六页：主题 / 配色 / 面板 / Dock / 灵动岛 / 关于；Dock、灵动岛齿轮上下文页索引后移一位
+- `RestoreVisualDefaults` 同时把强调色来源恢复为 auto
+- 坏值收敛：未知 `accentMode`→auto、`accentPreset` 越界→0–5、非法 `accentCustom`→`#7EB2FF`
+
+### 验证
+
+- 构建通过：`bin\Liuli.exe` 263.5 KB
+- 6 预设逐一点击 `accentPreset` 0→5；设置页色卡选中态、组件 accent 同步
+- 自定义取色 `#FF80FF` 全局生效（设置标题、导航、Dock 运行点/图标高亮、灵动岛）；取消不改
+- 主题保存含 `accentMode=custom / accentPreset=5 / accentCustom=#FF80FF`；切到 auto 后加载主题恢复 custom
+- 坏配置收敛为 `auto/5/#7EB2FF`；重启保持
+- 截图：`docs/screens/v6/settings-palette.png`、`settings-palette-preset.png`、`settings-palette-custom.png`、`m5-dock-accent.png`、`m5-island-accent.png`
+
+### 未验证 / 剩余
+
+- 真实键盘 `Ctrl+Alt+G` 注入未稳定复现，本轮用 `WM_HOTKEY` 消息验证入口
+- 换壁纸联动 5 秒未重测（沿用 M1 的 `Backdrop.Tick → ApplyTheme` 路径）
+- 6 套预设目前只切强调色；每套独立玻璃染色/描边/文字层级、描边强度/文字对比滑杆、全组件 token 审查与重算耗时仍待补
+
 ## [Unreleased · v2.0 M4 主题与设置]
 
 ### 新增
