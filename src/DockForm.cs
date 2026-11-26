@@ -172,7 +172,7 @@ namespace Liuli
                 {
                     bool pressed = pressedItem == i;
                     bool bouncing = bounceItem == i;
-                    float sc = pressed ? 0.90f : (bouncing ? BounceScale() : 1f);
+                    float sc = pressed ? 0.94f : (bouncing ? BounceScale() : 1f);
                     Rectangle baseRect = itemRects[i];
                     Rectangle r = ScaleRect(baseRect, sc);
                     if (hoverItem == i || pressed)
@@ -210,7 +210,7 @@ namespace Liuli
                 for (int i = 0; i < 3; i++)
                 {
                     bool pressed = pressedBtn == i;
-                    float sc = pressed ? 0.90f : (bounceBtn == i ? buttonScale : 1f);
+                    float sc = pressed ? 0.94f : (bounceBtn == i ? buttonScale : 1f);
                     PaintIconButton(g, btnRects[i], glyphs[i], hoverBtn == i, pressed, sc);
                 }
 
@@ -239,7 +239,7 @@ namespace Liuli
             if (t < 0f) t = 0f;
             if (t >= 1f) return 1f;
             float e = 1f - (1f - t) * (1f - t) * (1f - t);
-            return 0.90f + 0.10f * e + 0.06f * (float)Math.Sin(Math.PI * t);
+            return 0.94f + 0.10f * e + 0.06f * (float)Math.Sin(Math.PI * t);
         }
 
         void StartAnim()

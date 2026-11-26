@@ -20,7 +20,7 @@
 - 已验证：`pwsh tools/build.ps1` 编译成功（199 KB）；`bin\Liuli.exe --selftest` 读取 `bin\data\shell.json`，默认 8 项，任务栏 `ABS_AUTOHIDE=1`，图标探针 `explorer 256x256`。
 - 未验证：真机 UI 启动、截图、125% DPI、Dock 点击/拖入/右键移除、任务栏开关恢复、点击反馈动态手感、`.lnk` 实际显示。
 - 已生成离屏预览 `docs/screens/v2/m1-preview.png` 与按压态对照 `m1-preview-pressed.png` / `m1-feedback-compare.png`；不是桌面真机截图，仅用于材质/布局/按压态初评。
-- 点击反馈：Dock 项与右侧按钮、灵动岛快捷按钮统一为按下 0.90 缩放 + 按压底色，释放回弹 + accent 波纹；静态预览可见，真机手感仍待验证。
+- 点击反馈：Dock 项与右侧按钮、灵动岛快捷按钮统一为按下 0.94 缩放 + 按压底色，释放回弹 + accent 波纹；静态预览可见，真机手感仍待验证。
 - 高清图标：Dock 应用走 `SHGetImageList(SHIL_JUMBO)` + `IImageList.GetIcon`，探针确认 256×256；系统入口仍用矢量图标；`.lnk` 箭头由 Shell 图标源决定，未做全局箭头开关。
 - 用户此前明确“不运行”，因此不把“能启动”写成已验证；下列任务保持未勾选。
 
@@ -106,3 +106,4 @@
 证据：docs/screens/v2/m1-dock.png、日志时间戳
 未验证：...
 ```
+
