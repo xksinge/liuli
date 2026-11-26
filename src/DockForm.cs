@@ -79,10 +79,18 @@ namespace Liuli
             return V2Shell.Config.DockItems;
         }
 
+        float PresetScale()
+        {
+            string p = V2Shell.Config == null ? "standard" : V2Shell.Config.DockPreset;
+            if (string.Equals(p, "small", StringComparison.OrdinalIgnoreCase)) return 0.86f;
+            if (string.Equals(p, "large", StringComparison.OrdinalIgnoreCase)) return 1.14f;
+            return 1f;
+        }
+
         public void Relayout()
         {
             if (!IsHandleCreated) return;
-            UiScale = DpiUiScale();
+            UiScale = DpiUiScale() * PresetScale();
             int pad = Util.RoundI(16 * UiScale);
             int icon = Util.RoundI(44 * UiScale);
             int gap = Util.RoundI(5 * UiScale);

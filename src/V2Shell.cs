@@ -115,6 +115,7 @@ namespace Liuli
             ContextMenuStrip menu = new ContextMenuStrip();
             menu.Items.Add("显示/隐藏 Dock 与灵动岛", null, delegate { ToggleAll(); });
             menu.Items.Add("Dock 自动隐藏：开/关", null, delegate { ToggleDockAutoHide(); });
+            menu.Items.Add("Dock 尺寸：小/标准/大（点击切换）", null, delegate { CycleDockPreset(); });
             menu.Items.Add("任务栏自动隐藏：开/关", null, delegate { ToggleTaskbarAutoHide(); });
             menu.Items.Add("恢复系统任务栏", null, delegate { RestoreTaskbar(); });
             menu.Items.Add("重载 Dock 默认组合", null, delegate { ResetDock(); });
@@ -162,6 +163,7 @@ namespace Liuli
             List<MenuForm.Item> items = new List<MenuForm.Item>();
             items.Add(new MenuForm.Item("显示/隐藏 Dock 与灵动岛", delegate { ToggleAll(); }));
             items.Add(new MenuForm.Item("Dock 自动隐藏：开/关", delegate { ToggleDockAutoHide(); }, Glyph.Gear));
+            items.Add(new MenuForm.Item("Dock 尺寸：" + DockPresetLabel(Config == null ? "standard" : Config.DockPreset) + "（点击切换）", delegate { CycleDockPreset(); }, Glyph.Gear));
             items.Add(new MenuForm.Item("任务栏自动隐藏：开/关", delegate { ToggleTaskbarAutoHide(); }, Glyph.Gear));
             items.Add(new MenuForm.Item("恢复系统任务栏", delegate { RestoreTaskbar(); }, Glyph.Restore));
             items.Add(new MenuForm.Item("重载 Dock 默认组合", delegate { ResetDock(); }, Glyph.Restore));
@@ -206,6 +208,25 @@ namespace Liuli
             Config.Save();
             if (Dock != null) Dock.RefreshAutoHide();
             Toast(Config.DockAutoHide ? "Dock 已设为自动隐藏，鼠标触底唤出" : "Dock 已设为常显");
+        }
+
+        public static string DockPresetLabel(string preset)
+        {
+            if (string.Equals(preset, "small", StringComparison.OrdinalIgnoreCase)) return "小";
+            if (string.Equals(preset, "large", StringComparison.OrdinalIgnoreCase)) return "大";
+            return "标准";
+        }
+
+        public static void CycleDockPreset()
+        {
+            if (Config == null) return;
+            string next = "standard";
+            if (string.Equals(Config.DockPreset, "standard", StringComparison.OrdinalIgnoreCase)) next = "large";
+            else if (string.Equals(Config.DockPreset, "large", StringComparison.OrdinalIgnoreCase)) next = "small";
+            Config.DockPreset = next;
+            Config.Save();
+            if (Dock != null) Dock.RelayoutPublic();
+            Toast("Dock 尺寸：" + DockPresetLabel(next));
         }
 
         public static void ToggleTaskbarAutoHide()
