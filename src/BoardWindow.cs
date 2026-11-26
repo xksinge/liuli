@@ -781,6 +781,7 @@ namespace Liuli
         void OnFilesDropped(List<string> files)
         {
             if (files == null || files.Count == 0) return;
+            Log.Info("drop", "收到拖入 " + files.Count + " 项，看板 " + B.Title);
             if (B.Kind == BoardKind.Files)
             {
                 int moved = 0;
@@ -789,7 +790,7 @@ namespace Liuli
                     string p = files[i];
                     string dest = null;
                     if (IsOnDesktop(p) && !IsUnderLiuli(p)) dest = Icons.MoveIntoGroup(p, B.Title);
-                    if (dest != null) { p = dest; moved++; }
+                    if (dest != null) { Icons.RecordMove(p, dest); p = dest; moved++; }
                     Item it = new Item(System.IO.Path.GetFileNameWithoutExtension(p), p);
                     if (System.IO.Directory.Exists(p)) it.Text = new System.IO.DirectoryInfo(p).Name;
                     else it.Text = System.IO.Path.GetFileNameWithoutExtension(p);
