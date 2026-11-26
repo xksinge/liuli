@@ -10,7 +10,7 @@ namespace Liuli
 {
     sealed class V2SettingsForm : Form
     {
-        static readonly string[] Nav = { "主题", "配色", "面板", "Dock", "灵动岛", "壁纸", "关于" };
+        static readonly string[] Nav = { "主题", "配色", "面板", "Dock", "灵动岛", "壁纸", "桌面", "关于" };
         const int MaxThemes = 6;
 
         float S = 1f;
@@ -21,7 +21,7 @@ namespace Liuli
         bool dragging;
         Point dragOff;
         Rectangle closeR;
-        Rectangle[] navRects = new Rectangle[7];
+        Rectangle[] navRects = new Rectangle[8];
         List<Ctl> controls = new List<Ctl>();
         TextBox nameBox;
         Rectangle nameSaveR;
@@ -143,6 +143,7 @@ namespace Liuli
             else if (index == 3) BuildDockPage();
             else if (index == 4) BuildIslandPage();
             else if (index == 5) BuildWallpaperPage();
+            else if (index == 6) BuildDesktopPage();
             else BuildAboutPage();
         }
 
@@ -505,6 +506,66 @@ namespace Liuli
             }
         }
 
+        void BuildDesktopPage()
+        {
+            int x = Cx();
+            int w = Cr() - x;
+            int y = Ct();
+            AddSection("桌面图标", x, y, w); y += Util.RoundI(26 * S);
+            AddToggle("隐藏全部桌面图标", "运行期只隐藏，不删除文件；退出 Liuli 时恢复启动前状态",
+                "desktopAll", x, y, w,
+                delegate { return V2Shell.Config.DesktopIconsHidden ? 1 : 0; },
+                delegate (int v)
+                {
+                    V2Shell.Config.DesktopIconsHidden = v == 1;
+                    V2Shell.ApplyDesktopSettings(true);
+                });
+            y += Util.RoundI(62 * S);
+            AddInfo("说明", "只隐藏当前桌面视图，不改系统“显示桌面图标”偏好；文件与快捷方式原样保留。", x, y, w);
+            y += Util.RoundI(48 * S);
+
+            AddSection("系统图标", x, y, w); y += Util.RoundI(26 * S);
+            AddShellToggle("此电脑", "HideShellThisPc", x, ref y, w);
+            AddShellToggle("回收站", "HideShellRecycle", x, ref y, w);
+            AddShellToggle("用户文件夹", "HideShellUserFiles", x, ref y, w);
+            AddShellToggle("网络", "HideShellNetwork", x, ref y, w);
+            AddShellToggle("控制面板", "HideShellControlPanel", x, ref y, w);
+            AddInfo("提示", "关闭=桌面不显示；写入当前用户资源管理器设置，重启资源管理器仍保持；不会创建或删除快捷方式。" +
+                "\nWindows 11 25H2 已不再绘制“控制面板”桌面图标，开关会写偏好但可能看不到图标。", x, y, w);
+        }
+
+        void AddShellToggle(string title, string key, int x, ref int y, int w)
+        {
+            AddToggle(title, "关闭=桌面不显示这个系统图标", key, x, y, w,
+                delegate { return ShellToggleGet(key) ? 1 : 0; },
+                delegate (int v)
+                {
+                    ShellToggleSet(key, v == 1);
+                    if (!V2Shell.ApplyDesktopSettings(false)) V2Shell.Toast("系统图标切换失败");
+                });
+            y += Util.RoundI(58 * S);
+        }
+
+        bool ShellToggleGet(string key)
+        {
+            ShellConfig c = V2Shell.Config;
+            if (key == "HideShellThisPc") return c.HideShellThisPc;
+            if (key == "HideShellRecycle") return c.HideShellRecycle;
+            if (key == "HideShellUserFiles") return c.HideShellUserFiles;
+            if (key == "HideShellNetwork") return c.HideShellNetwork;
+            return c.HideShellControlPanel;
+        }
+
+        void ShellToggleSet(string key, bool hidden)
+        {
+            ShellConfig c = V2Shell.Config;
+            if (key == "HideShellThisPc") c.HideShellThisPc = hidden;
+            else if (key == "HideShellRecycle") c.HideShellRecycle = hidden;
+            else if (key == "HideShellUserFiles") c.HideShellUserFiles = hidden;
+            else if (key == "HideShellNetwork") c.HideShellNetwork = hidden;
+            else c.HideShellControlPanel = hidden;
+        }
+
         void BuildAboutPage()
         {
             int x = Cx();
@@ -642,7 +703,7 @@ namespace Liuli
             Rectangle hd = new Rectangle(Util.RoundI(26 * S), Util.RoundI(18 * S), Util.RoundI(420 * S), Util.RoundI(28 * S));
             Theme.Text(g, "Liuli 设置", Theme.Font(15f, FontStyle.Bold, S), Theme.TextMain, hd, StringAlignment.Near, false);
             Rectangle hsub = new Rectangle(hd.X, Util.RoundI(44 * S), Util.RoundI(500 * S), Util.RoundI(20 * S));
-            Theme.Text(g, "v2 桌面层 · 主题 / 配色 / 面板 / Dock / 灵动岛 / 壁纸", Theme.Font(9.5f, FontStyle.Regular, S), Theme.TextFaint, hsub, StringAlignment.Near, false);
+            Theme.Text(g, "v2 桌面层 · 主题 / 配色 / 面板 / Dock / 灵动岛 / 壁纸 / 桌面", Theme.Font(9.5f, FontStyle.Regular, S), Theme.TextFaint, hsub, StringAlignment.Near, false);
 
             closeR = new Rectangle(Width - Util.RoundI(50 * S), Util.RoundI(16 * S), Util.RoundI(30 * S), Util.RoundI(30 * S));
             Glass.Button(g, closeR, Glyph.Close, hover == -2, false, Theme.Accent);

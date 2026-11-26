@@ -151,7 +151,7 @@ M1 实际命名：`V2Shell`、`ShellConfig`、`V2Window`、`DockForm`、`IslandF
 - 保存/覆盖：`SaveTheme` 同名覆盖，`ActiveTheme` 指向当前快照；手动改玻璃、Dock、灵动岛、面板后立刻清空 `ActiveTheme`，避免把已偏离的状态误标成“当前”。
 - 加载：`LoadTheme` 先应用快照，壁纸文件存在时 `Wallpaper.Set` + `Backdrop.Rebuild`，再重建面板、Dock、灵动岛；任一步失败只影响对应窗口，不改快照内容。
 - 删除：二次确认（同一条目点两次），删除当前主题时同步清空 `activeTheme`；坏 JSON 由 `NormalizeThemes` 收敛，空/重复名自动修复。
-- 设置面板 `V2SettingsForm`：900×720 自绘玻璃窗、七页导航、窗口可拖动；滑杆松手保存，磨砂/压暗松手才重烘壁纸，开关/内容切换即时写 `shell.json`。
+- 设置面板 `V2SettingsForm`：900×720 自绘玻璃窗、八页导航、窗口可拖动；滑杆松手保存，磨砂/压暗松手才重烘壁纸，开关/内容切换即时写 `shell.json`。
 - 页面职责：
   - 主题：玻璃浓度 20–140、磨砂 10–100、圆角 10–30、自动/深色/浅色、保存当前主题（内嵌原生 TextBox 命名）、恢复外观默认、主题库加载/覆盖/删除。
   - 配色：强调色来源三选一（跟随壁纸 / 预设 / 自定义）、6 个预设色卡、自定义取色（`ColorDialog`，取消不改）、当前配色说明。
@@ -159,6 +159,7 @@ M1 实际命名：`V2Shell`、`ShellConfig`、`V2Window`、`DockForm`、`IslandF
   - Dock：显示开关、自动隐藏、小/标准/大三档；图标拖拽/移除仍在 Dock 本体，设置页明确提示。
   - 灵动岛：显示开关、宽/高/顶部偏移/动画四个滑杆、天气/系统读数/快捷动作三个开关。
   - 壁纸：当前壁纸预览、文件名/路径/系统样式、0–80% 压暗、选择本地图片、恢复系统壁纸。
+  - 桌面：全部桌面图标运行期隐藏；五个系统图标（此电脑/回收站/用户文件夹/网络/控制面板）独立开关。
   - 关于：版本、运行状态、快捷键、打开数据目录、关闭设置。
 - 入口与上下文：Dock 齿轮 `OpenSettings(3)`、灵动岛齿轮 `OpenSettings(4)`、托盘双击/热键/菜单 `OpenSettings(0)`；已打开时只切换页，不重复创建窗口。
 - 状态刷新：设置页内的主题库“当前”徽标由 `ActiveTheme` 驱动；滑杆/开关改完后 180ms 重建页面，避免徽标停留旧值，同时避开命名输入与拖动过程。
@@ -173,6 +174,15 @@ M1 实际命名：`V2Shell`、`ShellConfig`、`V2Window`、`DockForm`、`IslandF
 - 压暗：`Backdrop.Rebuild` 在 Frost/Blur 后、`ImageFx.Average` 前调用 `ApplyDim`，用黑色 alpha 覆盖 `pct*255/100`；`RebuildFromFrame` 同样在取平均色前压暗。
 - 重烘与 tone：`ApplyVisualSettings(true)` 先 `Config.ApplyTheme()` 再 `Backdrop.Rebuild()` 再 `Config.ApplyTheme()`；`LoadTheme` 也采取同样二次应用，确保压暗后的 mean/light/accent 进入同一轮绘制。`V2Shell.Boot` 在 `Backdrop.Start()` 前设置 `Theme.WallpaperDim`。
 - 限制：WebP 走系统 WIC/GDI+，解码能力取决于系统组件；无效/不存在图片不写壁纸，保持当前壁纸。
+
+### 7.6 桌面图标页（REQ-080–082，Issue #61）
+
+- 全部图标隐藏：`Native.SetDesktopIconsVisible` 只对桌面 `SysListView32` 调 `ShowWindow`，不写注册表；属于运行期状态。
+- 启动记录：`V2Shell.Boot` 在应用配置前记录 `desktopIconOriginalVisible`；隐藏成功后写 `data\desktop-icons.runtime`，退出时按原状态恢复并删除标记。
+- 异常恢复：下次启动先读标记恢复原始可见状态，再重新应用配置；标记不写进 `shell.json`，避免把临时隐藏当永久偏好。
+- 系统图标：`DesktopState` 维护五个 CLSID，写 `HideDesktopIcons\NewStartPanel` 与 `ClassicStartMenu`（1 隐藏 / 0 显示）；`SHChangeNotify(0x08000000)` 通知资源管理器刷新，不重启 Explorer。
+- 退出语义：`Quit` 只在“配置仍要隐藏且确实是 Liuli 隐藏”时恢复原状态；用户切到显示后退出不再反向隐藏。系统图标开关属于显式偏好，退出后保持。
+- 兼容：Windows 11 25H2 桌面已不绘制“控制面板”系统图标，开关仍写注册表/配置但无可见图标；Win10 1903 待回归。
 
 ## 8. 配色
 

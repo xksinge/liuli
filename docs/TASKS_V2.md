@@ -103,7 +103,7 @@
   - 验证：构建 225 KB；2 面板创建、拖动/缩放、四类内容切换、位置尺寸不变、重启保持、透明区 `HTTRANSPARENT`、置底被记事本覆盖均真机通过；截图 `docs/screens/v4/`。
 - [x] **TASK-041** [REQ-032] 主题保存/加载/删除（Issue #54）
   - 实现：`ThemeSnapshot` 快照（Dock / 灵动岛 / 玻璃 / 明暗 / 壁纸 / 面板深拷贝）；`Themes[]` + `activeTheme`；最多 6 个、同名覆盖、超限淘汰最早、二次确认删除；加载恢复壁纸与整套外壳。
-  - 设置面板：新增 `V2SettingsForm` 900×720 五页（主题/面板/Dock/灵动岛/关于），M5 配色页加入后为六页；主题库加载/覆盖/删除、滑杆松手保存、磨砂松手重烘、180ms 状态刷新；Dock/灵动岛齿轮、托盘、热键统一入口。
+  - 设置面板：新增 `V2SettingsForm` 900×720 五页（主题/面板/Dock/灵动岛/关于），M5 扩展配色/壁纸/桌面后为八页；主题库加载/覆盖/删除、滑杆松手保存、磨砂松手重烘、180ms 状态刷新；Dock/灵动岛齿轮、托盘、热键统一入口。
   - 验证：构建 `bin\Liuli.exe` 259 KB；主题保存/加载/删除、覆盖、7 个主题触发 6 上限淘汰、面板 6 上限、Dock/灵动岛显隐、上下文入口、坏配置收敛均已记录；截图 `docs/screens/v5/`。
 - [ ] **TASK-042** [REQ-033] 导入推荐配置（P1）
 - [ ] **TASK-043** [REQ-034] 统一 Theme token 审查
@@ -120,13 +120,17 @@
   - 实现：设置新增“配色”页；`accentMode=auto/preset/custom`、`accentPreset 0–5`、`accentCustom #RRGGBB`；`ShellConfig.ResolveAccent` 统一写入 `Theme.Accent`；6 套预设（雾蓝/青瓷/紫雾/暖砂/绯红/石墨）+ `ColorDialog` 自定义；主题快照保存/恢复配色三项。
   - 验证：6 预设逐一点击 `accentPreset` 0→5；自定义取色 `#FF80FF` 全局生效、取消不改；坏值收敛 `auto/5/#7EB2FF`；主题保存后加载恢复 `custom/#FF80FF`；重启保持；截图 `docs/screens/v6/`。
   - 剩余：REQ-054 每套预设独立玻璃染色/描边/文字层级、REQ-055 描边强度与文字对比滑杆、REQ-056 全组件 token 审查、REQ-057 重算耗时实测。
-- [ ] **TASK-053** [REQ-080–082] 桌面图标默认隐藏、系统图标桌面开关、退出恢复
+- [x] **TASK-053** [REQ-080–082] 桌面图标默认隐藏、系统图标桌面开关、退出恢复（Issue #61 / PR #62）
+  - 实现：设置新增“桌面”页；启动默认隐藏全部桌面图标（只对 `SysListView32` 做 `ShowWindow`，运行期状态）；五个系统图标独立开关写 `HideDesktopIcons\NewStartPanel` + `ClassicStartMenu`，`SHChangeNotify` 刷新；`desktop-icons.runtime` 标记异常退出校准；正常 `Quit` 恢复启动前可见状态。
+  - 验证：启动 `hidden=True visible=False`；切显示 `visible=True`；此电脑/回收站/用户文件夹/网络逐个 69↔70；隐藏状态菜单退出后图标恢复、标记删除、配置保留；Explorer 重启后已显示系统图标保持（项数 70）。截图 `docs/screens/v7/settings-desktop.png`。
+  - 限制：Windows 11 25H2 桌面不再绘制“控制面板”图标，开关写偏好但无可见项（项数 69→69）；Win10 1903、125% DPI、多屏未真机回归。
+  - 异常退出：隐藏态强杀后 marker=`1`；重启日志“上次异常退出，已校准桌面图标 visible=True”，随后重新隐藏并重建 marker。
 - [ ] **TASK-054** [REQ-044] 图标收纳组件（P1）
 
 ## Phase 6 · M6 设置与系统
 
 - [ ] **TASK-060** [REQ-060] `SettingsV2` 分模块页面
-  - M4 已完成主题/面板/Dock/灵动岛/关于五页与统一入口，M5 加入配色、壁纸两页后为七页；开机自启、快捷键配置、日志诊断等 M6 项仍待补。
+  - M4 已完成主题/面板/Dock/灵动岛/关于五页与统一入口，M5 加入配色、壁纸、桌面三页后为八页；开机自启、快捷键配置、日志诊断等 M6 项仍待补。
 - [ ] **TASK-061** [REQ-061] 开机自启
 - [ ] **TASK-062** [REQ-062/092] HiDPI + 文字四档
 - [ ] **TASK-063** [REQ-063] 热键配置/重置

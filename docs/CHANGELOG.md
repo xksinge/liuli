@@ -2,6 +2,35 @@
 
 遵循 Keep a Changelog；版本遵循 SemVer。
 
+## [Unreleased · v2.0 M5 桌面图标]
+
+### 新增
+
+- 设置新增“桌面”页：启动默认隐藏全部桌面图标（运行期，不写注册表）；此电脑/回收站/用户文件夹/网络/控制面板五个系统图标独立开关
+- 五个系统图标写 `HKCU\Software\Microsoft\Windows\CurrentVersion\Explorer\HideDesktopIcons`（NewStartPanel + ClassicStartMenu），通过 `SHChangeNotify` 刷新，不创建/删除快捷方式
+- 桌面图标显隐使用 `SysListView32` 的 `ShowWindow`，启动记录原可见状态，正常退出恢复；运行期标记 `data\desktop-icons.runtime` 在异常退出后下次启动校准
+- `ShellConfig` 已有 `desktopIconsHidden` / `hideShell*` 字段正式生效；`DesktopState` 统一封装五个 CLSID 与注册表写入
+
+### 变更
+
+- 设置由七页增至八页：主题 / 配色 / 面板 / Dock / 灵动岛 / 壁纸 / 桌面 / 关于；Dock/灵动岛上下文页索引保持 3/4
+- `V2Shell.Boot` 在启动时先校准上次异常残留，再记录原始可见状态并应用桌面配置；`Quit` 恢复运行期隐藏
+
+### 验证
+
+- 构建通过：`bin\Liuli.exe` 274 KB；C#5 warning 无新增
+- 首次启动日志 `[icons] 桌面 hidden=True visible=False`，桌面图标隐藏；切换“隐藏全部桌面图标”后 `visible=True`，`desktopIconsHidden=false`
+- 五个系统图标逐个点击：此电脑/回收站/用户文件夹/网络显示后桌面项数 69→70、隐藏后 70→69；注册表对应值 0/1 正确
+- 资源管理器重启后，已设为显示的系统图标仍在（桌面项数保持）
+- 隐藏状态下从 Liuli 菜单“退出”：桌面图标恢复显示，`desktop-icons.runtime` 删除，`shell.json` 保留用户偏好
+- 截图：`docs/screens/v7/settings-desktop.png`
+
+### 未验证 / 剩余
+
+- Windows 11 25H2 桌面不再绘制“控制面板”图标；开关能写注册表与配置，但桌面项数不变。Win10 1903 未回归。
+- 125% DPI、多屏未回归
+- “隐藏全部桌面图标”只在当前桌面视图生效；Explorer 重启后由下次启动重新应用
+
 ## [Unreleased · v2.0 M5 壁纸页]
 
 ### 新增

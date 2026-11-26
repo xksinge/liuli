@@ -30,6 +30,8 @@ namespace Liuli
         static Timer statsTimer;
         static Timer wallTimer;
         static bool allHidden;
+        static bool desktopIconOriginalVisible = true;
+        static bool desktopIconsHiddenByUs;
         static long bootAt;
 
         public static void Boot()
@@ -39,6 +41,10 @@ namespace Liuli
             Theme.BlurPct = Util.Clamp(Config.BlurPct, 10, 100);
             Theme.GlassPct = Util.Clamp(Config.GlassPct, 20, 140);
             Theme.WallpaperDim = Util.Clamp(Config.WallpaperDim, 0, 80);
+
+            RecoverDesktopIcons();
+            desktopIconOriginalVisible = Native.DesktopIconsVisible();
+            ApplyDesktopSettings(false);
 
             Backdrop.Start();
             Config.ApplyTheme();
@@ -784,6 +790,72 @@ namespace Liuli
             catch { try { a(); } catch { } }
         }
 
+        static string DesktopMarkerPath()
+        {
+            return Path.Combine(Paths.Data, "desktop-icons.runtime");
+        }
+
+        /// <summary>上次强退留下的运行期隐藏：下次启动先按标记恢复，再重新校准。</summary>
+        static void RecoverDesktopIcons()
+        {
+            try
+            {
+                string p = DesktopMarkerPath();
+                if (!File.Exists(p)) return;
+                string s = File.ReadAllText(p).Trim();
+                bool visible = s != "0";
+                Native.SetDesktopIconsVisible(visible);
+                File.Delete(p);
+                Log.Info("icons", "上次异常退出，已校准桌面图标 visible=" + visible);
+            }
+            catch (Exception ex) { Log.Warn("icons", "校准桌面图标失败 " + ex.Message); }
+        }
+
+        static void SaveDesktopMarker(bool originalVisible)
+        {
+            try
+            {
+                Directory.CreateDirectory(Paths.Data);
+                File.WriteAllText(DesktopMarkerPath(), originalVisible ? "1" : "0");
+            }
+            catch (Exception ex) { Log.Warn("icons", "写桌面图标标记失败 " + ex.Message); }
+        }
+
+        static void DeleteDesktopMarker()
+        {
+            try { if (File.Exists(DesktopMarkerPath())) File.Delete(DesktopMarkerPath()); } catch { }
+        }
+
+        /// <summary>应用桌面页配置：全部图标运行期隐藏 + 五个系统图标注册表开关。</summary>
+        public static bool ApplyDesktopSettings(bool announce)
+        {
+            if (Config == null) return false;
+            bool ok = true;
+            bool wantHidden = Config.DesktopIconsHidden;
+            bool visible = Native.DesktopIconsVisible();
+            if (visible == wantHidden)
+            {
+                if (!Native.SetDesktopIconsVisible(!wantHidden))
+                {
+                    ok = false;
+                    Log.Warn("icons", "桌面图标显隐失败 visible=" + visible + " wantHidden=" + wantHidden);
+                }
+                else if (wantHidden) desktopIconsHiddenByUs = visible;
+                else desktopIconsHiddenByUs = false;
+            }
+            else if (!wantHidden) desktopIconsHiddenByUs = false;
+
+            if (desktopIconsHiddenByUs && desktopIconOriginalVisible) SaveDesktopMarker(true);
+            else DeleteDesktopMarker();
+
+            if (!DesktopState.ApplyShellIcons(Config)) ok = false;
+            DesktopState.Refresh();
+            Log.Info("icons", "桌面 hidden=" + wantHidden + " visible=" + Native.DesktopIconsVisible() +
+                " ok=" + ok + " originalVisible=" + desktopIconOriginalVisible);
+            if (announce) Toast(ok ? (wantHidden ? "桌面图标已隐藏（运行期）" : "桌面图标已显示") : "桌面图标切换失败");
+            return ok;
+        }
+
         public static void Toast(string text)
         {
             UI(delegate { try { ToastForm.Show(text); } catch { } });
@@ -808,6 +880,13 @@ namespace Liuli
             try { if (Island != null) Island.Close(); } catch { }
             try { if (Settings != null) Settings.Close(); } catch { }
             for (int i = 0; i < Panels.Count; i++) { try { if (Panels[i] != null) Panels[i].Close(); } catch { } }
+            try
+            {
+                if (Config != null && Config.DesktopIconsHidden && desktopIconsHiddenByUs)
+                    Native.SetDesktopIconsVisible(desktopIconOriginalVisible);
+            }
+            catch { }
+            DeleteDesktopMarker();
             try { if (Host != null) Host.Close(); } catch { }
             Application.Exit();
         }
