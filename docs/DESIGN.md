@@ -79,7 +79,7 @@ Program.cs     入口、单实例、DPI、异常兜底
 `bin\data\boards.json`：
 
 ```json
-{ "app":"Liuli", "version":"1.1.0", "settings":{...}, "boards":[{ "id":"b...", "kind":0, "x":32, "y":32, "w":330, "h":300, ... }] }
+{ "app":"Liuli", "version":"1.2.1", "settings":{...}, "boards":[{ "id":"b...", "kind":0, "x":32, "y":32, "w":330, "h":300, ... }] }
 ```
 
 - `W/H` 是含 16px 投影外留白的窗口尺寸，玻璃主体 = `Glass.Body`

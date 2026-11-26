@@ -480,14 +480,33 @@ namespace Liuli
                 Settings.Show();
                 Settings.Activate();
                 Settings.Invalidate();
+                HideBar();
                 return;
             }
             Settings = new SettingsForm();
             Settings.Show();
             Settings.Activate();
+            HideBar();
         }
 
-        public static void SettingsClosed() { Settings = null; }
+        public static void SettingsClosed()
+        {
+            Settings = null;
+            RestoreBar();
+        }
+
+        /// <summary>模态/大面板期间收起控制条，避免胶囊压住编辑窗或设置页按钮。</summary>
+        public static void HideBar()
+        {
+            try { if (Bar != null && Bar.Visible) Bar.Hide(); }
+            catch { }
+        }
+
+        public static void RestoreBar()
+        {
+            try { ApplyBarVisible(); }
+            catch { }
+        }
 
         public static void ExportBackup()
         {
