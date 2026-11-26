@@ -2,6 +2,24 @@
 
 遵循 Keep a Changelog；版本遵循 SemVer。
 
+## [1.2.0] - 2026-11-26
+
+### 新增
+
+- 设置 → 看板新增「开机自启」开关：写当前用户 `HKCU\Software\Microsoft\Windows\CurrentVersion\Run\Liuli`，值为带引号的 exe 全路径（#12）
+- 启动时自动校准：配置为开但注册表缺失时补写，配置为关但注册表残留时清除，避免移动 exe 或手工改配置后状态不一致（#12）
+
+### 变更
+
+- 版本号 1.1.0 → 1.2.0
+
+### 验证
+
+- 打开开关：注册表值 `"E:\meihuaDesktop\bin\Liuli.exe"`，`autoStart=true`，日志 `[app] 开机自启 on …`
+- 关闭开关：注册表值删除、`autoStart=false`，日志 `[app] 开机自启 off …`
+- 手工改配置为 true 并删除注册表值后重启：自动补写成功
+- v1.2.0 闲置：WS 53.6MB、私有 30.9MB、exe 151KB
+
 ## [1.1.0] - 2026-11-26
 
 ### 新增
