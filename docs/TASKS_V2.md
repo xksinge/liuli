@@ -50,7 +50,16 @@
 
 ## Phase 2 · M2 Dock 完整
 
+### M2 实现状态（2026-11-26）
+
+- Issue #37；分支 `feat/v2-dock-autohide`（从 `feat/v2-shell` 切出，堆叠在 M1 之后）。
+- 已实现：`shell.json` 增加 `dockAutoHide`（默认 false）；托盘/快捷菜单增加切换；Dock 全局 55ms 鼠标轮询、底部 6px 热区、离开 650ms 收起；170ms cubic ease-out 滑入/滑出；隐藏位置按屏幕底边计算，任务栏露出时也能完全推出；切换开关、显示全部、重排时刷新状态。
+- 已验证：构建通过（201.5 KB）；`--selftest` 读取 `dockAutoHide=False`；临时写入 `true` 后读取为 `True`，已恢复原文件；离屏 `--preview` 打印隐藏态 `dockHidden top=1442`，`screenBottom=1440`，窗口完全移出屏幕。
+- 未验证：真机热区唤出、650ms 收起、动画中途反向、任务栏唤出共存、125% DPI。需要用真实鼠标事件验收。
+
 - [ ] **TASK-020** [REQ-014] Dock 自动隐藏与唤出动画（含任务栏共存）
+  - 实现：`DockForm` 的 `autoTimer` / `slideTimer` / `SlideTo` / `HiddenOffset`；配置与菜单切换。
+  - 验证：构建、配置读写、隐藏几何通过；真机交互未验证。
 - [ ] **TASK-021** [REQ-015] 图标尺寸/间距/整体缩放三档预设
 - [ ] **TASK-022** [REQ-016] 运行指示点（P1）
 - [ ] **TASK-023** [REQ-013] 拖拽排序（P1）
@@ -106,4 +115,5 @@
 证据：docs/screens/v2/m1-dock.png、日志时间戳
 未验证：...
 ```
+
 

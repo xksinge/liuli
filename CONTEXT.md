@@ -2,11 +2,11 @@
 
 ## Resume
 
-- 当前任务：Issue #35 / M1 新外壳
-- 状态：Dock 与灵动岛首版代码已实现并构建通过；点击按压/回弹/波纹反馈已接入（`a7b7b3e`）；Dock 应用图标已切 256px Shell 图像列表（`f3f5a1b`）；无界面自检通过；**真机 UI/截图/DPI/动态手感验证待做**
-- 分支：`feat/v2-shell`（从 main `19ed1bc` 创建；已推送 origin）
-- PR：`#36` Draft（代码/文档；待真机验证后再标 ready）
-- 下一步：真机启动验证 Dock/灵动岛/任务栏避让/点击反馈与热键，补 `docs/screens/v2/` 截图，再关 Issue #35；之后进入 M2 Dock 完整
+- 当前任务：Issue #37 / M2 Dock 自动隐藏与唤出
+- 状态：M1 首版与点击/图标反馈在 `feat/v2-shell`（PR #36 Draft）；M2 自动隐藏代码已实现并构建通过（201.5 KB），配置读写与隐藏几何通过；**真机热区/收起/动画/任务栏共存/DPI 未验证**
+- 分支：`feat/v2-dock-autohide`（从 `feat/v2-shell` 切出，堆叠在 M1 之后）
+- PR：M2 尚未创建（待提交后开 Draft，base 暂定 `feat/v2-shell`）；M1 PR #36 仍 Draft
+- 下一步：真机启动验证 M1 Dock/灵动岛/点击反馈，再验证 M2 底部热区、650ms 收起、170ms 动画与任务栏共存；补截图和 Issue 评论
 - 阻塞：无；用户此前要求“不运行”，因此未启动 UI，不能声称视觉验收通过
 - 约束：旧看板功能封存；不改动 `boards.json` 与 `Documents\Liuli`
 
@@ -24,6 +24,7 @@
 | 2026-11-26 | 实现 v2 配置/任务栏/Dock/灵动岛/入口切换，构建通过 | 提交 3be11bb、62ce47c、7282f77、87c92b7 |
 | 2026-11-26 | Dock/灵动岛增加点击按压、回弹、波纹反馈；生成按压态对照 | 提交 a7b7b3e |
 | 2026-11-26 | Dock 应用图标改用 256px Shell 图像列表，图标探针通过 | 提交 f3f5a1b |
+| 2026-11-26 | 创建 M2 Issue #37，开 `feat/v2-dock-autohide`；实现 Dock 自动隐藏/热区/170ms 动画 | Issue #37；构建 201.5 KB |
 
 ## Key Decisions
 
