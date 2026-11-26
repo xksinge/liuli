@@ -19,6 +19,11 @@
 - `m2-dock-hover.png`：普通态 / 悬停第 4 项对照
 - `--selftest` 输出 `dockAutoHide` 与 `dockPreset`；`--preview` 输出隐藏态窗口位置与三档尺寸
 
+### 修复
+
+- 任务栏常显时 Dock 上移量翻倍：`BaseTopY()` 不再重复扣 `Taskbar.VisibleHeight()`；真机 top 从 1248 修正为 1296（Issue #47）
+- 资源管理器/计算器等 exe 的运行指示映射补齐；`calc.exe` 映射到 `CalculatorApp / Calculator / WindowsCalculator`
+
 ### 验证
 
 - 构建通过，`bin\Liuli.exe` 209 KB
@@ -28,7 +33,8 @@
 - 运行指示：`--preview` 检测到 `dockRunning=explorer,SystemSettings`，放大对照图 `docs/screens/v2/m2-dock-running.png`
 - 拖拽排序：`--preview` 生成开头/中间/末尾插入位对照 `docs/screens/v2/m2-dock-reorder.png`
 - 悬停放大：`--preview` 生成普通态/第 4 项悬停态对照 `docs/screens/v2/m2-dock-hover.png`
-- **未验证**：真机热区唤出、收起延时、动画中途反向、任务栏唤出共存、125% DPI、三档真机切换、运行状态实时变化与 CPU 影响、真实拖动/点击不误触/重启保持、悬停放大手感与移出恢复
+- 真机验收：Dock 悬停、拖拽到末尾、自动隐藏 `1444→1344→1444`、任务栏常显 Dock `top=1296`、灵动岛展开/收起通过；截图 `m2-real-hover.png` / `m2-real-drag.png` / `m2-real-taskbar.png`
+- **未验证**：尺寸菜单循环与重启保持、运行状态实时增减与 CPU、外部文件拖入、125% DPI、按压瞬时视觉
 
 ## [Unreleased · v2.0 M1]
 

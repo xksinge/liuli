@@ -2,12 +2,12 @@
 
 ## Resume
 
-- 当前任务：Issue #45 / M2 Dock 悬停放大
-- 状态：M1 在 `feat/v2-shell`（PR #36 Draft）；M2 自动隐藏 `feat/v2-dock-autohide`（PR #38 Draft）；尺寸预设 `feat/v2-dock-presets`（PR #40 Draft）；运行指示 `feat/v2-dock-running`（PR #42 Draft）；拖拽排序 `feat/v2-dock-reorder`（PR #44 Draft）；悬停放大 `feat/v2-dock-hover` 已实现并构建通过（209 KB）；**真机悬停/拖动/点击未验证**
-- 分支：`feat/v2-dock-hover`（从 `feat/v2-dock-reorder` 切出）
-- PR：自动隐藏 `#38`、尺寸预设 `#40`、运行指示 `#42`、拖拽排序 `#44`、悬停放大 `#46` Draft（base `feat/v2-dock-reorder`）；M1 PR #36 仍 Draft
-- 下一步：提交悬停放大并开 Draft PR（base `feat/v2-dock-reorder`），再做 M2 真机验收
-- 阻塞：无；用户此前要求“不运行”，因此未启动 UI，不能声称视觉验收通过
+- 当前任务：Issue #47 / 修复任务栏常显时 Dock 上移量翻倍
+- 状态：M2 代码项完成；真机已验证 Dock 悬停、拖拽到末尾、自动隐藏 `1444→1344→1444`、任务栏常显（修复后 `top=1296`）、灵动岛展开/收起；**125% DPI、外部文件拖入、运行状态实时增减、尺寸重启保持未验证**
+- 分支：`fix/v2-dock-taskbar-offset`（从 `feat/v2-dock-hover` 切出）
+- PR：自动隐藏 `#38`、尺寸预设 `#40`、运行指示 `#42`、拖拽排序 `#44`、悬停放大 `#46`；任务栏修复 PR 待创建；M1 PR #36 仍 Draft
+- 下一步：提交 Issue #47 修复并开 Draft PR（base `feat/v2-dock-hover`），再补 125% DPI / 外部文件拖入 / 尺寸重启保持
+- 阻塞：无；真机验收已做，验收后已恢复 `dockItems` 顺序、`dockAutoHide=false`、`taskbarAutoHide=true` 并退出 Liuli
 - 约束：旧看板功能封存；不改动 `boards.json` 与 `Documents\Liuli`
 
 ## Session Log
@@ -29,6 +29,8 @@
 | 2026-11-26 | 创建 Issue #41，开 `feat/v2-dock-running`；实现运行指示圆点与放大对照 | Issue #41；构建 205 KB |
 | 2026-11-26 | 创建 Issue #43，开 `feat/v2-dock-reorder`；实现拖拽排序与三插入位对照 | Issue #43；构建 207.5 KB |
 | 2026-11-26 | 创建 Issue #45，开 `feat/v2-dock-hover`；实现悬停 1.08 放大与普通/悬停对照 | Issue #45；构建 209 KB |
+| 2026-11-26 | M2 真机验收：悬停/拖拽/自动隐藏/任务栏共存/灵动岛通过；发现任务栏常显 Dock 多上移 48px | 真实截图 `m2-real-*.png` |
+| 2026-11-26 | 创建 Issue #47，开 `fix/v2-dock-taskbar-offset`；修复 `WorkingArea` 双重扣除，真机 top 1248→1296 | Issue #47；构建 209 KB |
 
 ## Key Decisions
 

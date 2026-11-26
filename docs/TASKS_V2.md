@@ -57,6 +57,7 @@
 - Issue #41；分支 `feat/v2-dock-running`（从 `feat/v2-dock-presets` 切出）；Draft PR #42（base `feat/v2-dock-presets`）。
 - Issue #43；分支 `feat/v2-dock-reorder`（从 `feat/v2-dock-running` 切出）；Draft PR #44（base `feat/v2-dock-running`）。
 - Issue #45；分支 `feat/v2-dock-hover`（从 `feat/v2-dock-reorder` 切出）；Draft PR #46（base `feat/v2-dock-reorder`）。
+- Issue #47（bug）；分支 `fix/v2-dock-taskbar-offset`（从 `feat/v2-dock-hover` 切出）；PR 待创建。
 - 已实现：`shell.json` 增加 `dockAutoHide`（默认 false）；托盘/快捷菜单增加切换；Dock 全局 55ms 鼠标轮询、底部 6px 热区、离开 650ms 收起；170ms cubic ease-out 滑入/滑出；隐藏位置按屏幕底边计算，任务栏露出时也能完全推出；切换开关、显示全部、重排时刷新状态。
 - 已验证：构建通过（205 KB）；`--selftest` 读取 `dockAutoHide=False`；临时写入 `true` 后读取为 `True`，已恢复原文件；离屏 `--preview` 打印隐藏态 `dockHidden top=1442`，`screenBottom=1440`，窗口完全移出屏幕。
 - 未验证：真机热区唤出、650ms 收起、动画中途反向、任务栏唤出共存、125% DPI。需要用真实鼠标事件验收。
@@ -64,22 +65,25 @@
 - 运行指示（Issue #41）：每 2s 一次进程枚举，缓存目标名；仅 app 项绘制 accent 小圆点；预览检测到 `explorer`、`SystemSettings`，对照图 `docs/screens/v2/m2-dock-running.png`。
 - 拖拽排序（Issue #43）：左键移动超过 8px 进入排序，拖拽时显示 accent 插入竖线，松手写回 `shell.json`；`m2-dock-reorder.png` 展示开头/中间/末尾三个插入位。
 - 悬停放大（Issue #45）：指针进入 Dock 项后 140ms ease-out 放大到 1.08，按下仍为 0.94；`m2-dock-hover.png` 对照普通态/第 4 项悬停态。
+- 真机验收（2026-11-26）：Dock 悬停、拖拽到末尾、自动隐藏 `top=1444→1344→1444`、任务栏常显 `top=1296`、灵动岛展开/收起通过；留档 `m2-real-*.png`。
+- 任务栏常显 bug（Issue #47）：修复 `WorkingArea` 与 `Taskbar.VisibleHeight` 双重扣除，Dock top 1248→1296。
 
 - [ ] **TASK-020** [REQ-014] Dock 自动隐藏与唤出动画（含任务栏共存）
   - 实现：`DockForm` 的 `autoTimer` / `slideTimer` / `SlideTo` / `HiddenOffset`；配置与菜单切换。
-  - 验证：构建、配置读写、隐藏几何通过；真机交互未验证。
+  - 验证：真机底部热区唤出、650ms 收起、任务栏常显位置通过；动画中途反向未验证。
 - [ ] **TASK-021** [REQ-015] 图标尺寸/间距/整体缩放三档预设
   - 实现：`dockPreset` 配置 + `DockForm.PresetScale()` 乘到 `UiScale`；托盘/快捷菜单循环切换；`--preview` 三档对照。
-  - 验证：配置写入 `large` 后自检读取正确；三档离屏尺寸已记录；1366×768/125% 真机未验证。
+  - 验证：配置写入 `large` 后自检读取正确；三档离屏尺寸已记录；真机循环切换/重启保持未验证。
 - [ ] **TASK-022** [REQ-016] 运行指示点（P1）
   - 实现：`DockItem.ProcessNames()` + `DockForm.RefreshRunning()` 2s 缓存枚举；仅 app 项绘制 accent 圆点；`.lnk` 暂不解析。
-  - 验证：`--preview` 输出 `dockRunning=explorer,SystemSettings`；真机运行/退出变化与 CPU 影响未验证。
+  - 验证：真机 explorer/设置圆点可见；启动/退出实时变化与 CPU 影响未验证。
 - [ ] **TASK-023** [REQ-013] 拖拽排序（P1）
   - 实现：`DockForm` 的 `dragging/dragFrom/dragTo` 与 `InsertSlot()`；`V2Shell.MoveDockItem()` 写回配置；插入位 accent 竖线。
-  - 验证：离屏三插入位对照通过；真实拖动、点击不误触、重启保持未验证。
+  - 验证：真机拖资源管理器到末尾、配置顺序变化并立即重排通过；外部文件拖入未回归验证。
 - [ ] **TASK-024** [REQ-019] GlassBoard Dock 实测核对：动画、分组、滚轮、右侧小按钮
-  - 已补：悬停 1.08 放大（Issue #45）；其余分组/滚轮/右侧小按钮仍需实测核对。
+  - 已补：悬停 1.08 放大（Issue #45）；真机核对悬停/拖拽/自动隐藏/任务栏共存；分组、滚轮、右侧小按钮仍未核对。
 - [ ] **TASK-025** [REQ-010–019] Dock 验收截图与回归
+  - 已留档：`m2-real-hover.png`、`m2-real-drag.png`、`m2-real-taskbar.png`；125% DPI / 外部文件拖入 / 尺寸重启保持仍待验。
 
 ## Phase 3 · M3 灵动岛
 

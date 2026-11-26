@@ -193,14 +193,10 @@ namespace Liuli
 
         int BaseTopY()
         {
+            // WorkingArea 在任务栏常显时已扣除任务栏高度，不能再减一次。
             Rectangle work = Screen.PrimaryScreen.WorkingArea;
             int gap = Util.RoundI(8 * UiScale);
             int bodyBottom = work.Bottom - gap;
-            if (Taskbar.Visible())
-            {
-                int tb = Taskbar.VisibleHeight();
-                if (tb > 0) bodyBottom = Math.Min(bodyBottom, work.Bottom - tb - gap);
-            }
             int y = bodyBottom - body.Bottom;
             if (y < work.Top + Util.RoundI(40 * UiScale)) y = work.Top + Util.RoundI(40 * UiScale);
             return y;
