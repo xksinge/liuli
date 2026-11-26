@@ -1,5 +1,7 @@
 ﻿// Liuli · 入口：单实例、DPI、异常兜底、启动/退出。
 using System;
+using System.Drawing;
+using System.IO;
 using System.Threading;
 using System.Windows.Forms;
 
@@ -72,6 +74,8 @@ namespace Liuli
                     Console.WriteLine("  " + (i + 1) + ". " + it.Kind + " " + it.Id + " " + it.DisplayName);
                 }
                 Console.WriteLine("taskbar.autoHide=" + Taskbar.AutoHide() + " visible=" + Taskbar.Visible() + " height=" + Taskbar.VisibleHeight());
+                Bitmap probe = Icons.Get(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Windows), "explorer.exe"), 256);
+                Console.WriteLine("iconProbe=explorer " + (probe == null ? "null" : probe.Width + "x" + probe.Height));
                 return 0;
             }
             catch (Exception ex)

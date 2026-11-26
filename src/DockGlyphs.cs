@@ -25,7 +25,7 @@ namespace Liuli
                 DrawCalculator(g, r, s);
                 return;
             }
-            Icons.Draw(g, item.Path, r);
+            Icons.Draw(g, item.Path, r, 256);
         }
 
         static void DrawSystem(Graphics g, string id, Rectangle r, float s)
