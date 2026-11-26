@@ -687,7 +687,7 @@ namespace Liuli
                 Pulse(-1, pb);
                 if (pb == 0) V2Shell.AddPanel();
                 else if (pb == 1) V2Shell.Toast("桌面图标管理将在 M5 提供");
-                else V2Shell.ShowMenu(PointToScreen(e.Location));
+                else V2Shell.OpenSettings(2);
                 return;
             }
             Render();

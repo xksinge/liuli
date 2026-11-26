@@ -19,6 +19,19 @@ namespace Liuli
         public int H = 200;
         public bool TopMostPanel = true;
 
+        public PanelConfig Copy()
+        {
+            PanelConfig p = new PanelConfig();
+            p.Id = Id;
+            p.Content = Content;
+            p.X = X;
+            p.Y = Y;
+            p.W = W;
+            p.H = H;
+            p.TopMostPanel = TopMostPanel;
+            return p;
+        }
+
         public static string NormalizeContent(string s)
         {
             string v = (s == null ? "" : s.Trim().ToLowerInvariant());
@@ -38,6 +51,113 @@ namespace Liuli
         }
     }
 
+    sealed class ThemeSnapshot
+    {
+        public string Name = "";
+        public string SavedAt = "";
+        public bool DockOn = true;
+        public bool DockAutoHide = false;
+        public string DockPreset = "standard";
+        public bool IslandOn = true;
+        public bool IslandWeather = true;
+        public bool IslandStats = true;
+        public bool IslandQuick = true;
+        public int IslandWidth = 380;
+        public int IslandHeight = 112;
+        public int IslandTop = 6;
+        public int IslandAnimMs = 180;
+        public string ThemeMode = "auto";
+        public string ThemePreset = "mist";
+        public int GlassPct = 100;
+        public int BlurPct = 62;
+        public int Radius = 20;
+        public string WallpaperPath = "";
+        public int WallpaperStyle = 10;
+        public int WallpaperTile = 0;
+        public List<PanelConfig> Panels = new List<PanelConfig>();
+
+        public static string CleanName(string s)
+        {
+            string v = s == null ? "" : s.Trim();
+            StringBuilder b = new StringBuilder();
+            for (int i = 0; i < v.Length && b.Length < 24; i++)
+            {
+                char ch = v[i];
+                if (ch == '\r' || ch == '\n' || ch == '\t') ch = ' ';
+                b.Append(ch);
+            }
+            v = b.ToString().Trim();
+            return v.Length == 0 ? "主题" : v;
+        }
+
+        public static ThemeSnapshot Capture(string name, ShellConfig c)
+        {
+            ThemeSnapshot t = new ThemeSnapshot();
+            t.Name = CleanName(name);
+            t.SavedAt = DateTime.Now.ToString("yyyy-MM-dd HH:mm");
+            t.DockOn = c.DockOn;
+            t.DockAutoHide = c.DockAutoHide;
+            t.DockPreset = c.DockPreset;
+            t.IslandOn = c.IslandOn;
+            t.IslandWeather = c.IslandWeather;
+            t.IslandStats = c.IslandStats;
+            t.IslandQuick = c.IslandQuick;
+            t.IslandWidth = c.IslandWidth;
+            t.IslandHeight = c.IslandHeight;
+            t.IslandTop = c.IslandTop;
+            t.IslandAnimMs = c.IslandAnimMs;
+            t.ThemeMode = c.ThemeMode;
+            t.ThemePreset = c.ThemePreset;
+            t.GlassPct = c.GlassPct;
+            t.BlurPct = c.BlurPct;
+            t.Radius = c.Radius;
+            t.WallpaperPath = Wallpaper.CurrentPath();
+            int tile = 0;
+            string style = Wallpaper.GetStyleRaw(out tile);
+            int st = 10;
+            int.TryParse(style, out st);
+            t.WallpaperStyle = st;
+            t.WallpaperTile = tile;
+            t.Panels = new List<PanelConfig>();
+            for (int i = 0; i < c.Panels.Count; i++)
+                if (c.Panels[i] != null) t.Panels.Add(c.Panels[i].Copy());
+            return t;
+        }
+
+        public PanelConfig[] ClonePanels()
+        {
+            PanelConfig[] list = new PanelConfig[Panels.Count];
+            for (int i = 0; i < Panels.Count; i++)
+                if (Panels[i] != null) list[i] = Panels[i].Copy();
+            return list;
+        }
+
+        public void ApplyTo(ShellConfig c)
+        {
+            if (c == null) return;
+            c.DockOn = DockOn;
+            c.DockAutoHide = DockAutoHide;
+            c.DockPreset = DockPreset;
+            c.IslandOn = IslandOn;
+            c.IslandWeather = IslandWeather;
+            c.IslandStats = IslandStats;
+            c.IslandQuick = IslandQuick;
+            c.IslandWidth = IslandWidth;
+            c.IslandHeight = IslandHeight;
+            c.IslandTop = IslandTop;
+            c.IslandAnimMs = IslandAnimMs;
+            c.ThemeMode = ThemeMode;
+            c.ThemePreset = ThemePreset;
+            c.GlassPct = GlassPct;
+            c.BlurPct = BlurPct;
+            c.Radius = Radius;
+            c.Panels = new List<PanelConfig>();
+            for (int i = 0; i < Panels.Count && c.Panels.Count < 6; i++)
+                if (Panels[i] != null) c.Panels.Add(Panels[i].Copy());
+            c.NormalizePanels();
+            c.ActiveTheme = Name;
+        }
+    }
     sealed class DockItem
     {
         public string Kind = "app";       // system / app
@@ -183,6 +303,8 @@ namespace Liuli
         public int GlassPct = 100;
         public int BlurPct = 62;
         public int Radius = 20;
+        public string ActiveTheme = "";
+        public List<ThemeSnapshot> Themes = new List<ThemeSnapshot>();
 
         // 桌面图标（M5 才执行，先存字段）
         public bool DesktopIconsHidden = true;
@@ -230,6 +352,19 @@ namespace Liuli
                 c.GlassPct = Json.Int(root, "glassPct", 100);
                 c.BlurPct = Json.Int(root, "blurPct", 62);
                 c.Radius = Json.Int(root, "radius", 20);
+                c.ActiveTheme = Json.Str(root, "activeTheme", "");
+                c.Themes = new List<ThemeSnapshot>();
+                List<object> themes = Json.Arr(root.ContainsKey("themes") ? root["themes"] : null);
+                if (themes != null)
+                {
+                    for (int i = 0; i < themes.Count && c.Themes.Count < 6; i++)
+                    {
+                        Dictionary<string, object> d = Json.Obj(themes[i]);
+                        ThemeSnapshot t = ReadTheme(d);
+                        if (t != null) c.Themes.Add(t);
+                    }
+                }
+                c.NormalizeThemes();
                 c.DesktopIconsHidden = Json.Bool(root, "desktopIconsHidden", true);
                 c.HideShellThisPc = Json.Bool(root, "hideShellThisPc", true);
                 c.HideShellRecycle = Json.Bool(root, "hideShellRecycle", true);
@@ -392,6 +527,15 @@ namespace Liuli
                 root["glassPct"] = GlassPct;
                 root["blurPct"] = BlurPct;
                 root["radius"] = Radius;
+                root["activeTheme"] = ActiveTheme;
+                List<object> themeArr = new List<object>();
+                for (int i = 0; i < Themes.Count; i++)
+                {
+                    ThemeSnapshot t = Themes[i];
+                    if (t == null) continue;
+                    themeArr.Add(WriteTheme(t));
+                }
+                root["themes"] = themeArr;
                 root["desktopIconsHidden"] = DesktopIconsHidden;
                 root["hideShellThisPc"] = HideShellThisPc;
                 root["hideShellRecycle"] = HideShellRecycle;
@@ -431,6 +575,182 @@ namespace Liuli
                 Util.WriteAllTextAtomic(FilePath, Json.Write(root, true));
             }
             catch (Exception ex) { Log.Warn("config", "shell.json 保存失败：" + ex.Message); }
+        }
+
+        static Dictionary<string, object> WriteTheme(ThemeSnapshot t)
+        {
+            Dictionary<string, object> d = new Dictionary<string, object>();
+            d["name"] = ThemeSnapshot.CleanName(t.Name);
+            d["savedAt"] = t.SavedAt == null ? "" : t.SavedAt;
+            d["dockOn"] = t.DockOn;
+            d["dockAutoHide"] = t.DockAutoHide;
+            d["dockPreset"] = t.DockPreset;
+            d["islandOn"] = t.IslandOn;
+            d["islandWeather"] = t.IslandWeather;
+            d["islandStats"] = t.IslandStats;
+            d["islandQuick"] = t.IslandQuick;
+            d["islandWidth"] = t.IslandWidth;
+            d["islandHeight"] = t.IslandHeight;
+            d["islandTop"] = t.IslandTop;
+            d["islandAnimMs"] = t.IslandAnimMs;
+            d["themeMode"] = t.ThemeMode;
+            d["themePreset"] = t.ThemePreset;
+            d["glassPct"] = t.GlassPct;
+            d["blurPct"] = t.BlurPct;
+            d["radius"] = t.Radius;
+            d["wallpaper"] = t.WallpaperPath == null ? "" : t.WallpaperPath;
+            d["wallpaperStyle"] = t.WallpaperStyle;
+            d["wallpaperTile"] = t.WallpaperTile;
+            List<object> panelArr = new List<object>();
+            for (int i = 0; i < t.Panels.Count; i++)
+            {
+                PanelConfig p = t.Panels[i];
+                if (p == null) continue;
+                Dictionary<string, object> pd = new Dictionary<string, object>();
+                pd["id"] = p.Id;
+                pd["content"] = PanelConfig.NormalizeContent(p.Content);
+                pd["x"] = p.X;
+                pd["y"] = p.Y;
+                pd["w"] = p.W;
+                pd["h"] = p.H;
+                pd["topMost"] = p.TopMostPanel;
+                panelArr.Add(pd);
+            }
+            d["panels"] = panelArr;
+            return d;
+        }
+
+        static ThemeSnapshot ReadTheme(Dictionary<string, object> d)
+        {
+            if (d == null) return null;
+            ThemeSnapshot t = new ThemeSnapshot();
+            t.Name = ThemeSnapshot.CleanName(Json.Str(d, "name", ""));
+            t.SavedAt = Json.Str(d, "savedAt", "");
+            t.DockOn = Json.Bool(d, "dockOn", true);
+            t.DockAutoHide = Json.Bool(d, "dockAutoHide", false);
+            t.DockPreset = Json.Str(d, "dockPreset", "standard");
+            t.IslandOn = Json.Bool(d, "islandOn", true);
+            t.IslandWeather = Json.Bool(d, "islandWeather", true);
+            t.IslandStats = Json.Bool(d, "islandStats", true);
+            t.IslandQuick = Json.Bool(d, "islandQuick", true);
+            t.IslandWidth = Json.Int(d, "islandWidth", 380);
+            t.IslandHeight = Json.Int(d, "islandHeight", 112);
+            t.IslandTop = Json.Int(d, "islandTop", 6);
+            t.IslandAnimMs = Json.Int(d, "islandAnimMs", 180);
+            t.ThemeMode = Json.Str(d, "themeMode", "auto");
+            t.ThemePreset = Json.Str(d, "themePreset", "mist");
+            t.GlassPct = Json.Int(d, "glassPct", 100);
+            t.BlurPct = Json.Int(d, "blurPct", 62);
+            t.Radius = Json.Int(d, "radius", 20);
+            t.WallpaperPath = Json.Str(d, "wallpaper", "");
+            t.WallpaperStyle = Json.Int(d, "wallpaperStyle", 10);
+            t.WallpaperTile = Json.Int(d, "wallpaperTile", 0);
+            List<object> panelArr = Json.Arr(d.ContainsKey("panels") ? d["panels"] : null);
+            if (panelArr != null)
+            {
+                for (int i = 0; i < panelArr.Count && t.Panels.Count < 6; i++)
+                {
+                    Dictionary<string, object> pd = Json.Obj(panelArr[i]);
+                    if (pd == null) continue;
+                    PanelConfig p = new PanelConfig();
+                    p.Id = Json.Str(pd, "id", "");
+                    p.Content = PanelConfig.NormalizeContent(Json.Str(pd, "content", "empty"));
+                    p.X = Json.Int(pd, "x", -1);
+                    p.Y = Json.Int(pd, "y", -1);
+                    p.W = Json.Int(pd, "w", 340);
+                    p.H = Json.Int(pd, "h", 200);
+                    p.TopMostPanel = Json.Bool(pd, "topMost", true);
+                    t.Panels.Add(p);
+                }
+            }
+            return t;
+        }
+
+        public void NormalizeThemes()
+        {
+            if (Themes == null) Themes = new List<ThemeSnapshot>();
+            if (Themes.Count > 6) Themes.RemoveRange(6, Themes.Count - 6);
+            HashSet<string> names = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            for (int i = 0; i < Themes.Count; i++)
+            {
+                ThemeSnapshot t = Themes[i];
+                if (t == null) { Themes.RemoveAt(i); i--; continue; }
+                string baseName = ThemeSnapshot.CleanName(t.Name);
+                string name = baseName;
+                int n = 2;
+                while (names.Contains(name))
+                {
+                    name = baseName + " (" + n + ")";
+                    n++;
+                }
+                t.Name = name;
+                names.Add(name);
+                if (string.IsNullOrEmpty(t.SavedAt)) t.SavedAt = "";
+                t.GlassPct = Util.Clamp(t.GlassPct, 20, 140);
+                t.BlurPct = Util.Clamp(t.BlurPct, 10, 100);
+                t.Radius = Util.Clamp(t.Radius, 10, 30);
+                t.IslandWidth = Util.Clamp(t.IslandWidth, 360, 520);
+                t.IslandHeight = Util.Clamp(t.IslandHeight, 100, 180);
+                t.IslandTop = Util.Clamp(t.IslandTop, 0, 80);
+                t.IslandAnimMs = Util.Clamp(t.IslandAnimMs, 0, 400);
+                if (!string.Equals(t.DockPreset, "small", StringComparison.OrdinalIgnoreCase) &&
+                    !string.Equals(t.DockPreset, "large", StringComparison.OrdinalIgnoreCase))
+                    t.DockPreset = "standard";
+                else t.DockPreset = t.DockPreset.ToLowerInvariant();
+                for (int j = 0; j < t.Panels.Count; j++)
+                {
+                    PanelConfig p = t.Panels[j];
+                    if (p == null) { t.Panels.RemoveAt(j); j--; continue; }
+                    p.Content = PanelConfig.NormalizeContent(p.Content);
+                    p.W = Util.Clamp(p.W, 220, 720);
+                    p.H = Util.Clamp(p.H, 120, 520);
+                }
+            }
+            string active = ActiveTheme == null ? "" : ActiveTheme.Trim();
+            ThemeSnapshot found = FindTheme(active);
+            ActiveTheme = found == null ? "" : found.Name;
+        }
+
+        public ThemeSnapshot FindTheme(string name)
+        {
+            if (Themes == null || name == null) return null;
+            for (int i = 0; i < Themes.Count; i++)
+                if (Themes[i] != null && string.Equals(Themes[i].Name, name, StringComparison.OrdinalIgnoreCase))
+                    return Themes[i];
+            return null;
+        }
+
+        public ThemeSnapshot SaveTheme(string name)
+        {
+            ThemeSnapshot t = ThemeSnapshot.Capture(name, this);
+            int idx = -1;
+            for (int i = 0; i < Themes.Count; i++)
+                if (Themes[i] != null && string.Equals(Themes[i].Name, t.Name, StringComparison.OrdinalIgnoreCase)) { idx = i; break; }
+            if (idx >= 0) Themes[idx] = t;
+            else
+            {
+                Themes.Add(t);
+                if (Themes.Count > 6) Themes.RemoveAt(0);
+            }
+            ActiveTheme = t.Name;
+            Save();
+            return t;
+        }
+
+        public bool DeleteTheme(string name)
+        {
+            if (Themes == null) return false;
+            for (int i = 0; i < Themes.Count; i++)
+            {
+                if (Themes[i] != null && string.Equals(Themes[i].Name, name, StringComparison.OrdinalIgnoreCase))
+                {
+                    Themes.RemoveAt(i);
+                    if (string.Equals(ActiveTheme, name, StringComparison.OrdinalIgnoreCase)) ActiveTheme = "";
+                    Save();
+                    return true;
+                }
+            }
+            return false;
         }
 
         public void NormalizeIsland()
@@ -501,7 +821,10 @@ namespace Liuli
             Theme.GlassPct = Util.Clamp(GlassPct, 20, 140);
             Theme.BlurPct = Util.Clamp(BlurPct, 10, 100);
             Theme.Radius = Radius;
-            Theme.Light = Backdrop.Light;
+            bool light = Backdrop.Light;
+            if (string.Equals(ThemeMode, "light", StringComparison.OrdinalIgnoreCase)) light = true;
+            else if (string.Equals(ThemeMode, "dark", StringComparison.OrdinalIgnoreCase)) light = false;
+            Theme.Light = light;
             Theme.Accent = Backdrop.Accent;
             if (!Backdrop.Mean.IsEmpty) Theme.WallMean = Backdrop.Mean;
             Theme.ApplyTone();
