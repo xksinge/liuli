@@ -3,7 +3,7 @@
 ## Resume
 
 - 当前任务：Issue #35 / M1 新外壳
-- 状态：Dock 与灵动岛首版代码已实现并构建通过；点击按压/回弹/波纹反馈已接入（`a7b7b3e`）；无界面自检通过；**真机 UI/截图/DPI/动态手感验证待做**
+- 状态：Dock 与灵动岛首版代码已实现并构建通过；点击按压/回弹/波纹反馈已接入（`a7b7b3e`）；Dock 应用图标已切 256px Shell 图像列表（`f3f5a1b`）；无界面自检通过；**真机 UI/截图/DPI/动态手感验证待做**
 - 分支：`feat/v2-shell`（从 main `19ed1bc` 创建；已推送 origin）
 - PR：`#36` Draft（代码/文档；待真机验证后再标 ready）
 - 下一步：真机启动验证 Dock/灵动岛/任务栏避让/点击反馈与热键，补 `docs/screens/v2/` 截图，再关 Issue #35；之后进入 M2 Dock 完整
@@ -23,6 +23,7 @@
 | 2026-11-26 | 创建 M1 Issue #35，开 `feat/v2-shell` | Issue #35 |
 | 2026-11-26 | 实现 v2 配置/任务栏/Dock/灵动岛/入口切换，构建通过 | 提交 3be11bb、62ce47c、7282f77、87c92b7 |
 | 2026-11-26 | Dock/灵动岛增加点击按压、回弹、波纹反馈；生成按压态对照 | 提交 a7b7b3e |
+| 2026-11-26 | Dock 应用图标改用 256px Shell 图像列表，图标探针通过 | 提交 f3f5a1b |
 
 ## Key Decisions
 
@@ -48,7 +49,7 @@
 
 - v1.6 Dock/灵动岛原型已停在 `experiment/v1.6-dock-island`（28e8cfd），不作为 v2.0 实现基线，不合入 main。
 - v2 外壳已切到 `feat/v2-shell`；`Program.Main` 不再 `App.Boot()`，旧看板窗口不会创建。
-- `bin\Liuli.exe` 已是 v2 构建（197.5 KB），但**未启动 UI 验证**；`--selftest` 只验证配置/任务栏状态。
+- `bin\Liuli.exe` 已是 v2 构建（199 KB），但**未启动 UI 验证**；`--selftest` 只验证配置/任务栏状态/图标提取。
 - `bin\data\shell.json` 已由自检生成，含 8 个默认 Dock 项；`boards.json` 未改动。
 - 坏 `shell.json` 回退已测：非对象 JSON → `.bad-*` 备份 + 重建默认 8 项。
 - 离屏预览已生成 `docs/screens/v2/m1-preview.png` 与按压态 `m1-preview-pressed.png` / `m1-feedback-compare.png`（`--preview`，不显示窗口）；真机截图仍待做。

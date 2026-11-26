@@ -15,6 +15,7 @@
 - `Liuli.exe --preview` 离屏预览：不显示窗口，把 Dock 与展开态灵动岛合成到 PNG
 - Dock / 灵动岛点击反馈：按下 0.90 缩放与按压底色，释放 190ms 回弹、280ms accent 波纹；右侧圆按钮同步
 - `m1-preview-pressed.png` / `m1-feedback-compare.png`：静止态与按压态对照，供视觉评审
+- Dock 应用图标改用 Shell `SHIL_JUMBO` 256px 图像列表；失败回退 32px，缓存按尺寸区分
 
 ### 变更
 
