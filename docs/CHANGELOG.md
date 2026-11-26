@@ -1,6 +1,30 @@
-# 变更日志
+﻿# 变更日志
 
 遵循 Keep a Changelog；版本遵循 SemVer。
+
+## [Unreleased · v2.0 M6 全局热键]
+
+### 新增
+
+- 系统页新增“快捷键”区，显示 `Ctrl+Alt+L` 显示/隐藏与 `Ctrl+Alt+G` 打开设置的实际注册状态
+- “重新注册快捷键”按钮：先注销 id 11/12，再注册默认组合；失败不静默，Toast 提示占用
+
+### 变更
+
+- `V2Host` 捕获 `RegisterHotKey` 返回值，写入 `HotkeyToggleOk` / `HotkeySettingsOk` 和日志 `hotkey toggle=... settings=...`
+- `V2Shell.HotkeyStatus()` / `ResetHotkeys()` 统一提供状态文本与重注册入口；默认组合固定，不新增自定义键位编辑
+
+### 验证
+
+- `bin\Liuli.exe` 298 KB；C#5 无新增 error
+- `Ctrl+Alt+G` 注册成功并可打开设置；系统页显示“已注册”
+- 当前机器 `Ctrl+Alt+L` 被其它进程占用，系统页如实显示“失败”；启动日志 `toggle=fail settings=ok`
+- 点击重新注册后日志再次写入，页面不崩、文字不裁切；截图 `docs/screens/v8/settings-hotkeys.png`
+
+### 未验证 / 剩余
+
+- 关闭占用 `Ctrl+Alt+L` 的程序后能否恢复；非管理员账户；第三方热键冲突枚举
+- 日志诊断（REQ-064）仍待补；TASK-060 仍未完成
 
 ## [Unreleased · v2.0 M6 开机自启]
 

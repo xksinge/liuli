@@ -1,4 +1,4 @@
-# 设计说明 · Liuli V2（GlassBoard 功能对齐）
+﻿# 设计说明 · Liuli V2（GlassBoard 功能对齐）
 
 - 状态：Confirmed；M1 已按实现校正
 - 日期：2026-11-26
@@ -213,7 +213,10 @@ M1 实际命名：`V2Shell`、`ShellConfig`、`V2Window`、`DockForm`、`IslandF
 - `ShellConfig.AutoStart` 默认 false，读写 `autoStart`；`--selftest` 输出配置值和当前 Run 值。
 - `V2Shell.Boot` 每次按配置执行 `AutoStart.Apply`：开启时覆盖写入，关闭时删除；因此 exe 移到新目录后，只要启动一次就会把 Run 指向新路径。
 - 设置页开关先写注册表，成功后才改配置并 `Save`；失败不翻转开关，Toast 提示权限/注册表错误。
-- 系统页预留“后续”说明：快捷键配置（REQ-063）与日志诊断（REQ-064）仍待补，当前仍为 `Ctrl+Alt+L` / `Ctrl+Alt+G`。
+- 系统页新增“快捷键”区：显示 `Ctrl+Alt+L 显示/隐藏` 与 `Ctrl+Alt+G 打开设置` 的实际注册状态（已注册/失败），并提供“重新注册快捷键”按钮；日志诊断（REQ-064）仍待补。
+- `V2Host.RegisterDefaultHotkeys` 先对 id 11/12 调 `UnregisterHotKey`，再按 `Ctrl+Alt+L` / `Ctrl+Alt+G` 重新注册；捕获 `RegisterHotKey` 的 bool 返回值，结果写入 `HotkeyToggleOk` / `HotkeySettingsOk` 和日志 `hotkey toggle=... settings=...`，不再静默忽略失败。
+- 设置页 `V2Shell.HotkeyStatus()` 直接读两个状态；`ResetHotkeys()` 只重注册默认组合，不改键位、不写配置；失败时 Toast 提示可能被其它程序占用，设置页保留“失败”文本。
+- 约束：默认组合固定，不提供自定义键位编辑；冲突时不自动换用其它组合，需用户关闭占用方后点“重新注册”或重启 Liuli。
 - 验证：开启后 Run=`"E:\meihuaDesktop\bin\Liuli.exe"`，关闭后值不存在；把 exe+shell.json 复制到 `_scratch\move-test` 启动，Run 更新为临时路径；恢复主 exe 启动后 Run 回到主路径。
 - 限制：只支持当前用户；没有“启动时最小化/延迟启动”参数；多用户切换各自 HKCU 独立。
 
