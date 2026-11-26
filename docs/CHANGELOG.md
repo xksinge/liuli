@@ -2,6 +2,19 @@
 
 遵循 Keep a Changelog；版本遵循 SemVer。
 
+## [1.3.2] - 2026-11-26
+
+### 修复
+
+- 拖文件进看板完全无反应：`DragAcceptFiles` 声明在错误的 `user32.dll`，实际导出在 `shell32.dll`，调用一直抛入口点缺失并被空 `catch` 吞掉，窗口从未接受拖放（#21）
+- 补注册 OLE `IDropTarget`：先 `OleInitialize` 再 `RegisterDragDrop`，分层窗口也能稳定接收资源管理器拖拽；保留 `WM_DROPFILES` 兜底
+- 拖放日志细化：`OLE 进入/放下`、`收到拖入 N 项`、注册失败警告；不再每次启动刷注册成功日志
+
+### 验证
+
+- 修复后 11 块看板 `RegisterDragDrop` 全部返回 `hr=0`
+- 真实拖拽仍需人工确认一次（脚本合成拖拽启动不了资源管理器拖放循环）
+
 ## [1.3.1] - 2026-11-26
 
 ### 修复
