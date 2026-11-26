@@ -59,7 +59,7 @@ namespace Liuli
             int btn = Util.RoundI(34 * UiScale);
             int bgap = Util.RoundI(4 * UiScale);
             int bodyH = Util.RoundI(56 * UiScale);
-            int margin = Util.RoundI(6 * UiScale);
+            int margin = Util.RoundI(12 * UiScale);
             int tagH = Util.RoundI(16 * UiScale);
             int n = Items().Count;
             int bodyW = pad + n * (icon + gap) + sep + btn * 3 + bgap * 2 + pad;
@@ -92,14 +92,14 @@ namespace Liuli
             if (!IsHandleCreated) return;
             Rectangle work = Screen.PrimaryScreen.WorkingArea;
             int gap = Util.RoundI(8 * UiScale);
-            int bottom = work.Bottom - gap;
+            int bodyBottom = work.Bottom - gap;
             if (Taskbar.Visible())
             {
                 int tb = Taskbar.VisibleHeight();
-                if (tb > 0) bottom = Math.Min(bottom, work.Bottom - tb - gap);
+                if (tb > 0) bodyBottom = Math.Min(bodyBottom, work.Bottom - tb - gap);
             }
             int x = work.X + (work.Width - Width) / 2;
-            int y = bottom - Height;
+            int y = bodyBottom - body.Bottom;
             if (y < work.Top + Util.RoundI(40 * UiScale)) y = work.Top + Util.RoundI(40 * UiScale);
             Location = new Point(x, y);
             Native.KeepAtTop(Handle);
@@ -114,13 +114,13 @@ namespace Liuli
             if (!IsHandleCreated) return;
             Rectangle work = Screen.PrimaryScreen.WorkingArea;
             int gap = Util.RoundI(8 * UiScale);
-            int bottom = work.Bottom - gap;
+            int bodyBottom = work.Bottom - gap;
             if (Taskbar.Visible())
             {
                 int tb = Taskbar.VisibleHeight();
-                if (tb > 0) bottom = Math.Min(bottom, work.Bottom - tb - gap);
+                if (tb > 0) bodyBottom = Math.Min(bodyBottom, work.Bottom - tb - gap);
             }
-            Point target = new Point(work.X + (work.Width - Width) / 2, bottom - Height);
+            Point target = new Point(work.X + (work.Width - Width) / 2, bodyBottom - body.Bottom);
             if (target != Location)
             {
                 Location = target;

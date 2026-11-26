@@ -42,19 +42,19 @@ namespace Liuli
 
         Size CollapsedSize()
         {
-            int m = Util.RoundI(6 * UiScale);
+            int m = Util.RoundI(12 * UiScale);
             return new Size(Util.RoundI(230 * UiScale) + m * 2, Util.RoundI(38 * UiScale) + m * 2);
         }
 
         Size ExpandedSize()
         {
-            int m = Util.RoundI(6 * UiScale);
+            int m = Util.RoundI(12 * UiScale);
             return new Size(Util.RoundI(352 * UiScale) + m * 2, Util.RoundI(106 * UiScale) + m * 2);
         }
 
         Rectangle CurrentBody()
         {
-            int m = Util.RoundI(6 * UiScale);
+            int m = Util.RoundI(12 * UiScale);
             return new Rectangle(m, m, Width - m * 2, Height - m * 2);
         }
 
