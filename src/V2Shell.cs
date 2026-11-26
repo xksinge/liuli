@@ -116,6 +116,7 @@ namespace Liuli
             menu.Items.Add("显示/隐藏 Dock 与灵动岛", null, delegate { ToggleAll(); });
             menu.Items.Add("Dock 自动隐藏：开/关", null, delegate { ToggleDockAutoHide(); });
             menu.Items.Add("Dock 尺寸：小/标准/大（点击切换）", null, delegate { CycleDockPreset(); });
+            menu.Items.Add("灵动岛设置", null, delegate { OpenIslandSettingsLater(Cursor.Position); });
             menu.Items.Add("任务栏自动隐藏：开/关", null, delegate { ToggleTaskbarAutoHide(); });
             menu.Items.Add("恢复系统任务栏", null, delegate { RestoreTaskbar(); });
             menu.Items.Add("重载 Dock 默认组合", null, delegate { ResetDock(); });
@@ -164,6 +165,7 @@ namespace Liuli
             items.Add(new MenuForm.Item("显示/隐藏 Dock 与灵动岛", delegate { ToggleAll(); }));
             items.Add(new MenuForm.Item("Dock 自动隐藏：开/关", delegate { ToggleDockAutoHide(); }, Glyph.Gear));
             items.Add(new MenuForm.Item("Dock 尺寸：" + DockPresetLabel(Config == null ? "standard" : Config.DockPreset) + "（点击切换）", delegate { CycleDockPreset(); }, Glyph.Gear));
+            items.Add(new MenuForm.Item("灵动岛设置", delegate { OpenIslandSettingsLater(screen); }, Glyph.Gear));
             items.Add(new MenuForm.Item("任务栏自动隐藏：开/关", delegate { ToggleTaskbarAutoHide(); }, Glyph.Gear));
             items.Add(new MenuForm.Item("恢复系统任务栏", delegate { RestoreTaskbar(); }, Glyph.Restore));
             items.Add(new MenuForm.Item("重载 Dock 默认组合", delegate { ResetDock(); }, Glyph.Restore));
@@ -227,6 +229,99 @@ namespace Liuli
             Config.Save();
             if (Dock != null) Dock.RelayoutPublic();
             Toast("Dock 尺寸：" + DockPresetLabel(next));
+        }
+
+        // ---------- 灵动岛设置 ----------
+
+        static void OpenIslandSettingsLater(Point screen)
+        {
+            Timer t = new Timer();
+            t.Interval = 140;
+            t.Tick += delegate
+            {
+                t.Stop();
+                t.Dispose();
+                ShowIslandSettings(screen);
+            };
+            t.Start();
+        }
+
+        public static void ShowIslandSettings(Point screen)
+        {
+            if (Config == null) return;
+            List<MenuForm.Item> items = new List<MenuForm.Item>();
+            items.Add(new MenuForm.Item("宽度：" + Config.IslandWidth + "（点击切换）", delegate { CycleIslandWidth(); }, Glyph.Gear));
+            items.Add(new MenuForm.Item("高度：" + Config.IslandHeight + "（点击切换）", delegate { CycleIslandHeight(); }, Glyph.Gear));
+            items.Add(new MenuForm.Item("顶部偏移：" + Config.IslandTop + "px（点击切换）", delegate { CycleIslandTop(); }, Glyph.Gear));
+            items.Add(new MenuForm.Item("展开动画：" + Config.IslandAnimMs + "ms（点击切换）", delegate { CycleIslandAnim(); }, Glyph.Gear));
+            items.Add(new MenuForm.Item("天气：" + (Config.IslandWeather ? "开" : "关"), delegate { Config.IslandWeather = !Config.IslandWeather; ApplyIslandConfig(); }, Glyph.Gear));
+            items.Add(new MenuForm.Item("系统读数：" + (Config.IslandStats ? "开" : "关"), delegate { Config.IslandStats = !Config.IslandStats; ApplyIslandConfig(); }, Glyph.Gear));
+            items.Add(new MenuForm.Item("快捷动作：" + (Config.IslandQuick ? "开" : "关"), delegate { Config.IslandQuick = !Config.IslandQuick; ApplyIslandConfig(); }, Glyph.Gear));
+            items.Add(new MenuForm.Item("恢复灵动岛默认", delegate { ResetIslandSettings(); }, Glyph.Restore));
+            new MenuForm(items, new Size(Util.RoundI(200 * Theme.S), Util.RoundI(8 * Theme.S))).ShowAt(screen);
+        }
+
+        static int NextPreset(int current, int[] values)
+        {
+            for (int i = 0; i < values.Length; i++)
+                if (current == values[i]) return values[(i + 1) % values.Length];
+            for (int i = 0; i < values.Length; i++)
+                if (current < values[i]) return values[i];
+            return values[0];
+        }
+
+        public static void CycleIslandWidth()
+        {
+            if (Config == null) return;
+            Config.IslandWidth = NextPreset(Config.IslandWidth, new int[] { 360, 380, 420, 460, 520 });
+            ApplyIslandConfig();
+            Toast("灵动岛宽度：" + Config.IslandWidth);
+        }
+
+        public static void CycleIslandHeight()
+        {
+            if (Config == null) return;
+            Config.IslandHeight = NextPreset(Config.IslandHeight, new int[] { 100, 112, 136, 160, 180 });
+            ApplyIslandConfig();
+            Toast("灵动岛高度：" + Config.IslandHeight);
+        }
+
+        public static void CycleIslandTop()
+        {
+            if (Config == null) return;
+            Config.IslandTop = NextPreset(Config.IslandTop, new int[] { 0, 6, 16, 28, 48 });
+            ApplyIslandConfig();
+            Toast("灵动岛顶部偏移：" + Config.IslandTop);
+        }
+
+        public static void CycleIslandAnim()
+        {
+            if (Config == null) return;
+            Config.IslandAnimMs = NextPreset(Config.IslandAnimMs, new int[] { 0, 120, 180, 260, 360 });
+            ApplyIslandConfig();
+            Toast("灵动岛动画：" + Config.IslandAnimMs + "ms");
+        }
+
+        public static void ApplyIslandConfig()
+        {
+            if (Config == null) return;
+            Config.NormalizeIsland();
+            Config.Save();
+            if (Island != null) Island.ApplyConfig();
+        }
+
+        public static void ResetIslandSettings()
+        {
+            if (Config == null) return;
+            Config.IslandWidth = 380;
+            Config.IslandHeight = 112;
+            Config.IslandTop = 6;
+            Config.IslandAnimMs = 180;
+            Config.IslandWeather = true;
+            Config.IslandStats = true;
+            Config.IslandQuick = true;
+            ApplyIslandConfig();
+            Toast("灵动岛已恢复默认");
         }
 
         public static void ToggleTaskbarAutoHide()

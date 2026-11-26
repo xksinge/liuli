@@ -25,6 +25,7 @@ namespace Liuli
 
         readonly List<Item> items;
         int hover = -1;
+        int downIndex = -1;
         int rowH;
 
         public MenuForm(List<Item> items, Size anchor)
@@ -45,6 +46,7 @@ namespace Liuli
                 Region = new Region(p);
             MouseMove += OnMove;
             MouseDown += OnDown;
+            MouseUp += OnUp;
             KeyPreview = true;
         }
 
@@ -111,9 +113,19 @@ namespace Liuli
         {
             int s2 = Util.RoundI(14 * Theme.S);
             int idx = (e.Y - s2) / rowH;
-            if (idx >= 0 && idx < items.Count)
+            if (idx >= 0 && idx < items.Count) downIndex = idx;
+            else { downIndex = -1; Close(); }
+        }
+
+        void OnUp(object s, MouseEventArgs e)
+        {
+            int s2 = Util.RoundI(14 * Theme.S);
+            int idx = (e.Y - s2) / rowH;
+            int chosen = downIndex;
+            downIndex = -1;
+            if (chosen >= 0 && chosen < items.Count && idx == chosen)
             {
-                Item it = items[idx];
+                Item it = items[chosen];
                 Close();
                 if (it.Run != null) it.Run();
             }

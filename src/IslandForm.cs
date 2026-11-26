@@ -20,6 +20,10 @@ namespace Liuli
         long pulseAt;
         string lastClock = "";
         long leaveAt;
+        bool expandingSize;
+        int animFromW, animFromH, animToW, animToH;
+        long expandAt;
+        int expandMs;
 
         public IslandForm()
         {
@@ -53,13 +57,45 @@ namespace Liuli
         Size CollapsedSize()
         {
             int m = Util.RoundI(12 * UiScale);
-            return new Size(Util.RoundI(240 * UiScale) + m * 2, Util.RoundI(40 * UiScale) + m * 2);
+            int bw = Util.Clamp(Util.RoundI(IslandWidthCfg() * 0.63f), 200, 320);
+            int bh = Util.Clamp(Util.RoundI(IslandHeightCfg() * 0.36f), 34, 54);
+            return new Size(Util.RoundI(bw * UiScale) + m * 2, Util.RoundI(bh * UiScale) + m * 2);
         }
 
         Size ExpandedSize()
         {
             int m = Util.RoundI(12 * UiScale);
-            return new Size(Util.RoundI(380 * UiScale) + m * 2, Util.RoundI(112 * UiScale) + m * 2);
+            return new Size(Util.RoundI(IslandWidthCfg() * UiScale) + m * 2,
+                Util.RoundI(IslandHeightCfg() * UiScale) + m * 2);
+        }
+
+        static int IslandWidthCfg()
+        {
+            int w = V2Shell.Config == null ? 380 : V2Shell.Config.IslandWidth;
+            return Util.Clamp(w, 360, 520);
+        }
+
+        static int IslandHeightCfg()
+        {
+            int h = V2Shell.Config == null ? 112 : V2Shell.Config.IslandHeight;
+            return Util.Clamp(h, 100, 180);
+        }
+
+        static int IslandTopCfg()
+        {
+            int t = V2Shell.Config == null ? 6 : V2Shell.Config.IslandTop;
+            return Util.Clamp(t, 0, 80);
+        }
+
+        static int IslandAnimCfg()
+        {
+            int a = V2Shell.Config == null ? 180 : V2Shell.Config.IslandAnimMs;
+            return Util.Clamp(a, 0, 400);
+        }
+
+        static bool IslandQuickCfg()
+        {
+            return V2Shell.Config == null || V2Shell.Config.IslandQuick;
         }
 
         Rectangle CurrentBody()
@@ -85,17 +121,45 @@ namespace Liuli
         {
             if (!IsHandleCreated) return;
             Rectangle work = Screen.PrimaryScreen.WorkingArea;
-            Location = new Point(work.X + (work.Width - Width) / 2, work.Y + Util.RoundI(6 * UiScale));
+            Location = new Point(work.X + (work.Width - Width) / 2, work.Y + Util.RoundI(IslandTopCfg() * UiScale));
             Native.KeepAtTop(Handle);
+        }
+
+        /// <summary>配置变更后立即重排；若有进行中的展开动画则直接落位。</summary>
+        public void ApplyConfig()
+        {
+            if (!IsHandleCreated) return;
+            expandingSize = false;
+            if (animTimer != null) animTimer.Stop();
+            ClientSize = expanded ? ExpandedSize() : CollapsedSize();
+            EnsureCanvas();
+            ApplyPosition();
+            Render();
         }
 
         void SetExpanded(bool on)
         {
             if (expanded == on) return;
             expanded = on;
-            ClientSize = expanded ? ExpandedSize() : CollapsedSize();
-            EnsureCanvas();
-            ApplyPosition();
+            Size target = expanded ? ExpandedSize() : CollapsedSize();
+            int dur = IslandAnimCfg();
+            if (dur <= 0 || !IsHandleCreated)
+            {
+                expandingSize = false;
+                ClientSize = target;
+                EnsureCanvas();
+                ApplyPosition();
+                Render();
+                return;
+            }
+            animFromW = Width;
+            animFromH = Height;
+            animToW = target.Width;
+            animToH = target.Height;
+            expandAt = Environment.TickCount;
+            expandMs = dur;
+            expandingSize = true;
+            if (animTimer != null && !animTimer.Enabled) animTimer.Start();
             Render();
         }
 
@@ -152,6 +216,7 @@ namespace Liuli
         public void ExpandForPreview()
         {
             if (!IsHandleCreated) return;
+            expandingSize = false;
             expanded = true;
             ClientSize = ExpandedSize();
             EnsureCanvas();
@@ -182,16 +247,37 @@ namespace Liuli
         void TickAnim()
         {
             long now = Environment.TickCount;
-            if (bounceAt != 0 && now - bounceAt > 220)
+            bool active = false;
+            if (expandingSize && expandMs > 0)
             {
-                bounceBtn = -1;
-                bounceAt = 0;
-                pulseAt = 0;
-                if (animTimer != null) animTimer.Stop();
-                Render();
-                return;
+                float t = (now - expandAt) / (float)expandMs;
+                if (t < 0f) t = 0f;
+                if (t > 1f) t = 1f;
+                float e = 1f - (1f - t) * (1f - t) * (1f - t);
+                int w = animFromW + (int)((animToW - animFromW) * e);
+                int h = animFromH + (int)((animToH - animFromH) * e);
+                if (w < 1) w = 1;
+                if (h < 1) h = 1;
+                if (w != Width || h != Height)
+                {
+                    ClientSize = new Size(w, h);
+                    EnsureCanvas();
+                    ApplyPosition();
+                }
+                if (t >= 1f) expandingSize = false; else active = true;
+            }
+            if (bounceAt != 0)
+            {
+                if (now - bounceAt > 220)
+                {
+                    bounceBtn = -1;
+                    bounceAt = 0;
+                    pulseAt = 0;
+                }
+                else active = true;
             }
             Render();
+            if (!active && !expandingSize && animTimer != null) animTimer.Stop();
         }
 
         public void PreviewPressBtn(int index)
@@ -228,7 +314,7 @@ namespace Liuli
                         g.FillPath(b, p);
                 }
 
-                if (expanded) PaintExpanded(g, body);
+                if (expanded || expandingSize) PaintExpanded(g, body);
                 else PaintCollapsed(g, body);
                 Native.PushLayered(Handle, Canvas, Location, (byte)255);
             }
@@ -238,8 +324,9 @@ namespace Liuli
         void PaintCollapsed(Graphics g, Rectangle body)
         {
             WeatherNow wx = V2Shell.Weather != null ? V2Shell.Weather.Now : new WeatherNow();
+            bool showWx = V2Shell.Config == null || V2Shell.Config.IslandWeather;
             int x = body.X + Util.RoundI(13 * UiScale);
-            if (wx.Has)
+            if (showWx && wx.Has)
                 WeatherService.Glyph(g, wx.Code, new Rectangle(x + Util.RoundI(2 * UiScale), body.Y + Util.RoundI(11 * UiScale),
                     Util.RoundI(16 * UiScale), Util.RoundI(16 * UiScale)), Theme.Accent);
             else
@@ -254,7 +341,7 @@ namespace Liuli
             using (Pen pen = new Pen(Color.FromArgb(70, Theme.TextSub), 1f))
                 g.DrawLine(pen, dx, body.Y + Util.RoundI(10 * UiScale), dx, body.Bottom - Util.RoundI(10 * UiScale));
 
-            string info = wx.Has ? (wx.Temp + "° " + wx.Cond) : ("CPU " + (int)V2Shell.Stats.Cpu + "%");
+            string info = showWx && wx.Has ? (wx.Temp + "° " + wx.Cond) : ("CPU " + (int)V2Shell.Stats.Cpu + "%");
             Rectangle ir = new Rectangle(dx + Util.RoundI(10 * UiScale), body.Y,
                 body.Width - (dx - body.X) - Util.RoundI(16 * UiScale), body.Height);
             Theme.TextMiddle(g, info, Theme.Font(10.5f, FontStyle.Regular, UiScale), Theme.TextSub, ir, StringAlignment.Near);
@@ -264,6 +351,9 @@ namespace Liuli
         {
             WeatherNow wx = V2Shell.Weather != null ? V2Shell.Weather.Now : new WeatherNow();
             StatsNow st = V2Shell.Stats;
+            bool showWx = V2Shell.Config == null || V2Shell.Config.IslandWeather;
+            bool showStats = V2Shell.Config == null || V2Shell.Config.IslandStats;
+            bool showQuick = IslandQuickCfg();
 
             Rectangle tr = new Rectangle(body.X + Util.RoundI(20 * UiScale), body.Y + Util.RoundI(8 * UiScale),
                 Util.RoundI(118 * UiScale), Util.RoundI(36 * UiScale));
@@ -273,7 +363,7 @@ namespace Liuli
             Theme.TextMiddle(g, DateLine(), Theme.Font(10.5f, FontStyle.Regular, UiScale), Theme.TextSub, dr, StringAlignment.Near);
 
             int wxX = body.Right - Util.RoundI(138 * UiScale);
-            if (wx.Has)
+            if (showWx && wx.Has)
             {
                 WeatherService.Glyph(g, wx.Code, new Rectangle(wxX, body.Y + Util.RoundI(14 * UiScale),
                     Util.RoundI(27 * UiScale), Util.RoundI(27 * UiScale)), Theme.Accent);
@@ -285,7 +375,7 @@ namespace Liuli
                 Theme.TextMiddle(g, wx.Cond + " · " + wx.Humidity + "% · " + wx.Wind.ToString("0.0") + "m/s",
                     Theme.Font(9.5f, FontStyle.Regular, UiScale), Theme.TextSub, cond, StringAlignment.Near);
             }
-            else
+            else if (showWx)
             {
                 Rectangle nowr = new Rectangle(wxX, body.Y + Util.RoundI(14 * UiScale), Util.RoundI(120 * UiScale), Util.RoundI(28 * UiScale));
                 Theme.TextMiddle(g, "天气离线", Theme.Font(10f, FontStyle.Regular, UiScale), Theme.TextSub, nowr, StringAlignment.Near);
@@ -296,13 +386,14 @@ namespace Liuli
                     body.Right - Util.RoundI(20 * UiScale), body.Y + Util.RoundI(62 * UiScale));
 
             int y = body.Bottom - Util.RoundI(40 * UiScale);
-            if (V2Shell.Config == null || V2Shell.Config.IslandStats)
+            if (showStats)
             {
                 Stat(g, body.X + Util.RoundI(22 * UiScale), y, "CPU", st.CpuText, st.Cpu / 100f);
                 Stat(g, body.X + Util.RoundI(101 * UiScale), y, "内存", st.MemPct + "%", st.MemPct / 100f);
                 Stat(g, body.X + Util.RoundI(180 * UiScale), y, "磁盘", st.DiskPct + "%", st.DiskPct / 100f);
             }
 
+            if (!showQuick) return;
             Rectangle[] rs = QuickButtons();
             Glyph[] gl = { Glyph.Plus, Glyph.Broom, Glyph.Gear };
             float bs = BounceScale();
@@ -344,7 +435,7 @@ namespace Liuli
             if (!CurrentBody().Contains(e.Location)) return;
             pressedBody = true;
             pressedBtn = -1;
-            if (expanded)
+            if (expanded && IslandQuickCfg())
             {
                 Rectangle[] rs = QuickButtons();
                 for (int i = 0; i < rs.Length; i++)
@@ -366,7 +457,7 @@ namespace Liuli
             pressedBtn = -1;
             pressedBody = false;
             if (!bodyPressed && pb < 0) return;
-            if (pb >= 0 && expanded)
+            if (pb >= 0 && expanded && IslandQuickCfg())
             {
                 Rectangle[] rs = QuickButtons();
                 if (pb < rs.Length && rs[pb].Contains(e.Location))

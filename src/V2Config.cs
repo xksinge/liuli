@@ -136,6 +136,11 @@ namespace Liuli
         public bool IslandOn = true;
         public bool IslandWeather = true;
         public bool IslandStats = true;
+        public bool IslandQuick = true;
+        public int IslandWidth = 380;       // 展开态 body 宽度
+        public int IslandHeight = 112;      // 展开态 body 高度
+        public int IslandTop = 6;           // 顶部偏移
+        public int IslandAnimMs = 180;      // 展开/收起时长
 
         // 任务栏（M1 只做自动隐藏；完全隐藏留到 P1）
         public bool TaskbarAutoHide = true;
@@ -181,6 +186,11 @@ namespace Liuli
                 c.IslandOn = Json.Bool(root, "islandOn", true);
                 c.IslandWeather = Json.Bool(root, "islandWeather", true);
                 c.IslandStats = Json.Bool(root, "islandStats", true);
+                c.IslandQuick = Json.Bool(root, "islandQuick", true);
+                c.IslandWidth = Util.Clamp(Json.Int(root, "islandWidth", 380), 360, 520);
+                c.IslandHeight = Util.Clamp(Json.Int(root, "islandHeight", 112), 100, 180);
+                c.IslandTop = Util.Clamp(Json.Int(root, "islandTop", 6), 0, 80);
+                c.IslandAnimMs = Util.Clamp(Json.Int(root, "islandAnimMs", 180), 0, 400);
                 c.TaskbarAutoHide = Json.Bool(root, "taskbarAutoHide", true);
                 c.TaskbarOriginalAutoHide = Json.Bool(root, "taskbarOriginalAutoHide", true);
                 c.TaskbarFullHide = Json.Bool(root, "taskbarFullHide", false);
@@ -306,6 +316,7 @@ namespace Liuli
         {
             try
             {
+                NormalizeIsland();
                 Dictionary<string, object> root = new Dictionary<string, object>();
                 root["version"] = Version;
                 root["dockOn"] = DockOn;
@@ -314,6 +325,11 @@ namespace Liuli
                 root["islandOn"] = IslandOn;
                 root["islandWeather"] = IslandWeather;
                 root["islandStats"] = IslandStats;
+                root["islandQuick"] = IslandQuick;
+                root["islandWidth"] = IslandWidth;
+                root["islandHeight"] = IslandHeight;
+                root["islandTop"] = IslandTop;
+                root["islandAnimMs"] = IslandAnimMs;
                 root["taskbarAutoHide"] = TaskbarAutoHide;
                 root["taskbarOriginalAutoHide"] = TaskbarOriginalAutoHide;
                 root["taskbarFullHide"] = TaskbarFullHide;
@@ -344,6 +360,14 @@ namespace Liuli
                 Util.WriteAllTextAtomic(FilePath, Json.Write(root, true));
             }
             catch (Exception ex) { Log.Warn("config", "shell.json 保存失败：" + ex.Message); }
+        }
+
+        public void NormalizeIsland()
+        {
+            IslandWidth = Util.Clamp(IslandWidth, 360, 520);
+            IslandHeight = Util.Clamp(IslandHeight, 100, 180);
+            IslandTop = Util.Clamp(IslandTop, 0, 80);
+            IslandAnimMs = Util.Clamp(IslandAnimMs, 0, 400);
         }
 
         public void ApplyTheme()
