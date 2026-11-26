@@ -2,6 +2,41 @@
 
 遵循 Keep a Changelog；版本遵循 SemVer。
 
+## [Unreleased · v2.0 M3]
+
+### 新增
+
+- 灵动岛尺寸/偏移可配置：`islandWidth` 360–520（默认 380）、`islandHeight` 100–180（默认 112）、`islandTop` 0–80（默认 6）
+- 展开/收起动画可配置：`islandAnimMs` 0–400（默认 180），`0` 为立即切换，非零按 16ms cubic ease-out 插值
+- 内容开关：`islandWeather` / `islandStats` 沿用，新增 `islandQuick`；关闭后不绘制对应区域，快捷动作也不再命中
+- 收起尺寸由展开尺寸派生：宽 63% 夹 200–320、高 36% 夹 34–54，窗口统一加 12 逻辑像素阴影边距
+- 托盘/灵动岛菜单新增“灵动岛设置”子菜单：宽度、高度、顶部偏移、展开动画按档位循环，天气/读数/快捷动作开关，以及“恢复灵动岛默认”
+- `--selftest` 输出 `island.width/height/top/animMs/quick/weather/stats`
+
+### 变更
+
+- 菜单项改为 `MouseUp` 触发：按下只记录行号，抬起且仍在同一行才执行，避免按下即关菜单后误触刚弹出的子菜单
+- 子菜单改为 140ms 定时器延迟打开，父菜单关闭后再显示
+- 灵动岛配置改动时 `ApplyConfig()` 立即停止动画并落位，不做过渡
+
+### 修复
+
+- 设置子菜单在父菜单 `MouseDown` 中立即打开，父菜单 `MouseUp` 会命中新子菜单行；改为延迟打开并统一鼠标抬起触发
+- 灵动岛设置个别行首次点击不命中：菜单行高/内边距统一按 34/14 逻辑像素计算，点击与绘制共用同一 `items` 顺序，并改为鼠标抬起触发；本轮设置入口连续打开通过，多轮边界点击未压测
+
+### 验证
+
+- 构建通过：`pwsh -NoProfile -File tools\build.ps1` → `bin\Liuli.exe` 214.5 KB
+- 默认值：`--selftest` 输出 `width=380 height=112 top=6 animMs=180 quick=True weather=True stats=True`
+- 越界收敛：手改 `width=999 height=1 top=-100 animMs=999` 后自检输出 `width=520 height=100 top=0 animMs=400`
+- 真机默认：收起 `263×64`，展开 `404×136`；截图 `docs/screens/v3/m3-default-collapsed.png` / `m3-default-expanded.png`
+- 真机改宽 420：收起 `289×64`；改高 136：展开 `444×160`、收起 `289×73`；改顶部偏移 16：窗口 y 从 6 到 16；动画 260 捕捉到中间 `395×133`
+- 动画 0：指针移入后立即扫描即为 `404×136`，无中间尺寸；180/260 可见过渡
+- 内容开关：`islandQuick=false` 展开态无快捷按钮（`m3-quick-off.png`）；`islandWeather=false` 收起态改显 CPU（`m3-weather-off.png`）；`islandStats=false` 展开态无 CPU/内存/磁盘读数（`m3-stats-off.png`）
+- 菜单：主菜单“灵动岛设置”与 8 行子菜单真机打开，截图 `m3-main-menu.png` / `m3-island-menu.png`；“恢复默认”写回 380/112/6/180 与三个 `true`
+- 重启保持：420/136/16/260 重启后仍为 `289×73` 收起、`444×160` 展开
+- **未验证**：125% DPI、动画 260ms 的主观手感、菜单多轮压力点击；M2 遗留项不变
+
 ## [Unreleased · v2.0 M2]
 
 ### 新增
