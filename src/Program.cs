@@ -7,7 +7,7 @@ namespace Liuli
 {
     static class Program
     {
-        const string MutexName = "Liuli.Desktop.Boards.v1";
+        const string MutexName = "Liuli.Desktop.Shell.v2";
 
         [STAThread]
         static int Main(string[] args)
@@ -20,7 +20,7 @@ namespace Liuli
             Application.ThreadException += delegate (object s, ThreadExceptionEventArgs e)
             {
                 Log.Error("crash", e.Exception.ToString());
-                try { App.UI(delegate { App.Toast("出了点问题，已记到日志"); }); } catch { }
+                try { V2Shell.UI(delegate { V2Shell.Toast("出了点问题，已记到日志"); }); } catch { }
             };
             AppDomain.CurrentDomain.UnhandledException += delegate (object s, UnhandledExceptionEventArgs e)
             {
@@ -31,15 +31,15 @@ namespace Liuli
             Mutex mutex = new Mutex(true, MutexName, out first);
             if (!first)
             {
-                int msg = Native.RegisterWindowMessage(App.ActivateMessageName);
+                int msg = Native.RegisterWindowMessage(V2Shell.ActivateMessageName);
                 Native.PostMessage(new IntPtr(Native.HWND_BROADCAST), msg, IntPtr.Zero, IntPtr.Zero);
                 return 0;
             }
 
             try
             {
-                App.Boot();
-                Application.Run(App.Host);
+                V2Shell.Boot();
+                Application.Run(V2Shell.Host);
             }
             catch (Exception ex)
             {
