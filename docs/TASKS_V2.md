@@ -147,7 +147,7 @@
   - 未验证：Windows 重启后的实际自启行为、非管理员受限账户、多用户切换、杀软拦截。
 
 - [ ] **TASK-062** [REQ-062/092] HiDPI + 文字四档
-- [x] **TASK-063** [REQ-063] 热键查看与重置（Issue #68）
+- [x] **TASK-063** [REQ-063] 热键查看与重置（Issue #68 / PR #69，已合入 `ea378c0`）
   - 实现：系统页新增“快捷键”区，显示 Ctrl+Alt+L 显示/隐藏、Ctrl+Alt+G 打开设置的注册状态；新增“重新注册快捷键”，先 `UnregisterHotKey` 再注册默认组合，结果写日志并刷新页面。
   - 验证：构建 `bin\Liuli.exe` 298 KB；Ctrl+Alt+G 可正常打开设置，系统页显示“已注册”；Ctrl+Alt+L 在当前环境被其它进程占用，显示“失败”且启动日志为 `toggle=fail settings=ok`；点击重新注册后日志再次记录同样状态，页面不崩、无裁切；截图 `docs/screens/v8/settings-hotkeys.png`。
   - 未验证：关闭占用 Ctrl+Alt+L 的程序后能否恢复注册；非管理员账户；与系统/第三方热键的冲突枚举。
