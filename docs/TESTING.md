@@ -1,5 +1,27 @@
 # 测试记录
 
+## v2.0 M6 开机自启（2026-11-27，Issue #66）
+
+| 项 | 结果 | 证据 |
+|---|---|---|
+| 构建 | 通过 | `bin\Liuli.exe` 297 KB；C#5 无新增 error |
+| 设置第 10 页 | 通过（真机） | 十页导航主题/配色/面板/Dock/灵动岛/壁纸/桌面/收纳/系统/关于；系统页开关、启动项路径、后续说明完整；截图 `docs/screens/v8/settings-system.png` |
+| 开启 | 通过（真机） | `autoStart=True`；Run=`"E:\meihuaDesktop\bin\Liuli.exe"`；日志 `已写入` |
+| 关闭 | 通过（真机） | `autoStart=False`；Run 值不存在；日志 `已删除当前用户启动项` |
+| 移动 exe | 通过（真机） | exe+shell.json 复制到 `_scratch\move-test` 启动，Run 改为 `"E:\meihuaDesktop\_scratch\move-test\Liuli.exe"` |
+| 恢复主 exe | 通过（真机） | 主 exe 启动后 Run 回到 `"E:\meihuaDesktop\bin\Liuli.exe"` |
+| 自检 | 通过 | `--selftest` 输出 `autoStart=False run=` |
+| Windows 重启实际自启 | **未验证** | 未重启系统 |
+| 非管理员受限账户 | **未验证** | 当前用户可写 HKCU |
+| 多用户切换 / 杀软拦截 | **未验证** | 未测 |
+
+### 自启真机记录（2026-11-27）
+
+- 开启后 `HKCU\Software\Microsoft\Windows\CurrentVersion\Run\Liuli` 值为 `"E:\meihuaDesktop\bin\Liuli.exe"`；关闭后 `Get-ItemProperty` 取不到该值。
+- 移动测试使用 `_scratch\move-test\Liuli.exe` + `data\shell.json`；启动日志写入临时路径，Run 同步改为临时路径。
+- 恢复主 exe 启动后，Run 自动回到主路径；测试完关闭开关，配置与注册表均回到 false/无值。
+- 测试目录 `_scratch\move-test` 已回收。
+
 ## v2.0 M5 桌面组件（2026-11-27，Issue #64）
 
 | 项 | 结果 | 证据 |

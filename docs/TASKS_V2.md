@@ -103,7 +103,7 @@
   - 验证：构建 225 KB；2 面板创建、拖动/缩放、四类内容切换、位置尺寸不变、重启保持、透明区 `HTTRANSPARENT`、置底被记事本覆盖均真机通过；截图 `docs/screens/v4/`。
 - [x] **TASK-041** [REQ-032] 主题保存/加载/删除（Issue #54）
   - 实现：`ThemeSnapshot` 快照（Dock / 灵动岛 / 玻璃 / 明暗 / 壁纸 / 面板深拷贝）；`Themes[]` + `activeTheme`；最多 6 个、同名覆盖、超限淘汰最早、二次确认删除；加载恢复壁纸与整套外壳。
-  - 设置面板：新增 `V2SettingsForm` 900×720 五页（主题/面板/Dock/灵动岛/关于），M5 扩展配色/壁纸/桌面/收纳后为九页；主题库加载/覆盖/删除、滑杆松手保存、磨砂松手重烘、180ms 状态刷新；Dock/灵动岛齿轮、托盘、热键统一入口。
+  - 设置面板：新增 `V2SettingsForm` 900×720 五页（主题/面板/Dock/灵动岛/关于），M5 扩展配色/壁纸/桌面/收纳、M6 加入系统后为十页；主题库加载/覆盖/删除、滑杆松手保存、磨砂松手重烘、180ms 状态刷新；Dock/灵动岛齿轮、托盘、热键统一入口。
   - 验证：构建 `bin\Liuli.exe` 259 KB；主题保存/加载/删除、覆盖、7 个主题触发 6 上限淘汰、面板 6 上限、Dock/灵动岛显隐、上下文入口、坏配置收敛均已记录；截图 `docs/screens/v5/`。
 - [ ] **TASK-042** [REQ-033] 导入推荐配置（P1）
 - [ ] **TASK-043** [REQ-034] 统一 Theme token 审查
@@ -140,8 +140,12 @@
 ## Phase 6 · M6 设置与系统
 
 - [ ] **TASK-060** [REQ-060] `SettingsV2` 分模块页面
-  - M4 已完成主题/面板/Dock/灵动岛/关于五页与统一入口，M5 加入配色、壁纸、桌面、收纳四页后为九页；开机自启、快捷键配置、日志诊断等 M6 项仍待补。
-- [ ] **TASK-061** [REQ-061] 开机自启
+  - M4 已完成主题/面板/Dock/灵动岛/关于五页与统一入口，M5 加入配色、壁纸、桌面、收纳四页，M6 加入系统页后为十页；快捷键配置、日志诊断等 M6 项仍待补。
+- [x] **TASK-061** [REQ-061] 开机自启（Issue #66 / PR #67）
+  - 实现：设置第 10 页“系统”（索引 8）；`ShellConfig.AutoStart` 读写 `autoStart`；`AutoStart` 只写 `HKCU\Software\Microsoft\Windows\CurrentVersion\Run\Liuli`，值带引号指向当前 exe；`V2Shell.Boot` 每次按配置写入/删除，移动 exe 后下次启动自动修正。
+  - 验证：构建 `bin\Liuli.exe` 297 KB；系统页开关开启后 Run=`"E:\meihuaDesktop\bin\Liuli.exe"`，关闭后值不存在；把 exe+shell.json 复制到 `_scratch\move-test` 启动，Run 更新为临时路径；恢复主 exe 后 Run 回到主路径；`--selftest` 输出 `autoStart=False run=`；截图 `docs/screens/v8/settings-system.png`。
+  - 未验证：Windows 重启后的实际自启行为、非管理员受限账户、多用户切换、杀软拦截。
+
 - [ ] **TASK-062** [REQ-062/092] HiDPI + 文字四档
 - [ ] **TASK-063** [REQ-063] 热键配置/重置
 - [ ] **TASK-064** [REQ-064] 日志与诊断

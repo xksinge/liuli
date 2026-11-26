@@ -151,7 +151,7 @@ M1 实际命名：`V2Shell`、`ShellConfig`、`V2Window`、`DockForm`、`IslandF
 - 保存/覆盖：`SaveTheme` 同名覆盖，`ActiveTheme` 指向当前快照；手动改玻璃、Dock、灵动岛、面板后立刻清空 `ActiveTheme`，避免把已偏离的状态误标成“当前”。
 - 加载：`LoadTheme` 先应用快照，壁纸文件存在时 `Wallpaper.Set` + `Backdrop.Rebuild`，再重建面板、Dock、灵动岛；任一步失败只影响对应窗口，不改快照内容。
 - 删除：二次确认（同一条目点两次），删除当前主题时同步清空 `activeTheme`；坏 JSON 由 `NormalizeThemes` 收敛，空/重复名自动修复。
-- 设置面板 `V2SettingsForm`：900×720 自绘玻璃窗、九页导航、窗口可拖动；滑杆松手保存，磨砂/压暗松手才重烘壁纸，开关/内容切换即时写 `shell.json`。
+- 设置面板 `V2SettingsForm`：900×720 自绘玻璃窗、十页导航、窗口可拖动；滑杆松手保存，磨砂/压暗松手才重烘壁纸，开关/内容切换即时写 `shell.json`。
 - 页面职责：
   - 主题：玻璃浓度 20–140、磨砂 10–100、圆角 10–30、自动/深色/浅色、保存当前主题（内嵌原生 TextBox 命名）、恢复外观默认、主题库加载/覆盖/删除。
   - 配色：强调色来源三选一（跟随壁纸 / 预设 / 自定义）、6 个预设色卡、自定义取色（`ColorDialog`，取消不改）、当前配色说明。
@@ -203,8 +203,19 @@ M1 实际命名：`V2Shell`、`ShellConfig`、`V2Window`、`DockForm`、`IslandF
 - 时钟刷新：`PanelForm.ApplyTickInterval` 每秒刷新秒显示，关闭秒后回到 5 秒；秒开启时字号上限 32，避免 8 个字符在 220 宽面板内被裁切。
 - 天气：`Weather.LoadCache` 启动先读缓存；拉取失败置 `Weather.Offline`，面板在 `城市 · 天气` 后追加“离线缓存”，不再误报为实时数据；无缓存时仍显示“天气离线”。
 - 系统：CPU/内存/磁盘使用 `SysStats.Sample`，`V2Shell` 每 2 秒采样；系统面板 `PanelForm` 每 2 秒重绘，其它内容 5 秒。
-- 入口：时钟面板右键菜单在“内容”之后增加“时间制：24/12 小时”“显示秒：开/关”，改动立即 `Config.Save()` 并刷新所有面板；不新增设置页，避免十页导航。
+- 入口：时钟面板右键菜单在“内容”之后增加“时间制：24/12 小时”“显示秒：开/关”，改动立即 `Config.Save()` 并刷新所有面板；不占用设置页，系统页留给 M6 的开机自启/快捷键/日志。
 - 限制：时钟格式是外壳级偏好，不写入主题快照；12 小时制暂不显示 AM/PM 英文标记；天气离线标记依赖一次真实失败，未做强制断网回归。
+
+### 7.9 系统页与开机自启（TASK-061，Issue #66）
+
+- 设置第 10 页“系统”，索引 8；“关于”顺延到 9；导航 10 项仍在 720 高度内。
+- `AutoStart` 只操作 `HKCU\Software\Microsoft\Windows\CurrentVersion\Run\Liuli`，不写 HKLM，不需要管理员权限；写入值为带引号的当前 `Application.ExecutablePath`。
+- `ShellConfig.AutoStart` 默认 false，读写 `autoStart`；`--selftest` 输出配置值和当前 Run 值。
+- `V2Shell.Boot` 每次按配置执行 `AutoStart.Apply`：开启时覆盖写入，关闭时删除；因此 exe 移到新目录后，只要启动一次就会把 Run 指向新路径。
+- 设置页开关先写注册表，成功后才改配置并 `Save`；失败不翻转开关，Toast 提示权限/注册表错误。
+- 系统页预留“后续”说明：快捷键配置（REQ-063）与日志诊断（REQ-064）仍待补，当前仍为 `Ctrl+Alt+L` / `Ctrl+Alt+G`。
+- 验证：开启后 Run=`"E:\meihuaDesktop\bin\Liuli.exe"`，关闭后值不存在；把 exe+shell.json 复制到 `_scratch\move-test` 启动，Run 更新为临时路径；恢复主 exe 启动后 Run 回到主路径。
+- 限制：只支持当前用户；没有“启动时最小化/延迟启动”参数；多用户切换各自 HKCU 独立。
 
 ## 8. 配色
 

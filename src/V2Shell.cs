@@ -39,6 +39,7 @@ namespace Liuli
         {
             bootAt = Environment.TickCount;
             Config = ShellConfig.Load();
+            AutoStart.Apply(Config.AutoStart);
             Theme.BlurPct = Util.Clamp(Config.BlurPct, 10, 100);
             Theme.GlassPct = Util.Clamp(Config.GlassPct, 20, 140);
             Theme.WallpaperDim = Util.Clamp(Config.WallpaperDim, 0, 80);
@@ -456,6 +457,19 @@ namespace Liuli
                 Panels[i].Render();
             }
             Toast(on ? "时钟已显示秒" : "时钟已隐藏秒");
+        }
+
+        public static void SetAutoStart(bool on)
+        {
+            if (Config == null) return;
+            if (!AutoStart.Apply(on))
+            {
+                Toast("开机自启设置失败，请检查当前用户注册表权限");
+                return;
+            }
+            Config.AutoStart = on;
+            Config.Save();
+            Toast(on ? "已开启开机自启（当前用户）" : "已关闭开机自启");
         }
 
         public static void OpenSettings()
