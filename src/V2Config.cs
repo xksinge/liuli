@@ -17,6 +17,26 @@ namespace Liuli
 
         public bool IsSystem { get { return string.Equals(Kind, "system", StringComparison.OrdinalIgnoreCase); } }
 
+        /// <summary>运行指示用进程名；系统入口、URL、.lnk 暂不解析。</summary>
+        public string[] ProcessNames()
+        {
+            if (IsSystem || string.IsNullOrEmpty(Path)) return new string[0];
+            if (Path.StartsWith("ms-settings:", StringComparison.OrdinalIgnoreCase))
+                return new string[] { "SystemSettings" };
+            if (Path.StartsWith("ms-calculator:", StringComparison.OrdinalIgnoreCase))
+                return new string[] { "CalculatorApp", "Calculator", "WindowsCalculator" };
+            if (Path.StartsWith("http://", StringComparison.OrdinalIgnoreCase) ||
+                Path.StartsWith("https://", StringComparison.OrdinalIgnoreCase))
+                return new string[0];
+            try
+            {
+                if (Path.EndsWith(".exe", StringComparison.OrdinalIgnoreCase))
+                    return new string[] { System.IO.Path.GetFileNameWithoutExtension(Path) };
+            }
+            catch { }
+            return new string[0];
+        }
+
         public string DisplayName
         {
             get

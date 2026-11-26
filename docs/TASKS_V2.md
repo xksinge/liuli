@@ -54,10 +54,12 @@
 
 - Issue #37；分支 `feat/v2-dock-autohide`（从 `feat/v2-shell` 切出，堆叠在 M1 之后）；Draft PR #38。
 - Issue #39；分支 `feat/v2-dock-presets`（从 `feat/v2-dock-autohide` 切出）；Draft PR #40。
+- Issue #41；分支 `feat/v2-dock-running`（从 `feat/v2-dock-presets` 切出）；PR 待创建。
 - 已实现：`shell.json` 增加 `dockAutoHide`（默认 false）；托盘/快捷菜单增加切换；Dock 全局 55ms 鼠标轮询、底部 6px 热区、离开 650ms 收起；170ms cubic ease-out 滑入/滑出；隐藏位置按屏幕底边计算，任务栏露出时也能完全推出；切换开关、显示全部、重排时刷新状态。
-- 已验证：构建通过（201.5 KB）；`--selftest` 读取 `dockAutoHide=False`；临时写入 `true` 后读取为 `True`，已恢复原文件；离屏 `--preview` 打印隐藏态 `dockHidden top=1442`，`screenBottom=1440`，窗口完全移出屏幕。
+- 已验证：构建通过（205 KB）；`--selftest` 读取 `dockAutoHide=False`；临时写入 `true` 后读取为 `True`，已恢复原文件；离屏 `--preview` 打印隐藏态 `dockHidden top=1442`，`screenBottom=1440`，窗口完全移出屏幕。
 - 未验证：真机热区唤出、650ms 收起、动画中途反向、任务栏唤出共存、125% DPI。需要用真实鼠标事件验收。
 - 三档尺寸（Issue #39）：`dockPreset=small/standard/large` 对应 0.86/1.0/1.14 整体缩放；托盘/快捷菜单循环切换；离屏尺寸 small 494×86、standard 576×100、large 658×114，对照图 `docs/screens/v2/m2-dock-presets.png`。
+- 运行指示（Issue #41）：每 2s 一次进程枚举，缓存目标名；仅 app 项绘制 accent 小圆点；预览检测到 `explorer`、`SystemSettings`，对照图 `docs/screens/v2/m2-dock-running.png`。
 
 - [ ] **TASK-020** [REQ-014] Dock 自动隐藏与唤出动画（含任务栏共存）
   - 实现：`DockForm` 的 `autoTimer` / `slideTimer` / `SlideTo` / `HiddenOffset`；配置与菜单切换。
@@ -66,6 +68,8 @@
   - 实现：`dockPreset` 配置 + `DockForm.PresetScale()` 乘到 `UiScale`；托盘/快捷菜单循环切换；`--preview` 三档对照。
   - 验证：配置写入 `large` 后自检读取正确；三档离屏尺寸已记录；1366×768/125% 真机未验证。
 - [ ] **TASK-022** [REQ-016] 运行指示点（P1）
+  - 实现：`DockItem.ProcessNames()` + `DockForm.RefreshRunning()` 2s 缓存枚举；仅 app 项绘制 accent 圆点；`.lnk` 暂不解析。
+  - 验证：`--preview` 输出 `dockRunning=explorer,SystemSettings`；真机运行/退出变化与 CPU 影响未验证。
 - [ ] **TASK-023** [REQ-013] 拖拽排序（P1）
 - [ ] **TASK-024** [REQ-019] GlassBoard Dock 实测核对：动画、分组、滚轮、右侧小按钮
 - [ ] **TASK-025** [REQ-010–019] Dock 验收截图与回归

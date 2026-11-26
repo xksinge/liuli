@@ -2,11 +2,11 @@
 
 ## Resume
 
-- 当前任务：Issue #39 / M2 Dock 三档尺寸预设
-- 状态：M1 在 `feat/v2-shell`（PR #36 Draft）；M2 自动隐藏在 `feat/v2-dock-autohide`（PR #38 Draft）；`feat/v2-dock-presets` 已实现 `dockPreset` 三档并构建通过（203.5 KB）；**真机热区/收起/动画/尺寸切换/DPI 未验证**
-- 分支：`feat/v2-dock-presets`（从 `feat/v2-dock-autohide` 切出，堆叠在 M2 自动隐藏之上）
-- PR：M2 自动隐藏 `#38` Draft；尺寸预设 `#40` Draft（base `feat/v2-dock-autohide`）；M1 PR #36 仍 Draft
-- 下一步：提交并开尺寸预设 Draft PR（base `feat/v2-dock-autohide`），再真机验证三档视觉与自动隐藏手感
+- 当前任务：Issue #41 / M2 Dock 运行指示点
+- 状态：M1 在 `feat/v2-shell`（PR #36 Draft）；M2 自动隐藏 `feat/v2-dock-autohide`（PR #38 Draft）；尺寸预设 `feat/v2-dock-presets`（PR #40 Draft）；运行指示 `feat/v2-dock-running` 已实现并构建通过（205 KB）；**真机热区/动画/尺寸切换/运行状态变化/DPI 未验证**
+- 分支：`feat/v2-dock-running`（从 `feat/v2-dock-presets` 切出）
+- PR：自动隐藏 `#38`、尺寸预设 `#40`；运行指示 PR 待创建；M1 PR #36 仍 Draft
+- 下一步：提交运行指示并开 Draft PR（base `feat/v2-dock-presets`），再真机验收运行圆点与自动隐藏/尺寸组合
 - 阻塞：无；用户此前要求“不运行”，因此未启动 UI，不能声称视觉验收通过
 - 约束：旧看板功能封存；不改动 `boards.json` 与 `Documents\Liuli`
 
@@ -26,6 +26,7 @@
 | 2026-11-26 | Dock 应用图标改用 256px Shell 图像列表，图标探针通过 | 提交 f3f5a1b |
 | 2026-11-26 | 创建 M2 Issue #37，开 `feat/v2-dock-autohide`；实现 Dock 自动隐藏/热区/170ms 动画 | Issue #37；构建 201.5 KB |
 | 2026-11-26 | 创建 Issue #39，开 `feat/v2-dock-presets`；实现三档尺寸与离屏对照 | Issue #39；构建 203.5 KB |
+| 2026-11-26 | 创建 Issue #41，开 `feat/v2-dock-running`；实现运行指示圆点与放大对照 | Issue #41；构建 205 KB |
 
 ## Key Decisions
 

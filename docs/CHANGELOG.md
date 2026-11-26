@@ -10,16 +10,19 @@
 - 底部 6 逻辑像素热区唤出，离开约 650ms 收起；170ms cubic ease-out 滑入/滑出
 - 隐藏位置按屏幕底边计算，任务栏露出时 Dock 也能完全移出屏幕
 - Dock 三档尺寸预设：`dockPreset=small/standard/large`，整体缩放 0.86/1.0/1.14；托盘/快捷菜单循环切换并持久化
+- Dock 运行指示点：每 2s 一次进程枚举并缓存，仅 app 项绘制 accent 小圆点；`.lnk` 暂不解析
 - `m2-dock-presets.png`：三档 Dock 同背景离屏对照（494×86 / 576×100 / 658×114）
+- `m2-dock-running.png`：运行指示放大对照（explorer / SystemSettings）
 - `--selftest` 输出 `dockAutoHide` 与 `dockPreset`；`--preview` 输出隐藏态窗口位置与三档尺寸
 
 ### 验证
 
-- 构建通过，`bin\Liuli.exe` 203.5 KB
+- 构建通过，`bin\Liuli.exe` 205 KB
 - 配置读写：临时写入 `dockAutoHide=true` 后自检读取为 `True`；临时写入 `dockPreset=large` 后自检读取为 `large`，测试后恢复原文件
 - 隐藏几何：`dockHidden top=1442`，`screenBottom=1440`
 - 三档尺寸：small 494×86、standard 576×100、large 658×114；对照图 `docs/screens/v2/m2-dock-presets.png`
-- **未验证**：真机热区唤出、收起延时、动画中途反向、任务栏唤出共存、125% DPI、三档真机切换
+- 运行指示：`--preview` 检测到 `dockRunning=explorer,SystemSettings`，放大对照图 `docs/screens/v2/m2-dock-running.png`
+- **未验证**：真机热区唤出、收起延时、动画中途反向、任务栏唤出共存、125% DPI、三档真机切换、运行状态实时变化与 CPU 影响
 
 ## [Unreleased · v2.0 M1]
 

@@ -4,13 +4,15 @@
 
 | 项 | 结果 | 说明 |
 | --- | --- | --- |
-| 构建 | 通过 | `pwsh -File tools\build.ps1` → `bin\Liuli.exe` 203.5 KB |
+| 构建 | 通过 | `pwsh -File tools\build.ps1` → `bin\Liuli.exe` 205 KB |
 | 配置默认值 | 通过 | `--selftest`：`dockAutoHide=False`、`dockPreset=standard`，未写字段时保持常显/标准 |
 | 配置读写 | 通过 | 临时写入 `dockAutoHide=true` / `dockPreset=large` 后自检读取正确；测试后恢复原 `shell.json` |
 | 隐藏几何 | 通过（离屏） | `--preview`：`dockHidden top=1442`，`screenBottom=1440`，窗口完全移出屏幕 |
 | 三档尺寸 | 通过（离屏） | small 494×86、standard 576×100、large 658×114；`m2-dock-presets.png` 对照已生成 |
+| 运行指示 | 通过（离屏） | `dockRunning=explorer,SystemSettings`；`m2-dock-running.png` 可见 explorer/settings 下方圆点 |
 | 热区/收起/动画 | **未验证** | 需真实鼠标：底部 6px 唤出、离开约 650ms 收起、170ms 滑入/滑出、中途反向 |
 | 尺寸切换/重启保持 | **未验证** | 需真机点菜单切换并重启确认 |
+| 运行状态实时变化/CPU | **未验证** | 需启动/退出应用观察圆点；2s 进程枚举的 CPU 影响未测 |
 | 任务栏共存 | **未验证** | 需真机确认任务栏唤出时 Dock 上移且都能操作 |
 | 125% DPI | **未验证** | 需改缩放后实测 |
 

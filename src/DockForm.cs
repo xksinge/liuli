@@ -1,6 +1,7 @@
 ﻿// Liuli v2 · 底部 Dock：默认系统入口 + Windows 自带应用，支持拖入固定、右键移除。
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.IO;
@@ -14,6 +15,8 @@ namespace Liuli
         Timer animTimer;
         Timer autoTimer;
         Timer slideTimer;
+        Timer runningTimer;
+        HashSet<string> runningNames = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
         DropTarget oleDrop;
         int hoverItem = -1;
         int hoverBtn = -1;
@@ -59,6 +62,11 @@ namespace Liuli
             slideTimer = new Timer();
             slideTimer.Interval = 16;
             slideTimer.Tick += delegate { TickSlide(); };
+
+            runningTimer = new Timer();
+            runningTimer.Interval = 2000;
+            runningTimer.Tick += delegate { RefreshRunning(true); };
+            runningTimer.Start();
         }
 
         protected override void OnReady()
@@ -71,6 +79,7 @@ namespace Liuli
             }
             catch (Exception ex) { Log.Warn("dock", "注册拖放失败 " + ex.Message); }
             Relayout();
+            RefreshRunning(false);
         }
 
         List<DockItem> Items()
@@ -85,6 +94,57 @@ namespace Liuli
             if (string.Equals(p, "small", StringComparison.OrdinalIgnoreCase)) return 0.86f;
             if (string.Equals(p, "large", StringComparison.OrdinalIgnoreCase)) return 1.14f;
             return 1f;
+        }
+
+        void RefreshRunning(bool render)
+        {
+            List<DockItem> items = Items();
+            HashSet<string> wanted = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            for (int i = 0; i < items.Count; i++)
+            {
+                string[] names = items[i].ProcessNames();
+                for (int j = 0; j < names.Length; j++) wanted.Add(names[j]);
+            }
+
+            HashSet<string> next = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            if (wanted.Count > 0)
+            {
+                try
+                {
+                    Process[] ps = Process.GetProcesses();
+                    for (int i = 0; i < ps.Length; i++)
+                    {
+                        try
+                        {
+                            string name = ps[i].ProcessName;
+                            if (wanted.Contains(name)) next.Add(name);
+                        }
+                        catch { }
+                        finally { try { ps[i].Dispose(); } catch { } }
+                    }
+                }
+                catch (Exception ex) { Log.Warn("dock", "运行状态枚举失败 " + ex.Message); }
+            }
+
+            bool changed = next.Count != runningNames.Count;
+            if (!changed)
+            {
+                foreach (string name in next)
+                {
+                    if (!runningNames.Contains(name)) { changed = true; break; }
+                }
+            }
+            if (!changed) return;
+            runningNames = next;
+            if (render) Render();
+        }
+
+        bool IsRunning(DockItem item)
+        {
+            string[] names = item.ProcessNames();
+            for (int i = 0; i < names.Length; i++)
+                if (runningNames.Contains(names[i])) return true;
+            return false;
         }
 
         public void Relayout()
@@ -162,6 +222,17 @@ namespace Liuli
         public void RelayoutPublic() { Relayout(); }
 
         public void TickPositionPublic() { TickPosition(); }
+
+        public string RunningNamesPublic()
+        {
+            string s = "";
+            foreach (string name in runningNames)
+            {
+                if (s.Length > 0) s += ",";
+                s += name;
+            }
+            return s;
+        }
 
         void TickPosition()
         {
@@ -311,6 +382,15 @@ namespace Liuli
                         using (SolidBrush b = new SolidBrush(pressed ? Theme.Press : Theme.Hover)) g.FillPath(b, p);
                     }
                     DockGlyphs.Draw(g, items[i], r, UiScale);
+
+                    if (IsRunning(items[i]))
+                    {
+                        int dot = Math.Max(3, Util.RoundI(4 * UiScale));
+                        int dotX = baseRect.X + (baseRect.Width - dot) / 2;
+                        int dotY = baseRect.Bottom + Util.RoundI(1.5f * UiScale);
+                        using (SolidBrush b = new SolidBrush(Color.FromArgb(210, Theme.Accent)))
+                            g.FillEllipse(b, dotX, dotY, dot, dot);
+                    }
 
                     if (flashItem == i && flashAt != 0)
                     {
@@ -504,8 +584,8 @@ namespace Liuli
         {
             base.OnVisibleChanged(e);
             if (autoTimer == null) return;
-            if (!Visible) { autoTimer.Stop(); if (slideTimer != null) slideTimer.Stop(); }
-            else if (!autoTimer.Enabled) autoTimer.Start();
+            if (!Visible) { autoTimer.Stop(); if (slideTimer != null) slideTimer.Stop(); if (runningTimer != null) runningTimer.Stop(); }
+            else { if (!autoTimer.Enabled) autoTimer.Start(); if (runningTimer != null && !runningTimer.Enabled) runningTimer.Start(); }
         }
 
         protected override void OnFormClosed(FormClosedEventArgs e)
@@ -514,6 +594,7 @@ namespace Liuli
             if (animTimer != null) animTimer.Stop();
             if (autoTimer != null) autoTimer.Stop();
             if (slideTimer != null) slideTimer.Stop();
+            if (runningTimer != null) runningTimer.Stop();
             try { if (oleDrop != null) DropTarget.RevokeDragDrop(Handle); } catch { }
             base.OnFormClosed(e);
         }
