@@ -143,7 +143,7 @@ M1 实际命名：`V2Shell`、`ShellConfig`、`V2Window`、`DockForm`、`IslandF
 
 ### 7.4 主题快照与 v2 设置面板（REQ-032，Issue #54）
 
-- 主题快照存 `ShellConfig.Themes[]`，最多 6 个；每项含名称、保存时间、Dock 三项、灵动岛八项、玻璃五项（明暗/预设/浓度/磨砂/圆角）、壁纸三路径/样式/平铺、`Panels` 深拷贝。
+- 主题快照存 `ShellConfig.Themes[]`，最多 6 个；每项含名称、保存时间、Dock 三项、灵动岛八项、玻璃五项（明暗/预设/浓度/磨砂/圆角）、壁纸路径/样式/平铺、`Panels` 深拷贝。
 - 名称统一 `CleanName`：去首尾空白、限 24 字、空名回“主题”；重名加 ` (2)` 后缀，最多 6 个，超过时保存第 7 个会淘汰最早一个。
 - 保存/覆盖：`SaveTheme` 同名覆盖，`ActiveTheme` 指向当前快照；手动改玻璃、Dock、灵动岛、面板后立刻清空 `ActiveTheme`，避免把已偏离的状态误标成“当前”。
 - 加载：`LoadTheme` 先应用快照，壁纸文件存在时 `Wallpaper.Set` + `Backdrop.Rebuild`，再重建面板、Dock、灵动岛；任一步失败只影响对应窗口，不改快照内容。
