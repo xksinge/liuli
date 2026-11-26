@@ -1,5 +1,34 @@
 # 测试记录
 
+## v2.0 M5 配色（2026-11-26，Issue #56；完整形态 #57）
+
+| 项 | 结果 | 说明 |
+| --- | --- | --- |
+| 构建 | 通过 | `bin\Liuli.exe` 263.5 KB；C#5 warning 无新增 |
+| 设置页 | 通过（真机） | 新增第 2 页“配色”，六页导航全部落在 720 内；来源三段、6 色卡、自定义按钮、当前配色说明均可见 |
+| 跟随壁纸 | 通过（配置/代码） | `accent=auto` 时 `ResolveAccent` 返回 `Backdrop.Accent`；换壁纸仍走 M1 `Backdrop.Tick → ApplyTheme` |
+| 6 预设 | 通过（真机） | 逐一点击 6 个色卡，`accentPreset` 依次 0→5；选中环、区块标题、导航高亮随 accent 变化 |
+| 预设显色 | 通过（真机） | 紫雾 `#B49AFF` 选中态截图；石墨 `#B0BED0` 选中态截图；6 色卡各自颜色正确 |
+| 自定义取色 | 通过（真机） | 打开系统颜色对话框，选粉色并确定，`accentCustom=#FF80FF`、`accentMode=custom`；设置标题、导航、Dock 运行点/图标高亮、灵动岛太阳同步变粉 |
+| 取消不改 | 通过（真机） | 再次打开颜色对话框直接取消，`accentMode/custom` 保持 `custom/#FF80FF` |
+| 主题快照 | 通过（真机） | 保存“主题 1”时 `accentMode=custom / accentPreset=5 / accentCustom=#FF80FF`；切到 auto 后加载该主题，三项恢复 |
+| 重启保持 | 通过（真机） | 重启外壳后 `activeTheme=主题 1`，配色页仍显示自定义 `#FF80FF` |
+| 坏值收敛 | 通过（自检） | 手改 `weird / 9 / nothex` 后 `--selftest` 输出 `auto / 5 / #7EB2FF`；`NormalizeThemes` 对快照同样收敛 |
+| Dock/灵动岛入口 | 通过（真机/消息） | Dock 齿轮打开设置落在“Dock”页（索引 3）；灵动岛齿轮改索引 4 未真机点击 |
+| 页面视觉 | 通过（真机） | `docs/screens/v6/settings-palette.png`、`settings-palette-preset.png`、`settings-palette-custom.png`、`m5-dock-accent.png`、`m5-island-accent.png` |
+| 真实热键 | **未验证** | 仍用 `WM_HOTKEY` 消息打开设置；物理键盘注入未稳定复现 |
+| 换壁纸 5 秒 | **未验证** | 未切换系统壁纸做 auto 变色的 5 秒计时 |
+| 性能/对比度 | **未验证** | 未量重算耗时；6 预设仅切 accent，玻璃染色/描边/文字层级仍为全局 token |
+| 125% DPI | **未验证** | 仅在 100% 主屏验证 |
+
+### M5 配色真机记录（2026-11-26）
+
+- 设置窗口 `830,360,1730,1080`；第 1 页主题、第 2 页配色；Dock 齿轮落第 4 页（Dock），灵动岛齿轮代码指向第 5 页。
+- 6 色卡客户端坐标：第 1 行 `(270/530/760, 270)`，第 2 行 `(270/530/760, 330)`；点击后立即写 `shell.json`。
+- 颜色对话框 `1016,340,1544,760`；选基本色粉色 + 确定后配置 `#FF80FF`；取消不改。
+- 测试配置备份 `_scratch/shell-before-color.json`；测试主题 `主题 1` 与自定义色在验收后清理，最终恢复 `auto`。
+- Dock 齿轮真机点击后设置落在 Dock 页；灵动岛齿轮入口未真机点击（窗口被前台窗口遮挡）。
+
 ## v2.0 M4 主题与设置（2026-11-26，Issue #54）
 
 | 项 | 结果 | 说明 |

@@ -537,6 +537,9 @@ namespace Liuli
             Config.Radius = 20;
             Config.ThemeMode = "auto";
             Config.ThemePreset = "mist";
+            Config.AccentMode = "auto";
+            Config.AccentPreset = 0;
+            Config.AccentCustom = "#7EB2FF";
             Config.ActiveTheme = "";
             Config.Save();
             ApplyVisualSettings(true);
