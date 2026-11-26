@@ -95,8 +95,10 @@ Program.cs     入口、单实例、DPI、异常兜底
 - 可选真实移动（`settings.organizeMove=true`）：整理前弹确认框，确认后把用户桌面文件/文件夹移入 `文档\Liuli\<分组>`（收纳根可用 `settings.storeRoot` 改，默认 `Environment.SpecialFolder.MyDocuments\Liuli`），桌面不留副本；公共桌面（`C:\Users\Public\Desktop`）条目只收入口、不移动，避免系统目录写权限导致中断
 - 移动逐项写 `data\move-manifest.json`（`{"moves":[{"from":…,"to":…}]}`），每移一项原子重写一次，崩溃/断电后可再次撤销或按清单恢复
 - 整理前把 `boards.json` 复制为 `data\undo-organize.json`（只保留最近一步）；「撤销上次整理」先按清单把原件移回（逐项 try/catch，原目录不可写时退回用户桌面并记警告），再覆盖配置、`Store.Load` 重新解析、`RebuildAllWindows` 重建窗口；只有全部移回成功才删除清单与收纳根空目录
+- 每个文件看板持久化 `folder`（绝对路径），默认 `文档\Liuli\<看板标题>`；标题只用于第一次推导，之后改名不再换目录
+- 收纳目录每 4 秒做一次双向对齐：目录内已不存在的条目移除、目录内新增条目补进来；目录外的入口保持不动。只扫一层，不递归
 - 文件看板采用图标网格（按宽度 4/3/2 列，40px 图标 + 下方单行文件名），视觉接近酷呆/Fences 盒子；单击 tile 打开，按住超过阈值才启动 `DoDragDrop`，拖到资源管理器即移出
-- 文件看板拖入：开启移动时，桌面文件拖入会把原件移入 `文档\Liuli\<看板标题>` 后入库；已在收纳根内或非桌面路径的文件只加入口，避免二次移动
+- 文件看板拖入：桌面文件拖入会把原件移入看板绑定的 `folder` 后入库；已在收纳根内或非桌面路径的文件只加入口，避免二次移动
 - 拖放实现：`DragAcceptFiles`（`shell32.dll`）+ OLE `IDropTarget`（`OleInitialize` + `RegisterDragDrop`）双通道，分层窗口优先走 OLE；两条通道都汇到 `OnFilesDropped`
 - 取舍：撤销按整文件快照恢复，会把整理后对其它看板的改动一并回退；换来实现简单、可解释，适合“整理错了立刻反悔”的场景
 

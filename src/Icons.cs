@@ -236,13 +236,27 @@ namespace Liuli
             }
         }
 
-        /// <summary>把桌面上的文件/文件夹移进 桌面\Liuli\&lt;group&gt;，返回新路径；失败返回 null。</summary>
+        /// <summary>把桌面上的文件/文件夹移进收纳根下的 &lt;group&gt;，返回新路径；失败返回 null。</summary>
         public static string MoveIntoGroup(string path, string group)
         {
             try
             {
-                if (string.IsNullOrEmpty(path) || !File.Exists(path) && !Directory.Exists(path)) return null;
                 string dir = Path.Combine(LiuliRoot, string.IsNullOrEmpty(group) ? "其他" : group);
+                return MoveToFolder(path, dir);
+            }
+            catch (Exception ex)
+            {
+                Log.Warn("icons", "移入失败 " + path + " " + ex.Message);
+                return null;
+            }
+        }
+
+        /// <summary>把文件/文件夹移动进指定目录，返回新路径；失败返回 null。</summary>
+        public static string MoveToFolder(string path, string dir)
+        {
+            try
+            {
+                if (string.IsNullOrEmpty(path) || !File.Exists(path) && !Directory.Exists(path)) return null;
                 Directory.CreateDirectory(dir);
                 string dest = UniqueDest(dir, Path.GetFileName(path));
                 if (Directory.Exists(path)) Directory.Move(path, dest);
@@ -255,6 +269,89 @@ namespace Liuli
                 Log.Warn("icons", "移入失败 " + path + " " + ex.Message);
                 return null;
             }
+        }
+
+        public static string SafeFolderName(string title)
+        {
+            string t = title == null ? "" : title.Trim();
+            char[] bad = Path.GetInvalidFileNameChars();
+            for (int i = 0; i < bad.Length; i++) t = t.Replace(bad[i], '_');
+            t = t.Trim().TrimEnd('.');
+            return t.Length == 0 ? "文件" : t;
+        }
+
+        /// <summary>文件看板绑定的收纳目录；空 Folder 时按看板标题推导并写回。</summary>
+        public static string BindFolder(Board b, bool create)
+        {
+            if (b == null) return "";
+            string dir = b.Folder == null ? "" : b.Folder.Trim();
+            if (dir.Length == 0) dir = Path.Combine(LiuliRoot, SafeFolderName(b.Title));
+            b.Folder = dir;
+            if (create) Directory.CreateDirectory(dir);
+            return dir;
+        }
+
+        public static string MoveToBoard(string path, Board b)
+        {
+            string dir = BindFolder(b, true);
+            return MoveToFolder(path, dir);
+        }
+
+        /// <summary>把看板条目与绑定目录做一次双向对齐：外部新增补进来，外部删除/改名的移除。返回是否有变化。</summary>
+        public static bool SyncFolder(Board b)
+        {
+            if (b == null || b.Kind != BoardKind.Files) return false;
+            string dir;
+            try { dir = BindFolder(b, false); }
+            catch { return false; }
+            if (string.IsNullOrEmpty(dir) || !Directory.Exists(dir)) return false;
+
+            bool changed = false;
+            // 目录里已经不存在的条目（被外部删除或改名）移除；目录外的入口不动
+            for (int i = b.Items.Count - 1; i >= 0; i--)
+            {
+                string p = b.Items[i].Path;
+                if (string.IsNullOrEmpty(p)) continue;
+                if (!IsUnder(p, dir)) continue;
+                if (!File.Exists(p) && !Directory.Exists(p)) { b.Items.RemoveAt(i); changed = true; }
+            }
+
+            HashSet<string> have = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            for (int i = 0; i < b.Items.Count; i++) if (b.Items[i].Path.Length > 0) have.Add(b.Items[i].Path);
+
+            try
+            {
+                foreach (string p in Directory.GetFileSystemEntries(dir))
+                {
+                    try
+                    {
+                        FileAttributes at = File.GetAttributes(p);
+                        if ((at & (FileAttributes.Hidden | FileAttributes.System)) != 0) continue;
+                        if (have.Contains(p)) continue;
+                        Item it = new Item();
+                        it.Path = p;
+                        it.Text = Directory.Exists(p) ? new DirectoryInfo(p).Name : Path.GetFileNameWithoutExtension(p);
+                        b.Items.Add(it);
+                        have.Add(p);
+                        changed = true;
+                    }
+                    catch { }
+                }
+            }
+            catch (Exception ex) { Log.Warn("folder", "同步失败 " + dir + " " + ex.Message); }
+
+            if (changed) Log.Info("folder", "同步 " + b.Title + " ← " + dir + "，共 " + b.Items.Count + " 项");
+            return changed;
+        }
+
+        static bool IsUnder(string path, string dir)
+        {
+            try
+            {
+                string d = dir.TrimEnd('\\') + "\\";
+                return path.StartsWith(d, StringComparison.OrdinalIgnoreCase);
+            }
+            catch { return false; }
         }
 
         static string UniqueDest(string dir, string name)
@@ -432,6 +529,7 @@ namespace Liuli
                 }
                 if (same != null)
                 {
+                    same.Folder = Path.Combine(LiuliRoot, GroupOrder[gi]);
                     same.Items.Clear();
                     for (int k = 0; k < list.Count && k < 40; k++) same.Items.Add(new Item(list[k].Name, list[k].Path));
                     App.RefreshBoard(same);
@@ -442,6 +540,7 @@ namespace Liuli
                 nb.NewId();
                 nb.Kind = BoardKind.Files;
                 nb.Title = GroupOrder[gi];
+                nb.Folder = Path.Combine(LiuliRoot, GroupOrder[gi]);
                 nb.W = 330; nb.H = 330;
                 // 靠主屏右侧两列排，避开左侧默认看板
                 int col = created / 4;

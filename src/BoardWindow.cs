@@ -844,7 +844,7 @@ namespace Liuli
                 {
                     string p = files[i];
                     string dest = null;
-                    if (IsOnDesktop(p) && !IsUnderLiuli(p)) dest = Icons.MoveIntoGroup(p, B.Title);
+                    if (IsOnDesktop(p) && !IsUnderLiuli(p)) dest = Icons.MoveToBoard(p, B);
                     if (dest != null) { Icons.RecordMove(p, dest); p = dest; moved++; }
                     Item it = new Item(System.IO.Path.GetFileNameWithoutExtension(p), p);
                     if (System.IO.Directory.Exists(p)) it.Text = new System.IO.DirectoryInfo(p).Name;
@@ -852,7 +852,8 @@ namespace Liuli
                     B.Items.Add(it);
                 }
                 dirty = true; App.Save();
-                App.Toast(moved > 0 ? "已移入 " + moved + " 个原件到 " + Icons.LiuliRoot + "\\" + B.Title : "已收进 " + files.Count + " 个入口");
+                string dir = Icons.BindFolder(B, false);
+                App.Toast(moved > 0 ? "已移入 " + moved + " 个原件到 " + dir : "已收进 " + files.Count + " 个入口");
             }
             else if (B.Kind == BoardKind.Note)
             {

@@ -68,6 +68,15 @@ namespace Liuli
             Weather.Refresh(false);
 
             Ws.Boards.Sort(delegate (Board a, Board c) { return a.Z.CompareTo(c.Z); });
+            bool bound = false;
+            for (int i = 0; i < Ws.Boards.Count; i++)
+            {
+                Board b = Ws.Boards[i];
+                if (b.Kind != BoardKind.Files || b.Folder.Length > 0) continue;
+                Icons.BindFolder(b, false);
+                bound = true;
+            }
+            if (bound) Save();
             for (int i = 0; i < Ws.Boards.Count; i++) CreateWindow(Ws.Boards[i], false);
             ApplyTopModeAll();
 
@@ -294,6 +303,7 @@ namespace Liuli
                 StatsNow = SysStats.Sample();
                 MarkStatusDirty();
             }
+            if (slowCount % 4 == 0) SyncFolders();
             Weather.Refresh(false);
             if (slowCount % 10 == 0)
             {
@@ -307,6 +317,19 @@ namespace Liuli
             }
             if (slowCount % 9 == 0) KeepZOrder();
             WallEngine.Tick();
+        }
+
+        static void SyncFolders()
+        {
+            bool changed = false;
+            for (int i = 0; i < Ws.Boards.Count; i++)
+            {
+                Board b = Ws.Boards[i];
+                if (b.Kind != BoardKind.Files) continue;
+                if (b.Folder.Length == 0) { Icons.BindFolder(b, false); changed = true; }
+                if (Icons.SyncFolder(b)) { RefreshBoard(b); changed = true; }
+            }
+            if (changed) Save();
         }
 
         static void KeepZOrder()
