@@ -8,7 +8,7 @@ using System.Drawing.Text;
 
 namespace Liuli
 {
-    enum Glyph { Plus, Gear, Broom, Close, Chevron, Pin, Note, Todo, Folder, Code, Pulse, Clock, Copy, More, Check, Image, Video, Restore, Save, ArrowUp, ArrowDown, Dot, Speaker, Wifi, Bluetooth, Sun, Tray }
+    enum Glyph { Plus, Gear, Broom, Close, Chevron, Pin, Note, Todo, Folder, Code, Pulse, Clock, Copy, More, Check, Image, Video, Restore, Save, ArrowUp, ArrowDown, Dot, Speaker, Wifi, Bluetooth, Sun, Tray, Prev, Play, Pause, Next }
 
     static class Theme
     {
@@ -307,6 +307,25 @@ namespace Liuli
                     case Liuli.Glyph.Check:
                         g.DrawLine(pen, cx - u * 0.20f, cy, cx - u * 0.04f, cy + u * 0.15f);
                         g.DrawLine(pen, cx - u * 0.04f, cy + u * 0.15f, cx + u * 0.21f, cy - u * 0.16f);
+                        break;
+                    case Liuli.Glyph.Prev:
+                        g.DrawLine(pen, cx - u * 0.20f, cy - u * 0.18f, cx - u * 0.20f, cy + u * 0.18f);
+                        g.DrawLine(pen, cx + u * 0.16f, cy - u * 0.18f, cx - u * 0.04f, cy);
+                        g.DrawLine(pen, cx - u * 0.04f, cy, cx + u * 0.16f, cy + u * 0.18f);
+                        break;
+                    case Liuli.Glyph.Play:
+                        g.DrawLine(pen, cx - u * 0.10f, cy - u * 0.18f, cx + u * 0.18f, cy);
+                        g.DrawLine(pen, cx + u * 0.18f, cy, cx - u * 0.10f, cy + u * 0.18f);
+                        g.DrawLine(pen, cx - u * 0.10f, cy + u * 0.18f, cx - u * 0.10f, cy - u * 0.18f);
+                        break;
+                    case Liuli.Glyph.Pause:
+                        g.DrawLine(pen, cx - u * 0.11f, cy - u * 0.18f, cx - u * 0.11f, cy + u * 0.18f);
+                        g.DrawLine(pen, cx + u * 0.11f, cy - u * 0.18f, cx + u * 0.11f, cy + u * 0.18f);
+                        break;
+                    case Liuli.Glyph.Next:
+                        g.DrawLine(pen, cx + u * 0.20f, cy - u * 0.18f, cx + u * 0.20f, cy + u * 0.18f);
+                        g.DrawLine(pen, cx - u * 0.16f, cy - u * 0.18f, cx + u * 0.04f, cy);
+                        g.DrawLine(pen, cx + u * 0.04f, cy, cx - u * 0.16f, cy + u * 0.18f);
                         break;
                     case Liuli.Glyph.Note:
                         g.DrawRectangle(pen, cx - u * 0.20f, cy - u * 0.22f, u * 0.40f, u * 0.44f);

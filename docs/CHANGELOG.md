@@ -2,6 +2,28 @@
 
 遵循 Keep a Changelog；版本遵循 SemVer。
 
+## [Unreleased · v2.0 Phase 7 灵动岛 SMTC 媒体显示与控制]
+
+### 新增
+
+- 新增 `Media.cs`：后台线程通过 `Windows.Media.Control.GlobalSystemMediaTransportControlsSessionManager` 读取当前媒体会话，0.9s 轮询标题/歌手/播放状态/进度；无会话时发布空快照，不报错
+- 灵动岛展开态新增媒体行：标题、歌手（无歌手时显示应用名）、进度条、上一首/播放暂停/下一首；媒体存在时展开高度加 40px，无媒体恢复原高度
+- 收起态在有媒体时右侧显示 `♪ 标题`，替代天气/CPU 文案
+- 设置·灵动岛页新增“媒体信息”开关（`islandMedia`，默认开）；`ThemeSnapshot` 一并保存
+- 新增 `Glyph.Prev / Play / Pause / Next` 四个线性图标
+
+### 构建
+
+- `tools/build.ps1` 新增 `System.Runtime.dll`、`System.Runtime.WindowsRuntime.dll` 与 `C:\Windows\System32\WinMetadata\*.winmd` 引用；Win10 1903+ 自带 SMTC，缺失时后台线程记 warning、媒体区维持隐藏
+
+### 验证
+
+- `bin\Liuli.exe` 348.5 KB；C#5 无新增 error，仅历史 warning
+- 用 `Windows.Media.Playback.MediaPlayer` 播放本地 8s WAV 循环，SMTC 探针返回 `media-player.exe`；Liuli 展开窗 `1078,6..1482,182`（404×176，较无媒体 404×136 高 40px）
+- 媒体行显示 `media-player`、进度条与三枚控制；点中间按钮后图标从暂停变播放，播放状态同步；点上一首/下一首不崩
+- 无媒体时展开窗 `1078,6..1482,142`，媒体行隐藏；截图 `island-media.png`、`settings-island-media.png`
+- 未验证：真实 Spotify/浏览器/网易云会话的标题+歌手、SMTC 会话切换 1s 内、125%/150% DPI、无 SMTC 的 Win10 1903
+
 ## [Unreleased · v2.0 Phase 7 Dock 自由位置、收纳跟随与面板锁定]
 
 ### 新增

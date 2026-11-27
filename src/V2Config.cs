@@ -63,6 +63,7 @@ namespace Liuli
         public bool IslandWeather = true;
         public bool IslandStats = true;
         public bool IslandQuick = true;
+        public bool IslandMedia = true;
         public int IslandWidth = 380;
         public int IslandHeight = 112;
         public int IslandTop = 6;
@@ -108,6 +109,7 @@ namespace Liuli
             t.IslandWeather = c.IslandWeather;
             t.IslandStats = c.IslandStats;
             t.IslandQuick = c.IslandQuick;
+            t.IslandMedia = c.IslandMedia;
             t.IslandWidth = c.IslandWidth;
             t.IslandHeight = c.IslandHeight;
             t.IslandTop = c.IslandTop;
@@ -153,6 +155,7 @@ namespace Liuli
             c.IslandWeather = IslandWeather;
             c.IslandStats = IslandStats;
             c.IslandQuick = IslandQuick;
+            c.IslandMedia = IslandMedia;
             c.IslandWidth = IslandWidth;
             c.IslandHeight = IslandHeight;
             c.IslandTop = IslandTop;
@@ -314,6 +317,7 @@ namespace Liuli
         public bool IslandWeather = true;
         public bool IslandStats = true;
         public bool IslandQuick = true;
+        public bool IslandMedia = true;
         public int IslandWidth = 380;       // 展开态 body 宽度
         public int IslandHeight = 112;      // 展开态 body 高度
         public int IslandTop = 6;           // 顶部偏移
@@ -405,6 +409,7 @@ namespace Liuli
                 c.IslandWeather = Json.Bool(root, "islandWeather", true);
                 c.IslandStats = Json.Bool(root, "islandStats", true);
                 c.IslandQuick = Json.Bool(root, "islandQuick", true);
+                c.IslandMedia = Json.Bool(root, "islandMedia", true);
                 c.IslandWidth = Util.Clamp(Json.Int(root, "islandWidth", 380), 360, 520);
                 c.IslandHeight = Util.Clamp(Json.Int(root, "islandHeight", 112), 100, 180);
                 c.IslandTop = Util.Clamp(Json.Int(root, "islandTop", 6), 0, 80);
@@ -654,6 +659,7 @@ namespace Liuli
                 root["islandWeather"] = IslandWeather;
                 root["islandStats"] = IslandStats;
                 root["islandQuick"] = IslandQuick;
+                root["islandMedia"] = IslandMedia;
                 root["islandWidth"] = IslandWidth;
                 root["islandHeight"] = IslandHeight;
                 root["islandTop"] = IslandTop;

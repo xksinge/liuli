@@ -438,6 +438,10 @@ namespace Liuli
                 delegate { return V2Shell.Config.IslandStats ? 1 : 0; },
                 delegate (int v) { V2Shell.Config.IslandStats = v == 1; V2Shell.MarkThemeDirty(); V2Shell.Config.Save(); IslandPreview(); });
             y += Util.RoundI(54 * S);
+            AddToggle("媒体信息", "展开态显示系统当前媒体标题/歌手/进度，可播放暂停与切歌；无会话时自动隐藏", "islandMedia", x, y, w,
+                delegate { return V2Shell.Config.IslandMedia ? 1 : 0; },
+                delegate (int v) { V2Shell.Config.IslandMedia = v == 1; V2Shell.MarkThemeDirty(); V2Shell.Config.Save(); IslandPreview(); });
+            y += Util.RoundI(54 * S);
             AddToggle("快捷动作", "展开态右下三个小按钮", "islandQuick", x, y, w,
                 delegate { return V2Shell.Config.IslandQuick ? 1 : 0; },
                 delegate (int v) { V2Shell.Config.IslandQuick = v == 1; V2Shell.MarkThemeDirty(); V2Shell.Config.Save(); IslandPreview(); });

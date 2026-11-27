@@ -92,7 +92,12 @@
 - [x] **TASK-032** [REQ-025] 宽度/高度/偏移/动画/内容可配置
   - 实现：`islandWidth` / `islandHeight` / `islandTop` / `islandAnimMs` / `islandQuick`；设置子菜单与恢复默认；收起尺寸派生。
   - 验证：档位循环、即时应用、重启保持、越界收敛、动画 0/180/260ms、真机截图均已记录；菜单项改为 MouseUp 触发并延迟打开子菜单。
-- [ ] **TASK-030** [REQ-023] SMTC 媒体显示与控制（P1，M7）
+- [x] **TASK-030** [REQ-023] SMTC 媒体显示与控制（Issue #95 / PR #96）
+  - 实现：`Media.cs` 后台 MTA 线程 0.9s 轮询 `GlobalSystemMediaTransportControlsSessionManager`；读取当前会话标题/艺术家/播放状态/时间轴；元数据或播放状态变化才回 UI 线程，进度由既有 1s 展开重绘刷新；控制调用 `TrySkipPreviousAsync / TryTogglePlayPauseAsync / TrySkipNextAsync`。
+  - 灵动岛：有媒体时展开高度 +40，新增媒体行（标题、歌手/应用名、进度条、上一首/播放暂停/下一首）；收起态显示 `♪ 标题`；无媒体时整行与额外高度都不出现。`islandMedia` 默认开，设置页可关。
+  - 构建：`build.ps1` 引用 `System.Runtime.WindowsRuntime.dll` 与系统 `WinMetadata/*.winmd`；SMTC 不可用时后台线程记 warning，窗口不崩。
+  - 验证：本地 `MediaPlayer` 播放 8s WAV 循环，展开窗 404×176（无媒体 404×136）；点暂停图标由 Pause 变 Play，播放状态同步；点上一首/下一首不崩；截图 `island-media.png`、`settings-island-media.png`。
+  - 未验证：Spotify/浏览器真实会话标题+歌手、会话 1s 内切换、125%/150% DPI、Win10 1903 无 SMTC 情形。
 - [ ] **TASK-031** [REQ-024] 通知摘要（P1，M7）
 
 ## Phase 4 · M4 面板与主题

@@ -113,7 +113,7 @@ M1 实际命名：`V2Shell`、`ShellConfig`、`V2Window`、`DockForm`、`IslandF
 
 - 状态机：`Collapsed` / `Expanded`。
 - 收起宽 230、高 38；展开宽 352、高 106（逻辑像素，按 DPI 换算）；固定在主屏顶部居中。
-- 收起显示时间 + 天气摘要；展开显示日期、天气详情、CPU/内存/磁盘、三个快捷动作。
+- 收起显示时间 + 天气摘要；展开显示日期、天气详情、CPU/内存/磁盘、三个快捷动作；有 SMTC 媒体时展开高度加 40px 并多一行媒体信息。
 - 悬停 140ms 检测、进入即展开；离开 900ms 收起；1s 定时刷新时间，2s 刷新读数。
 - 不抢焦点；点击空白或齿轮打开设置菜单；M1 快捷动作为面板/桌面图标/设置占位。
 
@@ -124,7 +124,7 @@ M1 实际命名：`V2Shell`、`ShellConfig`、`V2Window`、`DockForm`、`IslandF
 - `islandTop`：顶部偏移，0–80，默认 6。
 - `islandAnimMs`：展开/收起时长，0–400，默认 180；`0` 为立即切换。
 - 收起尺寸派生：宽 `round(width * 0.63)` 夹 200–320，高 `round(height * 0.36)` 夹 34–54；窗口再加左右/上下各 12 逻辑像素阴影边距。
-- 内容开关：沿用 `islandWeather`、`islandStats`，新增 `islandQuick`；关闭后不绘制对应区域。
+- 内容开关：沿用 `islandWeather`、`islandStats`，新增 `islandQuick` 与 `islandMedia`；关闭后不绘制对应区域。
 - 动画：16ms 定时器按 `1-(1-t)^3` 插值窗口宽高并重新居中；过渡期间按目标状态绘制，尺寸变化由窗口裁剪呈现。配置为 0 时跳过定时器。
 - 设置入口：灵动岛主菜单新增“灵动岛设置”，子菜单按档位循环宽度/高度/偏移/动画，并切换内容开关；每次改动 `ApplyConfig()` + `Save()`，提供“恢复默认”。
 - 菜单项统一在 `MouseUp` 触发（按下只记录行号），子菜单由 140ms 定时器在父菜单关闭后打开，避免父菜单的按下/抬起事件命中刚出现的子菜单。
@@ -132,8 +132,8 @@ M1 实际命名：`V2Shell`、`ShellConfig`、`V2Window`、`DockForm`、`IslandF
 
 ### 7.2 P1（M7，不在 M3 验收）
 
-- SMTC 媒体标题/艺术家/进度与播放控制（REQ-023）。
-- Windows 通知摘要与忽略/清除（REQ-024）。
+- SMTC 媒体标题/艺术家/进度与播放控制（REQ-023，TASK-030/Issue #95）：新增 `Media.cs`，后台 MTA 线程 0.9s 轮询 `GlobalSystemMediaTransportControlsSessionManager.GetCurrentSession()`，读取 `TryGetMediaPropertiesAsync` 的标题/艺术家与 `GetPlaybackInfo/GetTimelineProperties` 的播放状态/进度；仅当元数据或播放状态变化时通过 `V2Shell.NotifyMediaChanged()` 回 UI 线程。展开态有媒体时高度加 40px，新增媒体行：标题、歌手（空则应用名）、进度条与三键控制；无媒体时不占行高。收起态媒体存在时右侧显示 `♪ 标题`。`islandMedia` 默认开，设置·灵动岛页可关。
+- Windows 通知摘要与忽略/清除（REQ-024，未实现）。
 - M3 验收只覆盖 REQ-020–022、025。
 
 ### 7.3 M4 玻璃面板（REQ-030/031，P0）
