@@ -193,10 +193,17 @@ namespace Liuli
 
         int BaseTopY()
         {
-            // WorkingArea 在任务栏常显时已扣除任务栏高度，不能再减一次。
+            // 任务栏常显时 WorkingArea 已扣除高度；自动隐藏时 WorkingArea 为全屏，
+            // 需要等任务栏真正露出后再临时上移一个任务栏高度，避免 Dock(TopMost) 盖住任务栏。
             Rectangle work = Screen.PrimaryScreen.WorkingArea;
             int gap = Util.RoundI(8 * UiScale);
-            int bodyBottom = work.Bottom - gap;
+            int bottom = work.Bottom;
+            if (Taskbar.AutoHide() && Taskbar.Revealed())
+            {
+                int taskbarH = Taskbar.VisibleHeight();
+                if (taskbarH > 0) bottom = Screen.PrimaryScreen.Bounds.Bottom - taskbarH;
+            }
+            int bodyBottom = bottom - gap;
             int y = bodyBottom - body.Bottom;
             if (y < work.Top + Util.RoundI(40 * UiScale)) y = work.Top + Util.RoundI(40 * UiScale);
             return y;
@@ -266,6 +273,8 @@ namespace Liuli
         void TickAutoHide()
         {
             if (!IsHandleCreated || !Visible) return;
+            // 55ms 检查一次位置：任务栏唤出/缩回时 Dock 比 320ms 定位定时器更快让位。
+            TickPosition();
             if (!AutoHideEnabled())
             {
                 if (!autoRevealed) SlideTo(true);
