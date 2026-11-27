@@ -2,6 +2,27 @@
 
 遵循 Keep a Changelog；版本遵循 SemVer。
 
+## [Unreleased · v2.0 Phase 7 每屏 Dock 布局收口]
+
+### 修复
+
+- 关闭“每屏独立布局”不再清空 `dockProfiles`，只停用并保留；重新开启后副屏恢复原布局
+- `dockProfiles` 加载/保存按 `screen` 去重，最多 4 条；达到上限时拒绝新增 profile，`Pin/Remove/Move` 不再误改共享列表
+- “仅主屏”模式下 Dock 页不再显示无效果的每屏开关，改为文字说明
+- `.lnk` 图标先解析 `TargetPath` 再取目标图标，并按不透明内容裁边铺满；7-Zip 在 Dock 内恢复 44px 槽位满幅
+
+### 验证
+
+- `bin\Liuli.exe` 333.5 KB；C#5 无新增 error
+- 关闭开关 `profiles=1 kept=1`，副屏 576→625，再开启回 576
+- 手改 6 条 profile 启动后保留 `DISPLAY2/3/4/5` 四条，DISPLAY2 取第一条 8 项
+- 仅主屏页无可点开关；7-Zip 图标满幅，截图 `dock-shortcut-icon.png`、`settings-dock-primary-info.png`
+- 测试后 `shell.json` 恢复 `primary`、8 项、0 profiles
+
+### 未验证
+
+- `IconContent` 对超大图标集的首次加载耗时；显示器改名/主副互换后的 profile 归属；面板/收纳每屏组合
+
 ## [Unreleased · v2.0 Phase 7 每屏独立 Dock 图标布局]
 
 ### 新增

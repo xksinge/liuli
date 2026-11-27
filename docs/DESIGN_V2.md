@@ -267,7 +267,8 @@ M1 实际命名：`V2Shell`、`ShellConfig`、`V2Window`、`DockForm`、`IslandF
 - 热插拔/分辨率变化：`V2Host` 收到 `WM_DISPLAYCHANGE` 后 `OnDisplayChanged()`，关闭并重建副屏 Dock，重排主 Dock、灵动岛、面板、收纳与设置；不用 `SystemEvents` 额外挂一遍，避免双触发。重排日志带 `taskbars=` 实例 rect。
 - 面板/收纳按窗口左上角 `Screen.FromPoint` 取所在屏工作区，先夹左/上、再夹右/下，实现跨屏或缩屏后的越界收回。
 - 玻璃底始终按 `SystemInformation.VirtualScreen` 物理坐标建一张磨砂图，`Backdrop.Draw` 用窗口屏幕矩形切片；多屏时 `Wallpaper.Render` 强制 `DrawSpan`，保证跨屏纹理连续，单屏仍按系统“填充/居中/平铺”样式。`wall` 日志记录 `span=1/0 screens=N`。
-- 每屏独立 Dock 图标布局：`dockPerScreen` 默认关闭，关闭时全部屏共享 `dockItems`。开启后主屏仍用共享列表，副屏第一次排序/移除/固定时把共享列表深拷贝为 `dockProfiles[]` 中该 `DeviceName` 的 profile，之后只改本屏；关闭开关清空 profiles。`DockItemsFor(Screen)` 统一决定读取哪份列表，Dock/Hub 的所有写操作都携带 `Screen`，按操作发生屏落库。profile 以 `Screen.DeviceName` 为键，显示器改名或主副互换时可能匹配不到，退化为共享列表，不丢数据。面板/收纳仍按窗口所在屏定位，不另设每屏组合。
+- 每屏独立 Dock 图标布局：`dockPerScreen` 默认关闭，关闭时全部屏共享 `dockItems`。开启后主屏仍用共享列表，副屏第一次排序/移除/固定时把共享列表深拷贝为 `dockProfiles[]` 中该 `DeviceName` 的 profile，之后只改本屏；关闭开关只停用并保留 profiles，重新开启即恢复，只有 `ResetDock` 才清空。加载/保存按 `screen` 去重、最多 4 条；超限时拒绝新增 profile，不误改共享列表。`DockItemsFor(Screen)` 统一决定读取哪份列表，Dock/Hub 的所有写操作都携带 `Screen`，按操作发生屏落库。profile 以 `Screen.DeviceName` 为键，显示器改名或主副互换时可能匹配不到，退化为共享列表，不丢数据。面板/收纳仍按窗口所在屏定位，不另设每屏组合。
+- 图标：`.lnk` 先解析 `TargetPath` 再取目标图标；大图标位图按不透明内容裁边后铺满目标矩形，避免 16/32px 源图标在 256px 画布中央缩成小点。裁边只在新图标首次进缓存时做，256px 图每 4px 采样一次。
 
 ## 11. 迁移与回滚
 

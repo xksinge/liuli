@@ -1,5 +1,17 @@
 ﻿# 测试记录
 
+## v2.0 Phase 7 每屏 Dock 布局收口（2026-11-27，Issue #84 / PR #85）
+
+- 环境：Windows 11 25H2，DISPLAY1 `0,0 2560×1440` 主屏、DISPLAY2 `-2560,0 2560×1440` 副屏，均 100% DPI。
+- 构建：`bin\Liuli.exe` 333.5 KB；C#5 无新增 error。
+- 保留布局：共享 `dockItems=9`、DISPLAY2 profile=8；副屏 Dock 576 宽、主屏 625。设置关闭开关后日志 `每屏独立布局=False profiles=1 kept=1`，`shell.json` profile 仍在，两块 Dock 都变 625；再开启 `True profiles=1`，副屏回 576。
+- 去重/上限：手改 6 条 profile（DISPLAY2 8 项 + DISPLAY2 7 项 + DISPLAY3/4/5/6 各 8 项）；启动后副屏取第一条 8 项（576 宽），触发保存后只剩 `DISPLAY2/3/4/5` 四条，重复的 7 项条目被丢弃。
+- 仅主屏：`displayMode=primary` 时 Dock 页“每屏独立布局”只显示说明，没有可点开关；profiles 仍为 1。
+- 图标：共享 Dock 固定 7-Zip 后第 9 项图标铺满 44px 槽位，截图 `dock-shortcut-icon.png`；不再出现 10px 小点。
+- 截图：`docs/screens/v8/dock-shortcut-icon.png`、`settings-dock-primary-info.png`、`settings-dock-per-screen.png`（新文案）。
+- 测试后恢复 `shell.json`：`displayMode=primary`、8 个 Dock 项、0 profiles，并重启。
+- 未验证：`IconContent` 在 99 项目录首次打开 Hub 的累计耗时、显示器改名/主副互换后的 profile 归属、面板/收纳每屏组合。
+
 ## v2.0 Phase 7 每屏独立 Dock 图标布局（2026-11-27，Issue #82 / PR #83）
 
 - 环境：Windows 11 25H2，DISPLAY1 `0,0 2560×1440` 主屏、DISPLAY2 `-2560,0 2560×1440` 副屏，均 100% DPI；两块任务栏自动隐藏。
