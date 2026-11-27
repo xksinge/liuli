@@ -396,7 +396,7 @@ namespace Liuli
 
             if (!showQuick) return;
             Rectangle[] rs = QuickButtons();
-            Glyph[] gl = { Glyph.Plus, Glyph.Broom, Glyph.Gear };
+            Glyph[] gl = { Glyph.Folder, Glyph.Pulse, Glyph.Gear };
             float bs = BounceScale();
             for (int i = 0; i < 3; i++)
             {
@@ -464,8 +464,8 @@ namespace Liuli
                 if (pb < rs.Length && rs[pb].Contains(e.Location))
                 {
                     Pulse(pb);
-                    if (pb == 0) V2Shell.AddPanel();
-                    else if (pb == 1) V2Shell.Toast("桌面图标管理将在 M5 提供");
+                    if (pb == 0) V2Shell.OpenHub(HubForm.ModeApps);
+                    else if (pb == 1) V2Shell.OpenHub(HubForm.ModeControl);
                     else V2Shell.OpenSettings(4);
                     return;
                 }
