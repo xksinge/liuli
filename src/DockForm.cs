@@ -205,6 +205,13 @@ namespace Liuli
             targetScreen = target;
         }
 
+        /// <summary>Dock 第 1 个动作按钮（收纳）的屏幕矩形；用于区分“点收纳按钮”和“点桌面”。</summary>
+        public Rectangle CollectorButtonScreenRect()
+        {
+            if (!IsHandleCreated || btnRects.Length == 0) return Rectangle.Empty;
+            return RectangleToScreen(btnRects[0]);
+        }
+
         public void RelayoutForScreen(Screen target)
         {
             SetScreen(target);
@@ -291,11 +298,16 @@ namespace Liuli
             if (!autoRevealed) SlideTo(true);
         }
 
+        bool leftWasDown;
+
         void TickAutoHide()
         {
             if (!IsHandleCreated || !Visible) return;
             // 55ms 检查一次位置：任务栏唤出/缩回时 Dock 比 320ms 定位定时器更快让位。
             TickPosition();
+            bool leftDown = (Control.MouseButtons & MouseButtons.Left) != 0;
+            if (leftDown && !leftWasDown) V2Shell.CloseCollectorIfOutside(Cursor.Position);
+            leftWasDown = leftDown;
             if (!AutoHideEnabled())
             {
                 if (!autoRevealed) SlideTo(true);
@@ -715,7 +727,7 @@ namespace Liuli
             if (pb >= 0 && pb < btnRects.Length && btnRects[pb].Contains(e.Location))
             {
                 Pulse(-1, pb);
-                if (pb == 0) V2Shell.OpenCollectorFromDock(targetScreen);
+                if (pb == 0) V2Shell.ToggleCollectorFromDock(targetScreen);
                 else if (pb == 1) V2Shell.OpenHub(HubForm.ModeApps);
                 else if (pb == 2) V2Shell.OpenHub(HubForm.ModeControl);
                 else V2Shell.OpenSettings(3);
