@@ -103,6 +103,22 @@ namespace Liuli
             catch { return 0; }
         }
 
+        /// <summary>任务栏是否真正从屏幕边缘露出（自动隐藏缩回 2px 时返回 false）。</summary>
+        public static bool Revealed()
+        {
+            try
+            {
+                IntPtr h = FindWindow("Shell_TrayWnd", null);
+                if (h == IntPtr.Zero || !IsWindowVisible(h)) return false;
+                Native.RECT r;
+                if (!GetWindowRect(h, out r)) return false;
+                Rectangle screen = Screen.PrimaryScreen.Bounds;
+                bool bottomDocked = r.Bottom >= screen.Bottom - 2;
+                return bottomDocked && r.Top <= screen.Bottom - 6;
+            }
+            catch { return false; }
+        }
+
         public static IntPtr Handle()
         {
             try { return FindWindow("Shell_TrayWnd", null); } catch { return IntPtr.Zero; }

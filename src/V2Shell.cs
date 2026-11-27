@@ -812,6 +812,7 @@ namespace Liuli
             {
                 Config.TaskbarAutoHide = on;
                 Config.Save();
+                if (Dock != null) Dock.TickPositionPublic();
                 Toast(on ? "任务栏已设为自动隐藏" : "任务栏已恢复常显");
             }
             else Toast("任务栏设置失败，请检查系统权限");
@@ -822,6 +823,7 @@ namespace Liuli
             bool target = Config != null ? Config.TaskbarOriginalAutoHide : true;
             bool ok = Taskbar.SetAutoHide(target);
             if (Config != null) { Config.TaskbarAutoHide = target; Config.Save(); }
+            if (ok && Dock != null) Dock.TickPositionPublic();
             Toast(ok ? (target ? "任务栏已恢复为自动隐藏" : "任务栏已恢复为常显") : "任务栏设置失败");
         }
 
