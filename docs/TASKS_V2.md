@@ -146,7 +146,7 @@
   - 验证：构建 `bin\Liuli.exe` 297 KB；系统页开关开启后 Run=`"E:\meihuaDesktop\bin\Liuli.exe"`，关闭后值不存在；把 exe+shell.json 复制到 `_scratch\move-test` 启动，Run 更新为临时路径；恢复主 exe 后 Run 回到主路径；`--selftest` 输出 `autoStart=False run=`；截图 `docs/screens/v8/settings-system.png`。
   - 未验证：Windows 重启后的实际自启行为、非管理员受限账户、多用户切换、杀软拦截。
 
-- [x] **TASK-062** [REQ-062/092] HiDPI + 文字四档（Issue #74 / PR #75，已合入 `待填`）
+- [x] **TASK-062** [REQ-062/092] HiDPI + 文字四档（Issue #74 / PR #75，已合入 `47204c5`）
   - 实现：`ShellConfig.TextSize` 读写 `textSize`（0 小 / 1 标准 / 2 大 / 3 特大），对应 0.9 / 1.0 / 1.15 / 1.3；`Theme.TextScale` 统一倍率，`V2Window.DpiUiScale`、设置 `S`、面板/收纳 body、Dock/灵动岛一起缩放，避免只放大字体导致固定行高裁切。
   - 入口：设置标题栏常驻“文字 小/标准/大/特大”四枚胶囊，任意页可切换；`V2Shell.SetTextSize` 写入配置并即时重排 Dock、灵动岛、面板、收纳和设置，Toast + 日志 `textsize`。
   - 验证：构建 `bin\Liuli.exe` 302 KB；0.9 设置 810×648、1.0 900×720、1.3 1170×936；收纳 0.9 580×409、1.0 644×454、1.3 838×591；Dock 1.3 窗口 754×131、玻璃主体底边 1382，任务栏顶 1392，仍留 10px；重启保持 `textSize=3`，切回标准后 `textSize=1`；截图 `settings-text-standard.png`、`settings-text-large.png`、`collector-text-large.png`、`dock-text-large.png`。
