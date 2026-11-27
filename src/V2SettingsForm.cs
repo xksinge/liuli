@@ -377,6 +377,11 @@ namespace Liuli
             }
             y += Util.RoundI(58 * S);
             AddInfo("图标管理", "Dock 图标的拖动排序、移除和文件固定仍在 Dock 上操作；开启每屏独立后，操作只改当前屏。", x, y, w);
+            y += Util.RoundI(66 * S);
+            AddSection("任务栏", x, y, w); y += Util.RoundI(30 * S);
+            AddToggle("完全隐藏任务栏", "运行期隐藏主/副任务栏，Dock 与托盘仍可用；关闭或退出 Liuli 自动恢复，重启不延续", "taskbarFullHide", x, y, w,
+                delegate { return V2Shell.Config.TaskbarFullHide ? 1 : 0; },
+                delegate (int v) { V2Shell.SetTaskbarFullHide(v == 1); });
         }
 
         void BuildIslandPage()

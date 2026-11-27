@@ -2,6 +2,34 @@
 
 遵循 Keep a Changelog；版本遵循 SemVer。
 
+## [Unreleased · v2.0 Phase 7 Dock 收纳入口、任务栏全隐藏与 DPI 回正]
+
+### 新增
+
+- Dock 右侧动作按钮扩为 4 个：桌面收纳 / 应用面板 / 控制中心 / 设置；收纳按钮在该 Dock 所在屏打开收纳，并居中贴在 Dock 上方 8px
+- 设置 Dock 页新增“完全隐藏任务栏”开关，运行期隐藏主/副任务栏，2 秒守护重试；关闭或退出 Liuli 自动恢复
+
+### 修复
+
+- `WM_DPICHANGED` 后 120ms 合并重排 Dock、灵动岛、收纳、Hub、设置与面板，修复 125% → 150% → 100% 往返后尺寸漂移
+- 收纳面板尺寸与保存改用 `UiScale`（DPI × 文字倍率），不再只乘文字倍率
+- 启动发现残留 `taskbarFullHide=true` 时强制恢复任务栏并复位，避免异常退出后任务栏一直隐藏
+
+### 验证
+
+- `bin\Liuli.exe` 336 KB；C#5 无新增 error
+- 主屏 Dock 617×100，四按钮依次为收纳/应用/控制/设置；点收纳窗口 `958,846..1602,1300`，底边距 Dock 8px
+- `displayMode=all` 时副屏 Dock `-1589,1296..-972,1396`；点副屏收纳后窗口 `-1602,846..-958,1300`，日志 `screen=\\.\DISPLAY2`
+- 任务栏开关 hide `n=2 any=False`，恢复 `n=2 any=True`；残留标记启动日志 `上次完全隐藏未正常恢复`
+- 截图 `dock-collector-button.png`、`collector-on-secondary-dock.png`、`settings-taskbar-full-hide.png`、`taskbar-full-hide-dock.png`
+- 测试后 `shell.json` 恢复 `primary`、自动隐藏开启
+
+### 未验证
+
+- 真机 125% / 150% / 100% 往返后的尺寸恢复（已加 `WM_DPICHANGED` 重排，需用户复测）
+- 主副屏互换 / 双屏变单屏后的 profile 归属
+- 任务栏在 2 秒守护间隔内被 Explorer 重新唤出的极端场景
+
 ## [Unreleased · v2.0 Phase 7 每屏 Dock 布局收口]
 
 ### 修复

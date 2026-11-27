@@ -1,5 +1,17 @@
 ﻿# 测试记录
 
+## v2.0 Phase 7 Dock 收纳入口、任务栏全隐藏与 DPI 回正（2026-11-27，Issue #86/#87 / PR #88）
+
+- 环境：Windows 11 25H2，DISPLAY1 `0,0 2560×1440` 主屏、DISPLAY2 `-2560,0 2560×1440` 副屏，均 100% DPI；`displayMode=primary`、`dockAutoHide` 临时关闭用于截图。
+- 构建：`bin\Liuli.exe` 336 KB；C#5 无新增 error，仅历史 warning。
+- Dock：窗口 `971,1296..1588,1396`（617×100）；右侧 4 个 36px 动作按钮，顺序收纳 / 应用 / 控制 / 设置；截图 `dock-collector-button.png`。
+- 主屏收纳：点击第 1 个按钮，日志 `[collector] Dock 打开收纳 screen=\\.\DISPLAY1`；收纳窗口 `958,846..1602,1300`（644×454），水平中心 1280，玻璃体底边距 Dock 顶 8px。
+- 副屏收纳：临时 `displayMode=all`，副屏 Dock `-1589,1296..-972,1396`；点副屏收纳后日志 `screen=\\.\DISPLAY2`，窗口 `-1602,846..-958,1300`，水平中心 -1280；截图 `collector-on-secondary-dock.png`。
+- 任务栏：设置 Dock 页开关点开，日志 `[taskbar] 完全隐藏=True n=2 any=False`；2 秒后 `Shell_TrayWnd` / `Shell_SecondaryTrayWnd` 均 `vis=False`，Dock 回到底部；再点关闭 `完全隐藏=False n=2 any=True`，两屏任务栏恢复；截图 `settings-taskbar-full-hide.png`、`taskbar-full-hide-dock.png`。
+- 残留恢复：停止进程后手改 `taskbarFullHide=true` 再启动，日志 `W [taskbar] 上次完全隐藏未正常恢复，启动已恢复任务栏 n=2`，`shell.json` 自动复位 false。
+- 收尾：恢复 `_scratch\shell.backup.json`，`displayMode=primary`、`dockAutoHide=true`、8 个 Dock 项、0 profiles，重启。
+- 未验证：真机 125% / 150% / 100% 往返后的 Dock / 灵动岛尺寸恢复；主副屏互换 / 双屏变单屏后的 profile 归属；Explorer 在 2 秒守护间隔内重新唤出任务栏。
+
 ## v2.0 Phase 7 每屏 Dock 布局收口（2026-11-27，Issue #84 / PR #85）
 
 - 环境：Windows 11 25H2，DISPLAY1 `0,0 2560×1440` 主屏、DISPLAY2 `-2560,0 2560×1440` 副屏，均 100% DPI。

@@ -33,6 +33,17 @@ namespace Liuli
         }
 
         protected override bool ShowWithoutActivation { get { return true; } }
+
+        protected override void WndProc(ref Message m)
+        {
+            base.WndProc(ref m);
+            if (m.Msg == Native.WM_DPICHANGED)
+            {
+                UiScale = DpiUiScale();
+                try { BeginInvoke(new MethodInvoker(V2Shell.QueueDpiRefresh)); }
+                catch { }
+            }
+        }
         protected override void OnPaintBackground(PaintEventArgs e) { }
         protected override void OnPaint(PaintEventArgs e) { }
 

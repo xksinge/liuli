@@ -25,6 +25,37 @@ namespace Liuli
         public static V2Host Host;
         public static bool HotkeyToggleOk;
         public static bool HotkeySettingsOk;
+        static System.Windows.Forms.Timer dpiTimer;
+
+        /// <summary>DPI 改变会连续打到多个窗口，120ms 合并一次全局重排。</summary>
+        public static void QueueDpiRefresh()
+        {
+            if (dpiTimer == null)
+            {
+                dpiTimer = new System.Windows.Forms.Timer();
+                dpiTimer.Interval = 120;
+                dpiTimer.Tick += delegate { dpiTimer.Stop(); RefreshDpiLayout(); };
+            }
+            dpiTimer.Stop();
+            dpiTimer.Start();
+        }
+
+        static void RefreshDpiLayout()
+        {
+            if (Config == null) return;
+            IEnumerable<DockForm> docks = LiveDocks();
+            foreach (DockForm d in docks)
+            {
+                d.Relayout();
+                d.RefreshAutoHide();
+            }
+            if (Island != null && !Island.IsDisposed) Island.ApplyConfig();
+            if (Collector != null && !Collector.IsDisposed) Collector.ApplyTextScale();
+            if (Hub != null && !Hub.IsDisposed) Hub.ApplyTextScale();
+            if (Settings != null && !Settings.IsDisposed) Settings.ApplyTextScale();
+            for (int i = 0; i < Panels.Count; i++) if (Panels[i] != null) Panels[i].ApplyTextScale();
+            Log.Info("ui", "DPI 重排完成");
+        }
 
         public static string HotkeyStatus()
         {
@@ -206,6 +237,7 @@ namespace Liuli
             {
                 Collector = new CollectorForm();
                 Collector.Show();
+                Collector.AnchorToDock(CollectorHomeScreen());
             }
 
             statsTimer = new Timer();
@@ -213,6 +245,12 @@ namespace Liuli
             statsTimer.Tick += delegate
             {
                 Stats = SysStats.Sample();
+                if (Config != null && Config.TaskbarFullHide && Taskbar.AnyVisible())
+                {
+                    int n = Taskbar.HideAll();
+                    Log.Info("taskbar", "完全隐藏守护重试 n=" + n);
+                    RelayoutDocks();
+                }
                 if (Island != null && Island.Visible) Island.RefreshIsland();
                 foreach (DockForm d in LiveDocks()) if (d.Visible) d.TickPositionPublic();
             };
@@ -248,6 +286,12 @@ namespace Liuli
                 {
                     bool ok = Taskbar.SetAutoHide(Config.TaskbarAutoHide);
                     Log.Info("taskbar", "自动隐藏=" + Config.TaskbarAutoHide + " ok=" + ok);
+                }
+                if (Config.TaskbarFullHide)
+                {
+                    Config.TaskbarFullHide = false;
+                    int n = Taskbar.ShowAll();
+                    Log.Warn("taskbar", "上次完全隐藏未正常恢复，启动已恢复任务栏 n=" + n);
                 }
                 Config.Save();
             }
@@ -362,6 +406,7 @@ namespace Liuli
             {
                 if (Collector == null) { Collector = new CollectorForm(); Collector.Show(); }
                 else { Collector.Show(); Collector.ApplyBounds(); }
+                Collector.AnchorToDock(CollectorHomeScreen());
             }
         }
 
@@ -697,6 +742,25 @@ namespace Liuli
             foreach (DockForm d in LiveDocks()) d.RefreshAutoHide();
         }
 
+        /// <summary>运行期完全隐藏任务栏；关闭/退出恢复。重启不延续，避免异常退出后任务栏消失。</summary>
+        public static void SetTaskbarFullHide(bool on)
+        {
+            if (Config == null) return;
+            Config.TaskbarFullHide = on;
+            Config.Save();
+            int n = on ? Taskbar.HideAll() : Taskbar.ShowAll();
+            RelayoutDocks();
+            if (Island != null) Island.ApplyPosition();
+            Toast(on ? "任务栏已完全隐藏；关闭开关或退出 Liuli 即恢复" : "任务栏已恢复");
+            Log.Info("taskbar", "完全隐藏=" + on + " n=" + n + " any=" + Taskbar.AnyVisible());
+        }
+
+        static Screen CollectorHomeScreen()
+        {
+            if (Config == null || Config.CollectorX < 0 || Config.CollectorY < 0) return Screen.PrimaryScreen;
+            return Screen.FromPoint(new Point(Config.CollectorX, Config.CollectorY));
+        }
+
         public static void ToggleCollector()
         {
             if (Config == null) return;
@@ -713,6 +777,7 @@ namespace Liuli
             {
                 if (Collector == null) { Collector = new CollectorForm(); Collector.Show(); }
                 else { Collector.Show(); Collector.ApplyBounds(); }
+                Collector.AnchorToDock(CollectorHomeScreen());
                 if (allHidden && Collector != null) Collector.Hide();
                 CollectorState.Sync(true);
                 if (Collector != null) Collector.Render();
@@ -725,6 +790,28 @@ namespace Liuli
                 Collector = null;
                 Toast("桌面收纳已关闭，原文件未移动；桌面图标仍按桌面页设置");
             }
+        }
+
+        /// <summary>Dock 的收纳按钮：在该 Dock 所在屏打开面板，居中贴在 Dock 上方。</summary>
+        public static void OpenCollectorFromDock(Screen screen)
+        {
+            if (Config == null) return;
+            if (!Config.CollectorOn)
+            {
+                Config.CollectorOn = true;
+                Config.Save();
+            }
+            if (Collector == null)
+            {
+                Collector = new CollectorForm();
+                Collector.Show();
+            }
+            else if (!Collector.Visible) Collector.Show();
+            CollectorState.Sync(true);
+            Collector.AnchorToDock(screen == null ? Screen.PrimaryScreen : screen);
+            Collector.BringToFront();
+            Collector.Render();
+            Log.Info("collector", "Dock 打开收纳 screen=" + DockScreenKey(screen == null ? Screen.PrimaryScreen : screen));
         }
 
         public static void ScanCollectorNow()

@@ -8,7 +8,7 @@ using System.Drawing.Text;
 
 namespace Liuli
 {
-    enum Glyph { Plus, Gear, Broom, Close, Chevron, Pin, Note, Todo, Folder, Code, Pulse, Clock, Copy, More, Check, Image, Video, Restore, Save, ArrowUp, ArrowDown, Dot, Speaker, Wifi, Bluetooth, Sun }
+    enum Glyph { Plus, Gear, Broom, Close, Chevron, Pin, Note, Todo, Folder, Code, Pulse, Clock, Copy, More, Check, Image, Video, Restore, Save, ArrowUp, ArrowDown, Dot, Speaker, Wifi, Bluetooth, Sun, Tray }
 
     static class Theme
     {
@@ -393,6 +393,13 @@ namespace Liuli
                         g.DrawRectangle(pen, cx - u * 0.18f, cy - u * 0.18f, u * 0.36f, u * 0.36f);
                         g.DrawRectangle(pen, cx - u * 0.09f, cy - u * 0.18f, u * 0.18f, u * 0.12f);
                         g.DrawRectangle(pen, cx - u * 0.09f, cy + u * 0.02f, u * 0.18f, u * 0.16f);
+                        break;
+                    case Liuli.Glyph.Tray:
+                        g.DrawLine(pen, cx - u * 0.22f, cy - u * 0.12f, cx + u * 0.22f, cy - u * 0.12f);
+                        g.DrawLine(pen, cx - u * 0.22f, cy - u * 0.12f, cx - u * 0.16f, cy + u * 0.16f);
+                        g.DrawLine(pen, cx + u * 0.22f, cy - u * 0.12f, cx + u * 0.16f, cy + u * 0.16f);
+                        g.DrawLine(pen, cx - u * 0.16f, cy + u * 0.16f, cx + u * 0.16f, cy + u * 0.16f);
+                        g.DrawLine(pen, cx - u * 0.10f, cy + u * 0.02f, cx + u * 0.10f, cy + u * 0.02f);
                         break;
                     case Liuli.Glyph.ArrowUp:
                         g.DrawLine(pen, cx, cy + u * 0.16f, cx, cy - u * 0.16f);

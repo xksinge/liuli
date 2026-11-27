@@ -83,9 +83,8 @@ namespace Liuli
             ShellConfig c = V2Shell.Config;
             c.CollectorW = Util.Clamp(c.CollectorW, 420, 900);
             c.CollectorH = Util.Clamp(c.CollectorH, 300, 720);
-            float ts = Theme.TextScale;
-            int w = Util.RoundI(c.CollectorW * ts);
-            int h = Util.RoundI(c.CollectorH * ts);
+            int w = Util.RoundI(c.CollectorW * UiScale);
+            int h = Util.RoundI(c.CollectorH * UiScale);
             Screen target = Screen.FromPoint(new Point(c.CollectorX, c.CollectorY));
             Rectangle work = target.WorkingArea;
             if (c.CollectorX < 0 || c.CollectorY < 0)
@@ -101,6 +100,24 @@ namespace Liuli
             Location = new Point(c.CollectorX - margin, c.CollectorY - margin);
             EnsureCanvas();
             Render();
+        }
+
+        /// <summary>从 Dock 打开时，把收纳面板居中贴到该屏 Dock 上方；不改保存坐标。</summary>
+        public void AnchorToDock(Screen target)
+        {
+            if (!IsHandleCreated || target == null) return;
+            UiScale = DpiUiScale();
+            margin = Util.RoundI(12 * UiScale);
+            ShellConfig c = V2Shell.Config;
+            int w = Util.RoundI(c.CollectorW * UiScale) + margin * 2;
+            int h = Util.RoundI(c.CollectorH * UiScale) + margin * 2;
+            Rectangle b = target.Bounds;
+            int left = b.Left + (b.Width - w) / 2;
+            int top = b.Bottom - Util.RoundI(152 * UiScale) - h + margin;
+            if (top < b.Top) top = b.Top;
+            ClientSize = new Size(w, h);
+            Location = new Point(left, top);
+            EnsureCanvas();
         }
 
         public void ApplyTextScale()
@@ -120,8 +137,8 @@ namespace Liuli
             int m = margin > 0 ? margin : Util.RoundI(12 * UiScale);
             V2Shell.Config.CollectorX = Location.X + m;
             V2Shell.Config.CollectorY = Location.Y + m;
-            V2Shell.Config.CollectorW = Util.RoundI((ClientSize.Width - m * 2) / Theme.TextScale);
-            V2Shell.Config.CollectorH = Util.RoundI((ClientSize.Height - m * 2) / Theme.TextScale);
+            V2Shell.Config.CollectorW = Util.RoundI((ClientSize.Width - m * 2) / UiScale);
+            V2Shell.Config.CollectorH = Util.RoundI((ClientSize.Height - m * 2) / UiScale);
             V2Shell.Config.Save();
         }
 
