@@ -174,7 +174,7 @@
   - 验证：构建 `bin\Liuli.exe` 306.5 KB；本机 `AllScreens` 实为 2 屏（DISPLAY1 `0,0 2560×1440`、DISPLAY2 `-2560,0 2560×1440`）。`all` 后日志 `screens=2 extraDocks=1`，副屏 Dock 落在 DISPLAY2 底部居中，主屏 Dock 同时隐藏；鼠标只在主屏底部时主屏 Dock `y=1296`、副屏 `y=1444`，只在副屏底部时副屏 `y=1344`、主屏 `y=1442`。发送 `WM_DISPLAYCHANGE` 后日志 `reflow screens=2 extraDocks=1`，进程不崩、副屏 Dock 重建一套；切回“仅主屏”后副屏 Dock 关闭，截图 `settings-dock-multiscreen-primary.png`、`settings-dock-multiscreen-all.png`、`dock-two-screens.png`。
   - 未验证：真实拔插显示器 / 改分辨率（当前用 `WM_DISPLAYCHANGE` 消息模拟）；副屏任务栏自动隐藏与多实例（`Shell_SecondaryTrayWnd`）；双屏不同 DPI；跨屏玻璃切片；每屏独立布局。
 - [ ] **TASK-070** [REQ-093–096] 多屏模式完整：副屏任务栏多实例、跨屏玻璃、每屏布局（P1）
-- [x] **TASK-071** [REQ-070/071] 应用面板、控制中心（Issue #78 / PR #79，待合入）
+- [x] **TASK-071** [REQ-070/071] 应用面板、控制中心（Issue #78 / PR #79，已合入 `1c19d51`）
   - 实现：新增 `Apps.cs` 扫描用户/公共开始菜单 `.lnk`（递归 ≤3 层、最多 500 项，过滤卸载/帮助/readme/网站/Startup，名称去重排序，缓存 5 分钟）；新增 `ControlCenter.cs` 读 Core Audio 音量/静音、`NetworkInterface` 网络、`bthprops.cpl` 蓝牙、WMI 亮度，接口失败只记一次日志并隐藏对应卡片。
   - Hub：`HubForm` 为 620×460 玻璃面板，两个页签“应用 / 控制中心”；应用页 4×4 网格、16 项/页、搜索、分页、左键启动、右键固定、拖到 Dock 固定；控制页音量点击静音/滚轮 4% 步进、网络/蓝牙打开设置、亮度循环 25/50/75/100；仅控制页可见时 2 秒采样。
   - 入口：Dock 与灵动岛快捷动作改为应用面板 / 控制中心 / 设置；托盘菜单与自绘菜单新增两项；原“新建面板”保留在托盘与 Hub 内按钮；文字四档、显示器变化、`HideAll`、退出均同步 Hub。
