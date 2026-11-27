@@ -156,7 +156,7 @@
   - 验证：构建 `bin\Liuli.exe` 299.5 KB；系统页文字不裁切；复制摘要成功写入剪贴板；打开日志目录定位 `bin\data\logs`；注入 581,641 B 后触发写入，`liuli.log` 变 52 B、`liuli.log.1` 为 581,641 B；测试后恢复原日志并删除 `.1`；截图 `docs/screens/v8/settings-logs.png`。
   - 未验证：连续多次轮转、多进程同时写日志、日志目录无权限、剪贴板被其它程序占用。
 
-- [x] **TASK-065** [REQ-007/010] Dock 动态避让任务栏（Issue #72）
+- [x] **TASK-065** [REQ-007/010] Dock 动态避让任务栏（Issue #72 / PR #73，已合入 `8b00fb2`）
   - 实现：`Taskbar.Revealed()` 区分自动隐藏的 2px 边缘和真正露出；`DockForm.BaseTopY` 在自动隐藏且露出时按 `VisibleHeight` 上移，缩回后回底；`TickAutoHide` 每 55ms 顺带定位；切换任务栏自动隐藏/恢复时立即刷新 Dock。
   - 验证：构建 `bin\Liuli.exe` 300 KB；任务栏露出 top=1392、高 48 时，Dock 窗口 1296..1396、玻璃主体底边 1384，距任务栏顶 8px；关闭 Dock 自动隐藏后截图 `docs/screens/v8/dock-above-taskbar.png` 确认不遮挡。
   - 未验证：任务栏缩回后的回底连续实测、连续扫底、任务栏换边、125% DPI。
