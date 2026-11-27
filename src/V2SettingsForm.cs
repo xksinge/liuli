@@ -293,6 +293,10 @@ namespace Liuli
             int w = Cr() - x;
             int y = Ct();
             AddSection("面板管理", x, y, w); y += Util.RoundI(30 * S);
+            AddToggle("锁定面板位置", "开启后所有桌面面板都不能拖动；关闭后按住面板空白处移动", "panelsLocked", x, y, w,
+                delegate { return V2Shell.Config.PanelsLocked ? 1 : 0; },
+                delegate (int v) { V2Shell.SetPanelsLocked(v == 1); });
+            y += Util.RoundI(58 * S);
             bool full = V2Shell.Config.Panels.Count >= 6;
             AddButton(full ? "已达 6 个面板上限" : "新建面板", full ? "先删除一个面板再新建" : "默认 340×200，时钟内容，出现在主屏右侧",
                 "addPanel", x, y, w, false, delegate
@@ -333,21 +337,17 @@ namespace Liuli
                 delegate { return V2Shell.Config.DockAutoHide ? 1 : 0; },
                 delegate (int v) { V2Shell.SetDockAutoHide(v == 1); });
             y += Util.RoundI(76 * S);
-            AddSeg("Dock 位置", "固定在任务栏上方，可选靠左、居中、靠右", "dockAlign", x, y, w, new string[] { "靠左", "居中", "靠右" },
-                delegate
-                {
-                    string a = ShellConfig.NormalizeDockAlign(V2Shell.Config.DockAlign);
-                    if (a == "left") return 0;
-                    if (a == "right") return 2;
-                    return 1;
-                },
-                delegate (int v)
-                {
-                    V2Shell.SetDockAlign(v == 0 ? "left" : (v == 2 ? "right" : "center"));
-                    BuildPage(3);
-                    Invalidate();
-                });
-            y += Util.RoundI(92 * S);
+            AddSlider("距底部", "Dock 底边到屏幕底部/任务栏的距离", "dockBottomGap", x, y, w, 0, 160, "px",
+                delegate { return V2Shell.Config.DockBottomGap; },
+                delegate (int v) { V2Shell.SetDockBottomGap(v); });
+            y += Util.RoundI(66 * S);
+            AddToggle("锁定 Dock 位置", "解锁后按住 Dock 顶部把手或空白处拖动；锁定后位置固定", "dockLocked", x, y, w,
+                delegate { return V2Shell.Config.DockLocked ? 1 : 0; },
+                delegate (int v) { V2Shell.SetDockLocked(v == 1); });
+            y += Util.RoundI(58 * S);
+            AddButton("Dock 回到居中", "清除拖动位置，按“距底部”重新居中", "dockReset", x, y, w, false,
+                delegate { V2Shell.ResetDockPosition(); BuildPage(3); Invalidate(); });
+            y += Util.RoundI(66 * S);
             AddSeg("Dock 尺寸", "整体缩放，小 / 标准 / 大", "dockPreset", x, y, w, new string[] { "小", "标准", "大" },
                 delegate
                 {

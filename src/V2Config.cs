@@ -305,6 +305,11 @@ namespace Liuli
         public bool DockAutoHide = false;
         public string DockPreset = "standard";   // small / standard / large
         public string DockAlign = "center";      // left / center / right
+        public int DockBottomGap = 8;            // 距屏幕底边/任务栏的间距
+        public bool DockLocked = true;           // 锁定后不能拖动 Dock
+        public int DockCustomX = int.MinValue;   // 自定义位置；MinValue 表示居中
+        public int DockCustomY = int.MinValue;
+        public bool PanelsLocked = false;        // 锁定所有桌面面板位置
         public bool IslandOn = true;
         public bool IslandWeather = true;
         public bool IslandStats = true;
@@ -391,6 +396,11 @@ namespace Liuli
                 c.DockPreset = (string.Equals(preset, "small", StringComparison.OrdinalIgnoreCase) ||
                     string.Equals(preset, "large", StringComparison.OrdinalIgnoreCase)) ? preset.ToLowerInvariant() : "standard";
                 c.DockAlign = NormalizeDockAlign(Json.Str(root, "dockAlign", "center"));
+                c.DockBottomGap = Util.Clamp(Json.Int(root, "dockBottomGap", 8), 0, 200);
+                c.DockLocked = Json.Bool(root, "dockLocked", true);
+                c.DockCustomX = Json.Int(root, "dockCustomX", int.MinValue);
+                c.DockCustomY = Json.Int(root, "dockCustomY", int.MinValue);
+                c.PanelsLocked = Json.Bool(root, "panelsLocked", false);
                 c.IslandOn = Json.Bool(root, "islandOn", true);
                 c.IslandWeather = Json.Bool(root, "islandWeather", true);
                 c.IslandStats = Json.Bool(root, "islandStats", true);
@@ -635,6 +645,11 @@ namespace Liuli
                 root["dockAutoHide"] = DockAutoHide;
                 root["dockPreset"] = DockPreset;
                 root["dockAlign"] = DockAlign;
+                root["dockBottomGap"] = DockBottomGap;
+                root["dockLocked"] = DockLocked;
+                root["dockCustomX"] = DockCustomX;
+                root["dockCustomY"] = DockCustomY;
+                root["panelsLocked"] = PanelsLocked;
                 root["islandOn"] = IslandOn;
                 root["islandWeather"] = IslandWeather;
                 root["islandStats"] = IslandStats;

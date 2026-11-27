@@ -2,12 +2,38 @@
 
 遵循 Keep a Changelog；版本遵循 SemVer。
 
+## [Unreleased · v2.0 Phase 7 Dock 自由位置、收纳跟随与面板锁定]
+
+### 新增
+
+- 设置·Dock 页新增“距底部”滑杆（0–160px），实时改写 `dockBottomGap`；Dock 底边按该距离贴任务栏/屏幕底边
+- 设置·Dock 页新增“锁定 Dock 位置”（`dockLocked`，默认开）；解锁后 Dock 顶部出现拖动把手，按住把手或空白处可移动到任意位置，写入 `dockCustomX/Y`
+- 新增“Dock 回到居中”按钮：清除自定义坐标，按“距底部”回到屏幕水平居中
+- 设置·面板页与面板右键菜单新增“锁定所有面板位置”（`panelsLocked`）；锁定后所有桌面面板不再响应拖动
+- 收纳固定贴 Dock 正上方：`CollectorForm.AnchorToDock` 改为读取 Dock 实际 `Bounds.Top`，不再使用硬编码 152；启动、DPI 重排、设置开启、Dock 拖动时都立即重锚
+- 收纳标题区不再可拖动，避免被拖离 Dock
+
+### 变更
+
+- Dock 横向位置收敛为“居中 + 自由拖动”，不再提供靠左/靠右三档；旧 `dockAlign` 仍兼容读取，但新写入统一 `center`
+- Dock 拖动时收纳实时跟随；松手后落库一次，避免拖动过程频繁写盘
+- 点 Dock 任意区域（不只收纳按钮）不再触发收纳外部收起
+
+### 验证
+
+- `bin\Liuli.exe` 341.5 KB；C#5 无新增 error
+- 主屏 100% DPI：Dock `971,1344..1588,1444`；间距 8px 时收纳 `957,894..1601,1348`，玻璃底边距 Dock 顶 8px
+- “距底部”=40px：Dock `971,1312..1588,1412`，收纳 `957,862..1601,1316`，跟随下移 32px
+- 解锁后从 Dock 顶部把手拖到 `592,1180`：配置写入 `dockCustomX/Y=592/1180`，收纳同步到 `578,730..1222,1182`，玻璃底边距 Dock 顶 8px
+- 锁定后拖动把手不再响应；`panelsLocked=true` 时面板 `OnMouseDown` 直接返回
+- 截图 `dock-collector-above.png`、`settings-dock-gap-lock.png`
+
 ## [Unreleased · v2.0 Phase 7 Dock 常驻与位置设置]
 
 ### 新增
 
 - Dock 默认关闭自动隐藏，常驻任务栏上方，不再触底弹出/离开收起；自动隐藏开关仍保留
-- 设置·Dock 页新增“Dock 位置”：靠左 / 居中 / 靠右，保存到 `dockAlign`
+- 设置·Dock 页曾提供“Dock 位置：靠左 / 居中 / 靠右”，保存到 `dockAlign`；已由上方“自由位置”阶段收敛为居中/拖动
 
 ### 修复
 
