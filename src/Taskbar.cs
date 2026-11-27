@@ -1,7 +1,9 @@
-﻿// Liuli v2 · 任务栏：只做受支持的自动隐藏（ABM_SETSTATE），完全隐藏留到 P1 且退出必恢复。
+﻿// Liuli v2 · 任务栏：自动隐藏（ABM_SETSTATE）、按屏露出检测、多实例隐藏/恢复。
 using System;
+using System.Collections.Generic;
 using System.Drawing;
 using System.Runtime.InteropServices;
+using System.Text;
 using System.Windows.Forms;
 
 namespace Liuli
@@ -26,9 +28,6 @@ namespace Liuli
 
         [DllImport("shell32.dll")]
         static extern uint SHAppBarMessage(uint dwMessage, ref APPBARDATA pData);
-
-        [DllImport("user32.dll", CharSet = CharSet.Unicode)]
-        static extern IntPtr FindWindow(string cls, string title);
 
         [DllImport("user32.dll")]
         static extern bool GetWindowRect(IntPtr h, out Native.RECT r);
@@ -74,26 +73,78 @@ namespace Liuli
             return d;
         }
 
-        /// <summary>主屏任务栏当前是否露出（自动隐藏滑下时返回 false）。</summary>
-        public static bool Visible()
+        [DllImport("user32.dll", CharSet = CharSet.Unicode)]
+        static extern int GetClassName(IntPtr h, StringBuilder sb, int max);
+
+        static string ClassOf(IntPtr h)
+        {
+            StringBuilder sb = new StringBuilder(128);
+            GetClassName(h, sb, sb.Capacity);
+            return sb.ToString();
+        }
+
+        static bool IsTaskbarClass(string name)
+        {
+            return name == "Shell_TrayWnd" || name == "Shell_SecondaryTrayWnd";
+        }
+
+        /// <summary>枚举主任务栏与所有副屏任务栏（副屏多实例均为 Shell_SecondaryTrayWnd）。</summary>
+        public static List<IntPtr> Handles()
+        {
+            List<IntPtr> list = new List<IntPtr>();
+            try
+            {
+                Native.EnumWindows(delegate(IntPtr h, IntPtr l)
+                {
+                    if (IsTaskbarClass(ClassOf(h))) list.Add(h);
+                    return true;
+                }, IntPtr.Zero);
+            }
+            catch { }
+            return list;
+        }
+
+        static IntPtr HandleFor(Screen screen)
+        {
+            if (screen == null) return IntPtr.Zero;
+            Rectangle bounds = screen.Bounds;
+            List<IntPtr> list = Handles();
+            for (int i = 0; i < list.Count; i++)
+            {
+                Native.RECT r;
+                if (!GetWindowRect(list[i], out r)) continue;
+                int midX = (r.Left + r.Right) / 2;
+                if (midX >= bounds.Left && midX < bounds.Right) return list[i];
+            }
+            return IntPtr.Zero;
+        }
+
+        /// <summary>指定屏任务栏当前是否露出（自动隐藏滑下时返回 false）。</summary>
+        public static bool Visible(Screen screen)
         {
             try
             {
-                IntPtr h = FindWindow("Shell_TrayWnd", null);
+                IntPtr h = HandleFor(screen);
                 if (h == IntPtr.Zero || !IsWindowVisible(h)) return false;
                 Native.RECT r;
                 if (!GetWindowRect(h, out r)) return false;
-                Rectangle screen = Screen.PrimaryScreen.Bounds;
-                return r.Top < screen.Bottom - 2 && r.Bottom > screen.Top + 2;
+                Rectangle bounds = screen.Bounds;
+                return r.Top < bounds.Bottom - 2 && r.Bottom > bounds.Top + 2;
             }
             catch { return false; }
         }
 
-        public static int VisibleHeight()
+        /// <summary>主屏任务栏当前是否露出。</summary>
+        public static bool Visible()
+        {
+            return Visible(Screen.PrimaryScreen);
+        }
+
+        public static int VisibleHeight(Screen screen)
         {
             try
             {
-                IntPtr h = FindWindow("Shell_TrayWnd", null);
+                IntPtr h = HandleFor(screen);
                 if (h == IntPtr.Zero) return 0;
                 Native.RECT r;
                 if (!GetWindowRect(h, out r)) return 0;
@@ -103,37 +154,66 @@ namespace Liuli
             catch { return 0; }
         }
 
-        /// <summary>任务栏是否真正从屏幕边缘露出（自动隐藏缩回 2px 时返回 false）。</summary>
-        public static bool Revealed()
+        public static int VisibleHeight()
+        {
+            return VisibleHeight(Screen.PrimaryScreen);
+        }
+
+        /// <summary>指定屏任务栏是否真正从该屏边缘露出（自动隐藏缩回 2px 时返回 false）。</summary>
+        public static bool Revealed(Screen screen)
         {
             try
             {
-                IntPtr h = FindWindow("Shell_TrayWnd", null);
+                IntPtr h = HandleFor(screen);
                 if (h == IntPtr.Zero || !IsWindowVisible(h)) return false;
                 Native.RECT r;
                 if (!GetWindowRect(h, out r)) return false;
-                Rectangle screen = Screen.PrimaryScreen.Bounds;
-                bool bottomDocked = r.Bottom >= screen.Bottom - 2;
-                return bottomDocked && r.Top <= screen.Bottom - 6;
+                Rectangle bounds = screen.Bounds;
+                bool bottomDocked = r.Bottom >= bounds.Bottom - 2;
+                return bottomDocked && r.Top <= bounds.Bottom - 6;
             }
             catch { return false; }
         }
 
+        /// <summary>主屏任务栏是否真正露出。</summary>
+        public static bool Revealed()
+        {
+            return Revealed(Screen.PrimaryScreen);
+        }
+
         public static IntPtr Handle()
         {
-            try { return FindWindow("Shell_TrayWnd", null); } catch { return IntPtr.Zero; }
+            return HandleFor(Screen.PrimaryScreen);
         }
 
-        public static void HideAll()
+        /// <summary>返回主屏、副屏任务栏的句柄与 rect，供启动/重排日志核对。</summary>
+        public static string Describe()
         {
-            IntPtr h = Handle();
-            if (h != IntPtr.Zero) ShowWindow(h, 0);
+            StringBuilder sb = new StringBuilder();
+            List<IntPtr> list = Handles();
+            for (int i = 0; i < list.Count; i++)
+            {
+                Native.RECT r;
+                GetWindowRect(list[i], out r);
+                if (sb.Length > 0) sb.Append("; ");
+                sb.Append(ClassOf(list[i]).Replace("Shell_", ""));
+                sb.Append("=").Append(r.Left).Append(",").Append(r.Top).Append(",").Append(r.Right).Append(",").Append(r.Bottom);
+            }
+            return sb.ToString();
         }
 
-        public static void ShowAll()
+        public static int HideAll()
         {
-            IntPtr h = Handle();
-            if (h != IntPtr.Zero) ShowWindow(h, 5);
+            List<IntPtr> list = Handles();
+            for (int i = 0; i < list.Count; i++) ShowWindow(list[i], 0);
+            return list.Count;
+        }
+
+        public static int ShowAll()
+        {
+            List<IntPtr> list = Handles();
+            for (int i = 0; i < list.Count; i++) ShowWindow(list[i], 5);
+            return list.Count;
         }
     }
 }

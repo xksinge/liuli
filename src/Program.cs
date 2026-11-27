@@ -18,6 +18,8 @@ namespace Liuli
             Native.EnablePerMonitorDpi();
             if (args.Length > 0 && string.Equals(args[0], "--selftest", StringComparison.OrdinalIgnoreCase))
                 return SelfTest();
+            if (args.Length > 0 && string.Equals(args[0], "--taskbar-cycle", StringComparison.OrdinalIgnoreCase))
+                return TaskbarCycle();
             if (args.Length > 0 && string.Equals(args[0], "--preview", StringComparison.OrdinalIgnoreCase))
                 return V2Preview.Run(args);
             Application.EnableVisualStyles();
@@ -59,6 +61,29 @@ namespace Liuli
             return 0;
         }
 
+        /// <summary>无界面诊断：隐藏并恢复全部任务栏实例，用于核对副屏多实例，不启动窗口。</summary>
+        static int TaskbarCycle()
+        {
+            try
+            {
+                int hidden = Taskbar.HideAll();
+                Thread.Sleep(500);
+                Console.WriteLine("taskbar hide n=" + hidden + " " + Taskbar.Describe());
+                for (int i = 0; i < Screen.AllScreens.Length; i++)
+                    Console.WriteLine("  screen." + (i + 1) + " visibleAfterHide=" + Taskbar.Visible(Screen.AllScreens[i]));
+            }
+            catch (Exception ex) { Console.WriteLine("taskbar hide failed: " + ex.Message); }
+            finally
+            {
+                int shown = Taskbar.ShowAll();
+                Thread.Sleep(500);
+                Console.WriteLine("taskbar show n=" + shown + " " + Taskbar.Describe());
+                for (int i = 0; i < Screen.AllScreens.Length; i++)
+                    Console.WriteLine("  screen." + (i + 1) + " visibleAfterShow=" + Taskbar.Visible(Screen.AllScreens[i]));
+            }
+            return 0;
+        }
+
         /// <summary>无界面自检：只验证 shell.json、默认 Dock 与任务栏状态，不启动窗口。</summary>
         static int SelfTest()
         {
@@ -96,6 +121,8 @@ namespace Liuli
                     Console.WriteLine("  " + (i + 1) + ". " + it.Kind + " " + it.Id + " " + it.DisplayName + " proc=" + string.Join("|", it.ProcessNames()));
                 }
                 Console.WriteLine("taskbar.autoHide=" + Taskbar.AutoHide() + " visible=" + Taskbar.Visible() + " height=" + Taskbar.VisibleHeight());
+                Console.WriteLine("screens=" + Screen.AllScreens.Length + " virtual=" + SystemInformation.VirtualScreen);
+                Console.WriteLine("taskbars=" + Taskbar.Describe());
                 Bitmap probe = Icons.Get(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Windows), "explorer.exe"), 256);
                 Console.WriteLine("iconProbe=explorer " + (probe == null ? "null" : probe.Width + "x" + probe.Height));
                 return 0;
