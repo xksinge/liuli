@@ -167,7 +167,7 @@
 
 ## Phase 7 · 多屏与 P1
 
-- [x] **TASK-070a** [REQ-093–095] 多屏模式第一步：每屏 Dock 与显示器变化重排（Issue #76 / PR #77）
+- [x] **TASK-070a** [REQ-093–095] 多屏模式第一步：每屏 Dock 与显示器变化重排（Issue #76 / PR #77，已合入 `e4628c6`）
   - 实现：`ShellConfig.DisplayMode` 读写 `displayMode`，收敛为 `primary/all`；`DockForm` 改为按 `Screen` 构造，新增 `SetScreen` / `RelayoutForScreen`，所有底部基准、热区、隐藏偏移按所在屏计算；`V2Shell` 新增 `ExtraDocks`、`LiveDocks/OpenExtraDocks/CloseExtraDocks/RelayoutDocks/HideAllDocks`；`all` 时为每块非主屏各建一套 Dock，共享图标配置，灵动岛仍在主屏；设置 Dock 页新增“多屏模式：仅主屏 / 所有屏”。
   - 重排：`V2Host` 收到 `WM_DISPLAYCHANGE (0x007E)` 后走 `OnDisplayChanged()`，重建副屏 Dock、重排主 Dock、灵动岛、面板、收纳和设置；副屏 Dock 只在本屏底部热区唤出，避免一块屏触发全部 Dock。
   - 越界收回：`PanelForm.ApplyBounds` / `CollectorForm.ApplyBounds` 改为 `Screen.FromPoint` 取窗口所在屏工作区，先夹左上再夹右下。
