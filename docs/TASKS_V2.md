@@ -151,7 +151,7 @@
   - 实现：系统页新增“快捷键”区，显示 Ctrl+Alt+L 显示/隐藏、Ctrl+Alt+G 打开设置的注册状态；新增“重新注册快捷键”，先 `UnregisterHotKey` 再注册默认组合，结果写日志并刷新页面。
   - 验证：构建 `bin\Liuli.exe` 298 KB；Ctrl+Alt+G 可正常打开设置，系统页显示“已注册”；Ctrl+Alt+L 在当前环境被其它进程占用，显示“失败”且启动日志为 `toggle=fail settings=ok`；点击重新注册后日志再次记录同样状态，页面不崩、无裁切；截图 `docs/screens/v8/settings-hotkeys.png`。
   - 未验证：关闭占用 Ctrl+Alt+L 的程序后能否恢复注册；非管理员账户；与系统/第三方热键的冲突枚举。
-- [x] **TASK-064** [REQ-064] 日志诊断与摘要（Issue #70）
+- [x] **TASK-064** [REQ-064] 日志诊断与摘要（Issue #70 / PR #71，已合入 `9851d21`）
   - 实现：系统页新增“日志诊断”区，显示日志路径、当前大小、`liuli.log.1` 大小与 512 KB 轮转说明；新增“打开日志目录”“复制诊断摘要”。`Log.Diagnostic` 输出版本、DPI、日志/配置路径、大小和最近 16 行。
   - 验证：构建 `bin\Liuli.exe` 299.5 KB；系统页文字不裁切；复制摘要成功写入剪贴板；打开日志目录定位 `bin\data\logs`；注入 581,641 B 后触发写入，`liuli.log` 变 52 B、`liuli.log.1` 为 581,641 B；测试后恢复原日志并删除 `.1`；截图 `docs/screens/v8/settings-logs.png`。
   - 未验证：连续多次轮转、多进程同时写日志、日志目录无权限、剪贴板被其它程序占用。
