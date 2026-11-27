@@ -143,7 +143,7 @@ namespace Liuli
             if (Hub != null && !Hub.IsDisposed) Hub.ApplyTextScale();
             if (Settings != null && !Settings.IsDisposed) Settings.ApplyTextScale();
             Toast("显示器变化，桌面层已重新排布");
-            Log.Info("display", "reflow screens=" + Screen.AllScreens.Length);
+            Log.Info("display", "reflow screens=" + Screen.AllScreens.Length + " taskbars=" + Taskbar.Describe());
         }
 
         public static HubForm Hub;
@@ -243,6 +243,7 @@ namespace Liuli
             {
                 bool current = Taskbar.AutoHide();
                 Config.TaskbarOriginalAutoHide = current;
+                Log.Info("taskbar", "任务栏实例 " + Taskbar.Describe() + " autohide=" + current);
                 if (Config.TaskbarAutoHide != current)
                 {
                     bool ok = Taskbar.SetAutoHide(Config.TaskbarAutoHide);
@@ -1140,7 +1141,8 @@ namespace Liuli
             {
                 if (Config != null && Config.TaskbarFullHide)
                 {
-                    Taskbar.ShowAll();
+                    int n = Taskbar.ShowAll();
+                    Log.Info("taskbar", "退出恢复任务栏 n=" + n);
                     Config.TaskbarFullHide = false;
                     Config.Save();
                 }

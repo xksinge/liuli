@@ -2,6 +2,32 @@
 
 遵循 Keep a Changelog；版本遵循 SemVer。
 
+## [Unreleased · v2.0 Phase 7 副屏任务栏与跨屏玻璃]
+
+### 新增
+
+- 任务栏多实例枚举：主 `Shell_TrayWnd` + 所有 `Shell_SecondaryTrayWnd`，`--selftest` 输出实例 rect
+- `--taskbar-cycle` 诊断：隐藏/恢复全部任务栏并打印每屏可见状态
+
+### 修复
+
+- 副屏 Dock 不再只避让主屏任务栏：按 `targetScreen` 找到本屏任务栏，露出时上移一个任务栏高度，玻璃底边保持 8px 间距
+- `Taskbar.HideAll/ShowAll` 覆盖全部任务栏实例，避免只隐藏主屏
+- 多屏玻璃“填充/平铺”在每块屏重新起算导致接缝重复纹理：改为虚拟屏 `DrawSpan` 连续渲染
+
+### 验证
+
+- `bin\Liuli.exe` 329.5 KB；C#5 无新增 error
+- 启动日志 `taskbars=TrayWnd=0,1392,2560,1440; SecondaryTrayWnd=-2560,1392,0,1440`，`wall span=1 screens=2`
+- 副屏任务栏露出时副屏 Dock `-1568,1296..-992,1396`、主屏 Dock 收起；反向主屏 Dock `992,1296..1568,1396`、副屏收起
+- `--taskbar-cycle`：hide/show 均 `n=2`，两屏 visible False→True
+- 跨屏时钟面板拼接截图 `panel-seam.png`，接缝无错位/重复纹理（同 DPI）
+- 截图 `dock-secondary-taskbar.png`
+
+### 未验证
+
+- 双屏不同 DPI 的真实接缝、真实拔插/改分辨率、任务栏左/右边缘、Explorer 重启重建副任务栏
+
 ## [Unreleased · v2.0 Phase 7 应用面板与控制中心]
 
 ### 新增

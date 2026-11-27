@@ -11,6 +11,9 @@ namespace Liuli
 {
     static class Wallpaper
     {
+        /// <summary>最近一次 Render 是否按虚拟屏连续（span）绘制；多屏时为 true。</summary>
+        public static bool LastSpan;
+
         public static string CurrentPath()
         {
             try
@@ -165,13 +168,17 @@ namespace Liuli
                     if (img == null) return bmp;
                     int style = overridePath != null && overridePath.Length > 0 ? 10 : Style();
                     RectangleF vb = new RectangleF(0, 0, w, h);
-                    if (style == 22)
+                    // 多屏玻璃底必须按虚拟屏连续铺一张图，否则“填充/平铺”会在每块屏重新起算，
+                    // 跨屏窗口的玻璃在拼接处出现重复纹理。单屏仍按系统样式。
+                    Screen[] screens = Screen.AllScreens;
+                    bool span = style == 22 || screens.Length > 1;
+                    LastSpan = span;
+                    if (span)
                     {
                         DrawSpan(g, img, vb);
                     }
                     else
                     {
-                        Screen[] screens = Screen.AllScreens;
                         for (int i = 0; i < screens.Length; i++)
                         {
                             Rectangle s = screens[i].Bounds;

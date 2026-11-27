@@ -47,7 +47,7 @@ namespace Liuli
         Rectangle[] btnRects = new Rectangle[3];
         Rectangle screenBounds;
         Rectangle workArea;
-        bool primaryScreen;
+        Screen targetScreen;
 
         public DockForm() : this(Screen.PrimaryScreen) { }
 
@@ -201,7 +201,7 @@ namespace Liuli
         {
             screenBounds = target.Bounds;
             workArea = target.WorkingArea;
-            primaryScreen = target.Primary;
+            targetScreen = target;
         }
 
         public void RelayoutForScreen(Screen target)
@@ -218,9 +218,9 @@ namespace Liuli
             Rectangle work = workArea;
             int gap = Util.RoundI(8 * UiScale);
             int bottom = work.Bottom;
-            if (primaryScreen && Taskbar.AutoHide() && Taskbar.Revealed())
+            if (Taskbar.AutoHide() && Taskbar.Revealed(targetScreen))
             {
-                int taskbarH = Taskbar.VisibleHeight();
+                int taskbarH = Taskbar.VisibleHeight(targetScreen);
                 if (taskbarH > 0) bottom = screenBounds.Bottom - taskbarH;
             }
             int bodyBottom = bottom - gap;

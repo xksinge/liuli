@@ -1,5 +1,17 @@
 ﻿# 测试记录
 
+## v2.0 Phase 7 副屏任务栏与跨屏玻璃（2026-11-27，Issue #80 / PR #81）
+
+- 环境：Windows 11 25H2，DISPLAY1 `0,0 2560×1440` 主屏、DISPLAY2 `-2560,0 2560×1440` 副屏，均 100% DPI；两块任务栏均开自动隐藏。
+- 构建：`bin\Liuli.exe` 329.5 KB；C#5 无新增 error。
+- 任务栏枚举：启动日志 `taskbars=TrayWnd=0,1392,2560,1440; SecondaryTrayWnd=-2560,1392,0,1440`；`--selftest` 输出 `screens=2 virtual={X=-2560,Y=0,Width=5120,Height=1440}` 与两条实例。
+- 副屏：鼠标只压副屏底部，副屏任务栏 `-2560,1392..1440`；副屏 Dock `-1568,1296..-992,1396`，玻璃底边 1384，距任务栏顶 8px；主屏 Dock `992,1444..1568,1544` 保持收起。
+- 主屏：鼠标只压主屏底部，主屏任务栏 `0,1392..2560,1440`；主屏 Dock `992,1296..1568,1396`；副屏 Dock `-1568,1444..-992,1544` 收起。主屏避让无回归。
+- 全部隐藏/恢复：光标移离屏幕边缘后 `--taskbar-cycle` 输出 `hide n=2`，两屏 `visibleAfterHide=False`；`show n=2`，两屏 `visibleAfterShow=True`。
+- 跨屏玻璃：时钟面板放在 `x=-200..164` 横跨虚拟屏接缝，左右屏分别抓取后拼接 `panel-seam.png`，面板玻璃在接缝处连续、无重复纹理（两屏同 DPI）。
+- 截图：`docs/screens/v8/dock-secondary-taskbar.png`、`panel-seam.png`。
+- 未验证：双屏不同 DPI、真实拔插显示器/改分辨率、任务栏左/右边缘、Explorer 重启后副任务栏重建。
+
 ## v2.0 Phase 7 应用面板与控制中心（2026-11-27，Issue #78 / PR #79）
 
 - 环境：Windows 11 25H2，双屏 DISPLAY1 `0,0 2560×1440` 主屏、DISPLAY2 `-2560,0 2560×1440` 副屏，均 100% DPI。

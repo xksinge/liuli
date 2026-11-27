@@ -82,7 +82,8 @@ namespace Liuli
                 }
                 LastBuildMs = Environment.TickCount - t0;
                 Log.Info("wall", "磨砂重烘 " + raw0(vb) + " scale=" + scale.ToString("0.###") + " ms=" + LastBuildMs.ToString("0") +
-                    " dim=" + Theme.WallpaperDim + " mean=" + mean.R + "," + mean.G + "," + mean.B + " light=" + (light ? 1 : 0));
+                    " dim=" + Theme.WallpaperDim + " mean=" + mean.R + "," + mean.G + "," + mean.B + " light=" + (light ? 1 : 0) +
+                    " span=" + (Wallpaper.LastSpan ? 1 : 0) + " screens=" + Screen.AllScreens.Length);
             }
             catch (Exception ex)
             {
