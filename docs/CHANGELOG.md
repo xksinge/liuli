@@ -2,6 +2,31 @@
 
 遵循 Keep a Changelog；版本遵循 SemVer。
 
+## [Unreleased · v2.0 Phase 7 Dock 收纳按钮切换]
+
+### 新增
+
+- Dock 收纳按钮改为切换：未显示时从该屏 Dock 打开并锚定到 Dock 上方；已显示时再点一次直接收起
+- 收纳显示时，鼠标左键点桌面/其它窗口/任务栏自动收起；点收纳窗口内部或 Dock 收纳按钮本身不触发外部收起
+- 收起同时把 `collectorOn=false` 写回配置，重启不自动弹回收纳；再点 Dock 按钮会重新置 true 并打开
+
+### 修复
+
+- 启动、DPI 重排、设置开启不再强制把收纳拉回 Dock 上方；从 Dock 打开时把锚定位置写回 `CollectorX/Y`，之后沿用，尊重用户拖动后的自定义位置
+
+### 验证
+
+- `bin\Liuli.exe` 336.5 KB；C#5 无新增 error
+- 收纳可见时点 Dock 按钮：日志 `收纳已收起`，窗口 `vis=False`；再点一次打开 `958,846..1602,1300`，`CollectorX/Y=970/858`
+- 打开后点桌面 `1000,500`：日志 `收纳已收起`；点收纳内部 `1000,900` 保持可见
+- 手改 `CollectorX/Y=1625/735` 后启动，窗口 `1613,723..2257,1177`，不再强制回 Dock 上方
+- 截图 `collector-toggle-anchored.png`
+- 测试后 `shell.json` 恢复自动隐藏开启
+
+### 未验证
+
+- 真机副屏 Dock 按钮切换、125% / 150% DPI 下的外部点击与位置保持
+
 ## [Unreleased · v2.0 Phase 7 Dock 收纳入口、任务栏全隐藏与 DPI 回正]
 
 ### 新增

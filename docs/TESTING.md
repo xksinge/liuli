@@ -1,5 +1,18 @@
 ﻿# 测试记录
 
+## v2.0 Phase 7 Dock 收纳按钮切换与外部点击收起（2026-11-27，Issue #89 / PR #90）
+
+- 环境：Windows 11 25H2，DISPLAY1 主屏、DISPLAY2 副屏，100% DPI；先 `displayMode=all` 验证副屏 Dock，再恢复 `displayMode=primary`；`dockAutoHide=true` 复测切换和外部点击。
+- 构建：`bin\Liuli.exe` 336.5 KB；C#5 无新增 error，仅历史 warning。
+- 切换收起：收纳可见时点 Dock 收纳按钮，日志 `[collector] 收纳已收起`，窗口 `vis=False`，`collectorOn` 写回 false。
+- 切换打开：再点同一按钮，日志 `[collector] Dock 打开收纳 screen=\\.\DISPLAY1`，窗口 `958,846..1602,1300`，`CollectorX/Y` 写回 `970/858`，`collectorOn=true`。
+- 副屏：点副屏 Dock 收纳按钮，日志 `screen=\\.\DISPLAY2`，窗口 `-1602,846..-958,1300`；再点同一按钮日志 `收纳已收起`，`collectorOn=false`。
+- 自动隐藏开启：鼠标移到底部唤出 Dock，点收纳按钮打开；点桌面 `1000,500` 150ms，日志 `收纳已收起`，`collectorOn=false`。
+- 位置保持：手改 `CollectorX/Y=1625/735` 后重启，窗口 `1613,723..2257,1177`，启动不再强制锚定到 Dock 上方；从 Dock 按钮打开时才重新锚定。
+- 截图：`docs/screens/v8/collector-toggle-anchored.png`。
+- 收尾：恢复 `_scratch\shell.before89.json`，`displayMode=primary`、`dockAutoHide=true`、8 个 Dock 项、0 profiles，重启。
+- 未验证：125% / 150% DPI 下外部点击与位置保持。
+
 ## v2.0 Phase 7 Dock 收纳入口、任务栏全隐藏与 DPI 回正（2026-11-27，Issue #86/#87 / PR #88）
 
 - 环境：Windows 11 25H2，DISPLAY1 `0,0 2560×1440` 主屏、DISPLAY2 `-2560,0 2560×1440` 副屏，均 100% DPI；`displayMode=primary`、`dockAutoHide` 临时关闭用于截图。
