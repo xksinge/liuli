@@ -90,13 +90,14 @@ M1 实际命名：`V2Shell`、`ShellConfig`、`V2Window`、`DockForm`、`IslandF
 - 所有窗口 `WS_EX_LAYERED | TOOLWINDOW | NOACTIVATE | TOPMOST`，`ShowWithoutActivation`。
 - 画布用 32bppPArgb；`UpdateLayeredWindow` 每帧推送。
 - 尺寸以 96 DPI 逻辑单位定义，窗口按 `GetDpiForWindow` 计算 `scale`；M1 每个窗口按自身句柄 DPI 计算，主屏单屏。
-- M1 处理 `WM_DISPLAYCHANGE` 重算位置；每窗 `WM_DPICHANGED` 与文字四档在 M6 补齐。
+- M1 处理 `WM_DISPLAYCHANGE` 重算位置；每个窗口处理 `WM_DPICHANGED`，更新 `UiScale` 后 120ms 合并调用 `V2Shell.QueueDpiRefresh`，统一重排 Dock、灵动岛、收纳、Hub、设置与面板（Issue #87）。
 - 透明区域点击穿透由分层窗口 alpha 决定；命中区在窗口内显式判断。
 
 ## 6. Dock
 
 - 默认组合：系统入口（此电脑、回收站、用户文件夹）+ 自带应用（资源管理器、设置、Edge、记事本、计算器）；缺失跳过。
-- 布局：系统入口段 → 分隔线 → 固定应用段 → 右侧三个快捷动作（面板/桌面图标/设置），M1 不预留弹性空白。
+- 布局：系统入口段 → 分隔线 → 固定应用段 → 右侧四个快捷动作（桌面收纳 / 应用面板 / 控制中心 / 设置），M1 不预留弹性空白。
+- 收纳入口（TASK-070e）：Dock 第 1 个动作按钮为 `Glyph.Tray`；点击调用 `V2Shell.OpenCollectorFromDock(Screen)`，在该 Dock 所在屏打开唯一收纳面板，`CollectorForm.AnchorToDock` 按屏宽居中、放在 Dock 顶上方 8px；启动/设置恢复时按 `CollectorX/Y` 所在屏重新锚定，不沿用旧的自由漂移位置。
 - 交互：左键启动；拖入固定（COPY effect，不移动源文件）；右键取消固定；`P1` 拖拽排序。
 - 自动隐藏（M2）：`dockAutoHide` 默认关闭；全局 55ms 轮询鼠标，底部 6 逻辑像素热区唤出，离开约 650ms 收起；窗口向下滑出，170ms `1-(1-t)^3` ease-out，动画目标可变、可中途反向；隐藏位置以屏幕底边为准，任务栏露出时也能完全推出屏幕。任务栏常显时基础位置读 `WorkingArea`，已扣除任务栏高度；任务栏自动隐藏时 `WorkingArea` 为全屏，只有 `Taskbar.Revealed()` 检测到任务栏真正露出（顶部距屏幕底 ≥6px）才临时再减 `VisibleHeight`，缩回后回到底部（Issue #72）。
 - 尺寸预设（M2）：`dockPreset` 为 `small` / `standard` / `large`，整体缩放系数 0.86 / 1.0 / 1.14；缩放图标、间距、圆按钮、内边距、窗口与文字；切换后立即重排并持久化。
@@ -104,6 +105,7 @@ M1 实际命名：`V2Shell`、`ShellConfig`、`V2Window`、`DockForm`、`IslandF
 - 拖拽排序（M2，P1）：左键移动超过 8px 进入排序；按指针 X 计算 0..N 插入槽，绘制 accent 竖线；松手后 `V2Shell.MoveDockItem` 调整 `dockItems` 并保存；移动不超过 4px 仍按点击启动。
 - 悬停放大（M2）：指针进入 Dock 项后 140ms cubic ease-out 放大到 1.08；按下 0.94 优先；拖拽时禁用；移出或拖拽开始立即恢复 1.0。
 - 任务栏避让：`Taskbar.Revealed()` 用 `Shell_TrayWnd` 的 rect 判断“真正露出”，缩到屏幕边缘只剩 2px 时不算；`TickAutoHide` 每 55ms 顺带 `TickPosition`，比 320ms 定位定时器更快让位；`BaseTopY` 只在自动隐藏且已露出时临时减任务栏高度，M2 的滑入/滑出仍只叠加在基础位置上。
+- 任务栏完全隐藏（TASK-070e）：设置 Dock 页开关写 `taskbarFullHide`，`Taskbar.HideAll/ShowAll` 覆盖主/副 `Shell_TrayWnd`；2 秒统计定时器检测到任一任务栏重新可见时再次 `HideAll`。仅运行期有效，关闭或退出恢复；下次启动发现残留 `true` 时强制 `ShowAll` 并复位，避免崩溃后任务栏一直不见。
 - 图标：`Icons` 取 256px Shell 图标；开关控制是否绘制快捷方式箭头。
 
 ## 7. 灵动岛

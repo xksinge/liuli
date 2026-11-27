@@ -44,7 +44,7 @@ namespace Liuli
 
         Rectangle body = Rectangle.Empty;
         List<Rectangle> itemRects = new List<Rectangle>();
-        Rectangle[] btnRects = new Rectangle[3];
+        Rectangle[] btnRects = new Rectangle[4];
         Rectangle screenBounds;
         Rectangle workArea;
         Screen targetScreen;
@@ -171,7 +171,7 @@ namespace Liuli
             int margin = Util.RoundI(12 * UiScale);
             int tagH = Util.RoundI(16 * UiScale);
             int n = Items().Count;
-            int bodyW = pad + n * (icon + gap) + sep + btn * 3 + bgap * 2 + pad;
+            int bodyW = pad + n * (icon + gap) + sep + btn * 4 + bgap * 3 + pad;
             if (bodyW < Util.RoundI(220 * UiScale)) bodyW = Util.RoundI(220 * UiScale);
 
             itemRects.Clear();
@@ -185,9 +185,10 @@ namespace Liuli
 
             int right = margin + bodyW - pad;
             int by = margin + tagH + (bodyH - btn) / 2;
-            btnRects[0] = new Rectangle(right - btn * 3 - bgap * 2, by, btn, btn);
-            btnRects[1] = new Rectangle(right - btn * 2 - bgap, by, btn, btn);
-            btnRects[2] = new Rectangle(right - btn, by, btn, btn);
+            btnRects[0] = new Rectangle(right - btn * 4 - bgap * 3, by, btn, btn);
+            btnRects[1] = new Rectangle(right - btn * 3 - bgap * 2, by, btn, btn);
+            btnRects[2] = new Rectangle(right - btn * 2 - bgap, by, btn, btn);
+            btnRects[3] = new Rectangle(right - btn, by, btn, btn);
 
             body = new Rectangle(margin, margin + tagH, bodyW, bodyH);
             ClientSize = new Size(bodyW + margin * 2, bodyH + tagH + margin * 2);
@@ -443,9 +444,9 @@ namespace Liuli
                         g.DrawLine(pen, sx, body.Y + Util.RoundI(12 * UiScale), sx, body.Bottom - Util.RoundI(12 * UiScale));
                 }
 
-                Glyph[] glyphs = { Glyph.Folder, Glyph.Pulse, Glyph.Gear };
+                Glyph[] glyphs = { Glyph.Tray, Glyph.Folder, Glyph.Pulse, Glyph.Gear };
                 float buttonScale = BounceScale();
-                for (int i = 0; i < 3; i++)
+                for (int i = 0; i < 4; i++)
                 {
                     bool pressed = pressedBtn == i;
                     float sc = pressed ? 0.94f : (bounceBtn == i ? buttonScale : 1f);
@@ -459,7 +460,7 @@ namespace Liuli
                 }
                 else if (!dragging && hoverBtn >= 0)
                 {
-                    string[] tips = { "应用面板", "控制中心", "设置" };
+                    string[] tips = { "桌面收纳", "应用面板", "控制中心", "设置" };
                     PaintTag(g, tips[hoverBtn], btnRects[hoverBtn].X + btnRects[hoverBtn].Width / 2,
                         Util.RoundI(1 * UiScale), Util.RoundI(180 * UiScale));
                 }
@@ -714,8 +715,9 @@ namespace Liuli
             if (pb >= 0 && pb < btnRects.Length && btnRects[pb].Contains(e.Location))
             {
                 Pulse(-1, pb);
-                if (pb == 0) V2Shell.OpenHub(HubForm.ModeApps);
-                else if (pb == 1) V2Shell.OpenHub(HubForm.ModeControl);
+                if (pb == 0) V2Shell.OpenCollectorFromDock(targetScreen);
+                else if (pb == 1) V2Shell.OpenHub(HubForm.ModeApps);
+                else if (pb == 2) V2Shell.OpenHub(HubForm.ModeControl);
                 else V2Shell.OpenSettings(3);
                 return;
             }

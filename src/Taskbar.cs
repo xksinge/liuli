@@ -215,5 +215,14 @@ namespace Liuli
             for (int i = 0; i < list.Count; i++) ShowWindow(list[i], 5);
             return list.Count;
         }
+
+        /// <summary>任一屏任务栏当前可见；用于完全隐藏的守护重试。</summary>
+        public static bool AnyVisible()
+        {
+            Screen[] screens = Screen.AllScreens;
+            for (int i = 0; i < screens.Length; i++)
+                if (Visible(screens[i])) return true;
+            return false;
+        }
     }
 }

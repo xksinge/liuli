@@ -192,7 +192,13 @@
   - 图标：`.lnk` 先解析 `TargetPath`，再取目标图标；对 256 画布按不透明内容裁边铺满槽位，修复 7-Zip 图标缩成小点。
   - 验证：构建 `bin\Liuli.exe` 333.5 KB；关闭开关 `profiles=1 kept=1`，副屏 576→625，再开启回 576；6 条手改 profile 启动后只保留 `DISPLAY2/3/4/5` 四条且 DISPLAY2 取第一条 8 项；仅主屏页无开关；7-Zip 图标铺满 44px 槽位；截图 `dock-shortcut-icon.png`、`settings-dock-primary-info.png`。
   - 未验证：`IconContent` 对超大图标集的启动耗时、显示器改名后的 profile 归属；面板/收纳每屏组合未纳入。
-- [x] **TASK-070** [REQ-093–096] 多屏模式完整：每屏 Dock 定位、副屏任务栏避让、跨屏玻璃、每屏独立 Dock 图标布局（070a/070b/070c/070d 均已完成）
+- [x] **TASK-070e** [REQ-096/097] Dock 收纳入口、任务栏完全隐藏与 DPI 尺寸回正（Issue #86/#87 / PR #88）
+  - 收纳：Dock 右侧动作按钮扩为 4 个（桌面收纳 / 应用面板 / 控制中心 / 设置），新增 `Glyph.Tray`；`OpenCollectorFromDock(Screen)` 在该 Dock 所在屏打开收纳，`CollectorForm.AnchorToDock` 居中贴 Dock 上方；启动/开关恢复时按保存坐标所在屏重新锚定。
+  - 任务栏：设置 Dock 页新增“完全隐藏任务栏”开关，`SetTaskbarFullHide` 对主/副 `Shell_TrayWnd` 全部 `HideAll`，2 秒守护重试；关闭或退出 `Quit` 恢复。开关运行期有效，下次启动若发现残留 `taskbarFullHide=true` 强制恢复并复位，避免异常退出后任务栏消失。
+  - DPI：`V2Window` 处理 `WM_DPICHANGED`，120ms 合并后全局重排 Dock、灵动岛、收纳、Hub、设置和面板；收纳尺寸/保存改用 `UiScale`（DPI × 文字倍率），修复 125% → 150% → 100% 后尺寸漂移。
+  - 验证：构建 `bin\Liuli.exe` 336 KB；主屏 Dock 4 按钮 617 宽，点收纳后窗口 `958,846..1602,1300`、底边距 Dock 8px；`all` 模式下点副屏收纳日志 `screen=\\.\DISPLAY2`，窗口移到 `-1602,846..-958,1300`；任务栏开关 hide `n=2 any=False`、恢复 `n=2 any=True`；残留 `taskbarFullHide=true` 启动日志 `W 上次完全隐藏未正常恢复` 且配置复位；截图 `dock-collector-button.png`、`collector-on-secondary-dock.png`、`settings-taskbar-full-hide.png`、`taskbar-full-hide-dock.png`。
+  - 未验证：真机 125% / 150% / 100% 往返后的尺寸恢复（当前代码已处理 `WM_DPICHANGED`，需用户复测）；主副屏互换/双屏变单屏后的 profile 归属。
+- [x] **TASK-070** [REQ-093–096] 多屏模式完整：每屏 Dock 定位、副屏任务栏避让、跨屏玻璃、每屏独立 Dock 图标布局、收纳入口与任务栏完全隐藏（070a/070b/070c/070d/070e 均已完成）
 - [x] **TASK-071** [REQ-070/071] 应用面板、控制中心（Issue #78 / PR #79，已合入 `1c19d51`）
   - 实现：新增 `Apps.cs` 扫描用户/公共开始菜单 `.lnk`（递归 ≤3 层、最多 500 项，过滤卸载/帮助/readme/网站/Startup，名称去重排序，缓存 5 分钟）；新增 `ControlCenter.cs` 读 Core Audio 音量/静音、`NetworkInterface` 网络、`bthprops.cpl` 蓝牙、WMI 亮度，接口失败只记一次日志并隐藏对应卡片。
   - Hub：`HubForm` 为 620×460 玻璃面板，两个页签“应用 / 控制中心”；应用页 4×4 网格、16 项/页、搜索、分页、左键启动、右键固定、拖到 Dock 固定；控制页音量点击静音/滚轮 4% 步进、网络/蓝牙打开设置、亮度循环 25/50/75/100；仅控制页可见时 2 秒采样。
