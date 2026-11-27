@@ -48,12 +48,28 @@ namespace Liuli
         {
             if (!IsHandleCreated || Cfg == null) return;
             margin = Util.RoundI(12 * UiScale);
+            float ts = Theme.TextScale;
             Cfg.W = Util.Clamp(Cfg.W, 220, 720);
             Cfg.H = Util.Clamp(Cfg.H, 120, 520);
-            ClientSize = new Size(Cfg.W + margin * 2, Cfg.H + margin * 2);
-            Location = new Point(Cfg.X - margin, Cfg.Y - margin);
+            int w = Util.RoundI(Cfg.W * ts);
+            int h = Util.RoundI(Cfg.H * ts);
+            Rectangle work = Screen.PrimaryScreen.WorkingArea;
+            if (w > work.Width - 40) { w = Math.Max(220, work.Width - 40); Cfg.W = Util.RoundI(w / ts); }
+            if (h > work.Height - 60) { h = Math.Max(120, work.Height - 60); Cfg.H = Util.RoundI(h / ts); }
+            int x = Cfg.X;
+            int y = Cfg.Y;
+            if (x + w > work.Right) x = work.Right - w;
+            if (y + h > work.Bottom) y = work.Bottom - h;
+            ClientSize = new Size(w + margin * 2, h + margin * 2);
+            Location = new Point(x - margin, y - margin);
             EnsureCanvas();
             Render();
+        }
+
+        public void ApplyTextScale()
+        {
+            UiScale = DpiUiScale();
+            ApplyBounds();
         }
 
         public void ApplyConfig()
@@ -146,14 +162,15 @@ namespace Liuli
                 return;
             }
 
+            float ts = Theme.TextScale;
             int w = downBody.Width + dx;
             int h = downBody.Height + dy;
-            w = Util.Clamp(w, 220, 720);
-            h = Util.Clamp(h, 120, 520);
-            if (Cfg.X + w > work.Right) w = Math.Max(220, work.Right - Cfg.X);
-            if (Cfg.Y + h > work.Bottom) h = Math.Max(120, work.Bottom - Cfg.Y);
-            Cfg.W = w;
-            Cfg.H = h;
+            w = Util.Clamp(w, Util.RoundI(220 * ts), Util.RoundI(720 * ts));
+            h = Util.Clamp(h, Util.RoundI(120 * ts), Util.RoundI(520 * ts));
+            if (Cfg.X + w > work.Right) w = Math.Max(Util.RoundI(220 * ts), work.Right - Cfg.X);
+            if (Cfg.Y + h > work.Bottom) h = Math.Max(Util.RoundI(120 * ts), work.Bottom - Cfg.Y);
+            Cfg.W = Util.RoundI(w / ts);
+            Cfg.H = Util.RoundI(h / ts);
             ClientSize = new Size(w + margin * 2, h + margin * 2);
             EnsureCanvas();
             Render();

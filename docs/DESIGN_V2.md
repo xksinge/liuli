@@ -225,6 +225,15 @@ M1 实际命名：`V2Shell`、`ShellConfig`、`V2Window`、`DockForm`、`IslandF
 - 单文件轮转只保留一个 `.1`，不做按天归档或多份保留；日志写失败继续静默兜底。
 - 验证：系统页显示 118.8 KB / 0 B；复制摘要含完整字段和最近 16 行；进入 `logs` 目录；注入 581,641 B 后触发写入，当前日志变 52 B、`.1` 为 581,641 B，测试后已恢复原日志并删除 `.1`。
 
+### 7.10 文字大小四档（TASK-062，Issue #74）
+
+- `ShellConfig.TextSize` 默认 1，读写 `textSize`；0/1/2/3 映射 0.9/1.0/1.15/1.3，非法值在载入和保存时夹到 0..3。
+- `Theme.TextScale` 是全局倍率，`Theme.Font` 对最终 px 做 `Math.Max(8, px*scale*TextScale)`，0.9 档也不低于 8px。
+- `V2Window.DpiUiScale()` 返回 `DPI/96 * TextScale`，Dock、灵动岛和面板的间距/图标/文字一起缩放；设置窗 `S` 用同一公式。
+- 面板和收纳的 `Cfg.W/H` 保持逻辑尺寸，`ApplyBounds` 乘 `TextScale` 得到物理 body；拖拽缩放时把物理宽高除回去，防止重启后叠加放大。
+- 设置标题栏放四枚胶囊，`V2Shell.SetTextSize` 改配置并立即调用 Dock/灵动岛/面板/收纳/设置的 `ApplyTextScale`；切换后 Toast，日志记 `textsize`。
+- 限制：这是整体 UI 缩放，不是只缩字体；1.3 档在 150% DPI + 小屏可能超过工作区，当前只保证 2560×1440@100%。超长文件名仍按收纳原规则换行/截断。
+
 ## 8. 配色
 
 - 当前实现（M5 第一刀）：`ShellConfig.ApplyTheme` 调 `ResolveAccent`，按 `accentMode` 选择 `Backdrop.Accent`（auto）、`Palette.Get` 六套预设（preset）或 `ParseHexColor` 自定义色（custom），最后统一写入 `Theme.Accent`；Dock、灵动岛、面板、设置窗全部只读 `Theme.Accent`。

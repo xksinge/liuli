@@ -96,20 +96,39 @@ namespace Liuli
         static readonly Dictionary<string, Font> fonts = new Dictionary<string, Font>();
         static readonly object fontGate = new object();
 
+        /// <summary>TASK-062：文字档整体倍率，1.0 为标准。</summary>
+        public static float TextScale = 1f;
+
+        public static float TextScaleOf(int size)
+        {
+            if (size <= 0) return 0.9f;
+            if (size == 2) return 1.15f;
+            if (size >= 3) return 1.3f;
+            return 1f;
+        }
+
+        public static string TextScaleName(int size)
+        {
+            if (size <= 0) return "小";
+            if (size == 2) return "大";
+            if (size >= 3) return "特大";
+            return "标准";
+        }
+
         public static Font Font(float px, FontStyle style)
         {
-            return Get(Family, px * S, style);
+            return Get(Family, Math.Max(8f, px * S * TextScale), style);
         }
 
         /// <summary>v2 外壳按窗口自己的缩放取字，不受全局 Theme.S 影响。</summary>
         public static Font Font(float px, FontStyle style, float scale)
         {
-            return Get(Family, px * scale, style);
+            return Get(Family, Math.Max(8f, px * scale), style);
         }
 
         public static Font Mono(float px, FontStyle style)
         {
-            return Get(FamilyMono, px * S, style);
+            return Get(FamilyMono, Math.Max(8f, px * S * TextScale), style);
         }
 
         static Font Get(string family, float px, FontStyle style)

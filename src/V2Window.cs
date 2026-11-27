@@ -49,9 +49,9 @@ namespace Liuli
             {
                 int dpi = Native.DpiOf(Handle);
                 if (dpi <= 0) dpi = 96;
-                return dpi / 96f;
+                return dpi / 96f * Theme.TextScale;
             }
-            catch { return 1f; }
+            catch { return Theme.TextScale; }
         }
 
         /// <summary>句柄就绪后做一次布局；子类在此登记拖放等。</summary>

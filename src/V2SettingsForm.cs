@@ -22,6 +22,7 @@ namespace Liuli
         Point dragOff;
         Rectangle closeR;
         Rectangle[] navRects = new Rectangle[10];
+        Rectangle[] textRects = new Rectangle[4];
         List<Ctl> controls = new List<Ctl>();
         TextBox nameBox;
         Rectangle nameSaveR;
@@ -86,9 +87,9 @@ namespace Liuli
             try
             {
                 int dpi = Native.DpiOf(Handle);
-                if (dpi > 0) S = dpi / 96f;
+                if (dpi > 0) S = dpi / 96f * Theme.TextScale;
             }
-            catch { S = 1f; }
+            catch { S = Theme.TextScale; }
             ClientSize = new Size(Util.RoundI(900 * S), Util.RoundI(720 * S));
             ApplyRegion();
             PlaceCenter();
@@ -713,6 +714,27 @@ namespace Liuli
             controls.Add(c);
         }
 
+        int TextChipAt(Point p)
+        {
+            for (int i = 0; i < textRects.Length; i++) if (textRects[i].Contains(p)) return i;
+            return -1;
+        }
+
+        public void ApplyTextScale()
+        {
+            try
+            {
+                int dpi = Native.DpiOf(Handle);
+                if (dpi > 0) S = dpi / 96f * Theme.TextScale;
+            }
+            catch { S = Theme.TextScale; }
+            ClientSize = new Size(Util.RoundI(900 * S), Util.RoundI(720 * S));
+            ApplyRegion();
+            PlaceCenter();
+            BuildPage(page);
+            Invalidate();
+        }
+
         void AddSeg(string title, string desc, string key, int x, int y, int w, string[] options, Func<int> get, Action<int> set)
         {
             Ctl c = new Ctl();
@@ -800,6 +822,34 @@ namespace Liuli
 
             closeR = new Rectangle(Width - Util.RoundI(50 * S), Util.RoundI(16 * S), Util.RoundI(30 * S), Util.RoundI(30 * S));
             Glass.Button(g, closeR, Glyph.Close, hover == -2, false, Theme.Accent);
+
+            int chipH = Util.RoundI(24 * S), chipW = Util.RoundI(44 * S), chipGap = Util.RoundI(4 * S);
+            int chipTotal = chipW * 4 + chipGap * 3;
+            int chipX = closeR.X - Util.RoundI(74 * S) - chipTotal;
+            int chipY = Util.RoundI(19 * S);
+            Theme.Text(g, "文字", Theme.Font(8.5f, FontStyle.Regular, S), Theme.TextFaint,
+                new Rectangle(chipX - Util.RoundI(2 * S), chipY, Util.RoundI(34 * S), chipH), StringAlignment.Near, false);
+            chipX += Util.RoundI(34 * S);
+            int textAt = V2Shell.TextSizeIndex();
+            for (int i = 0; i < 4; i++)
+            {
+                Rectangle r = new Rectangle(chipX + i * (chipW + chipGap), chipY, chipW, chipH);
+                textRects[i] = r;
+                bool on = i == textAt;
+                bool hot = hover == -200 - i;
+                if (on)
+                {
+                    using (GraphicsPath p = Theme.Round(r, chipH / 2))
+                    using (SolidBrush b = new SolidBrush(Color.FromArgb(46, Theme.Accent))) g.FillPath(b, p);
+                }
+                else if (hot)
+                {
+                    using (GraphicsPath p = Theme.Round(r, chipH / 2))
+                    using (SolidBrush b = new SolidBrush(Theme.Hover)) g.FillPath(b, p);
+                }
+                Theme.TextMiddle(g, Theme.TextScaleName(i), Theme.Font(8.5f, on ? FontStyle.Bold : FontStyle.Regular, S),
+                    on ? Theme.TextMain : Theme.TextSub, r, StringAlignment.Center);
+            }
 
             int navW = Util.RoundI(136 * S);
             for (int i = 0; i < Nav.Length; i++)
@@ -1144,7 +1194,9 @@ namespace Liuli
 
             int oldHover = hover, oldPart = hoverPart;
             hover = -1; hoverPart = -1;
-            if (closeR.Contains(e.Location)) hover = -2;
+            int th = TextChipAt(e.Location);
+            if (th >= 0) hover = -200 - th;
+            else if (closeR.Contains(e.Location)) hover = -2;
             else if (naming && nameSaveR.Contains(e.Location)) hover = -3;
             else if (naming && nameCancelR.Contains(e.Location)) hover = -4;
             else
@@ -1171,6 +1223,7 @@ namespace Liuli
         void OnDown(object sender, MouseEventArgs e)
         {
             if (e.Button != MouseButtons.Left) return;
+            if (TextChipAt(e.Location) >= 0) return;
             if (e.Y < Util.RoundI(72 * S) && !closeR.Contains(e.Location) && !(nameBox != null && nameBox.Bounds.Contains(e.Location)))
             {
                 dragging = true;
@@ -1206,6 +1259,8 @@ namespace Liuli
         {
             base.OnMouseDown(e);
             if (e.Button != MouseButtons.Left) return;
+            int th = TextChipAt(e.Location);
+            if (th >= 0) { V2Shell.SetTextSize(th); return; }
             for (int i = 0; i < navRects.Length; i++)
             {
                 if (navRects[i].Contains(e.Location)) { BuildPage(i); Invalidate(); return; }
