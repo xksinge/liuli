@@ -1,4 +1,4 @@
-# Liuli 构建脚本：补 UTF-8 BOM（csc 对无 BOM 文件按 ANSI 解析，中文会乱码），再编译成单文件 exe。
+﻿# Liuli 构建脚本：补 UTF-8 BOM（csc 对无 BOM 文件按 ANSI 解析，中文会乱码），再编译成单文件 exe。
 # 用法：pwsh -File tools\build.ps1 [-Run] [-Clean]
 param(
     [switch]$Run,
@@ -30,7 +30,7 @@ $args = @(
     '/nologo', '/target:winexe', '/optimize+', '/platform:anycpu', '/utf8output',
     "/out:$bin\Liuli.exe",
     '/r:System.dll', '/r:System.Drawing.dll', '/r:System.Windows.Forms.dll',
-    '/r:System.IO.Compression.dll', '/r:System.IO.Compression.FileSystem.dll'
+    '/r:System.IO.Compression.dll', '/r:System.IO.Compression.FileSystem.dll', '/r:System.Management.dll'
 ) + $list
 $sw = [Diagnostics.Stopwatch]::StartNew()
 & $csc @args

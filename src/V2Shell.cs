@@ -62,6 +62,7 @@ namespace Liuli
             if (Island != null) Island.ApplyConfig();
             for (int i = 0; i < Panels.Count; i++) if (Panels[i] != null) Panels[i].ApplyTextScale();
             if (Collector != null) Collector.ApplyTextScale();
+            if (Hub != null && !Hub.IsDisposed) Hub.ApplyTextScale();
             if (Settings != null && !Settings.IsDisposed) Settings.ApplyTextScale();
             Toast("文字大小：" + TextSizeStatus());
             Log.Info("textsize", TextSizeStatus());
@@ -139,11 +140,13 @@ namespace Liuli
             if (Island != null) { Island.ApplyConfig(); Island.ApplyPosition(); }
             for (int i = 0; i < Panels.Count; i++) if (Panels[i] != null) Panels[i].ApplyTextScale();
             if (Collector != null) Collector.ApplyTextScale();
+            if (Hub != null && !Hub.IsDisposed) Hub.ApplyTextScale();
             if (Settings != null && !Settings.IsDisposed) Settings.ApplyTextScale();
             Toast("显示器变化，桌面层已重新排布");
             Log.Info("display", "reflow screens=" + Screen.AllScreens.Length);
         }
 
+        public static HubForm Hub;
         public static WeatherService Weather;
         public static StatsNow Stats = new StatsNow();
         public static int ActivateMessage;
@@ -260,6 +263,8 @@ namespace Liuli
             tray.Visible = true;
             ContextMenuStrip menu = new ContextMenuStrip();
             menu.Items.Add("打开设置", null, delegate { OpenSettings(); });
+            menu.Items.Add("应用面板", null, delegate { OpenHub(HubForm.ModeApps); });
+            menu.Items.Add("控制中心", null, delegate { OpenHub(HubForm.ModeControl); });
             menu.Items.Add("显示/隐藏桌面层", null, delegate { ToggleAll(); });
             menu.Items.Add("Dock 自动隐藏：开/关", null, delegate { ToggleDockAutoHide(); });
             menu.Items.Add("Dock 尺寸：小/标准/大（点击切换）", null, delegate { CycleDockPreset(); });
@@ -313,6 +318,8 @@ namespace Liuli
         {
             List<MenuForm.Item> items = new List<MenuForm.Item>();
             items.Add(new MenuForm.Item("打开设置", delegate { OpenSettings(); }, Glyph.Gear));
+            items.Add(new MenuForm.Item("应用面板", delegate { OpenHub(HubForm.ModeApps); }, Glyph.Folder));
+            items.Add(new MenuForm.Item("控制中心", delegate { OpenHub(HubForm.ModeControl); }, Glyph.Pulse));
             items.Add(new MenuForm.Item("显示/隐藏桌面层", delegate { ToggleAll(); }));
             items.Add(new MenuForm.Item("Dock 自动隐藏：开/关", delegate { ToggleDockAutoHide(); }, Glyph.Gear));
             items.Add(new MenuForm.Item("Dock 尺寸：" + DockPresetLabel(Config == null ? "standard" : Config.DockPreset) + "（点击切换）", delegate { CycleDockPreset(); }, Glyph.Gear));
@@ -362,6 +369,7 @@ namespace Liuli
             allHidden = true;
             if (Dock != null) Dock.Hide();
             HideAllDocks();
+            if (Hub != null && Hub.Visible) Hub.Hide();
             if (Island != null) Island.Hide();
             if (Collector != null) Collector.Hide();
             for (int i = 0; i < Panels.Count; i++)
@@ -591,6 +599,28 @@ namespace Liuli
             Config.AutoStart = on;
             Config.Save();
             Toast(on ? "已开启开机自启（当前用户）" : "已关闭开机自启");
+        }
+
+        public static void OpenHub(int mode)
+        {
+            try
+            {
+                if (Hub == null || Hub.IsDisposed)
+                {
+                    Hub = new HubForm(mode);
+                    Hub.Show();
+                }
+                else
+                {
+                    Hub.SetMode(mode);
+                    Hub.Show();
+                    Hub.ApplyTextScale();
+                }
+                Hub.Activate();
+                Hub.BringToFront();
+                Log.Info("hub", mode == HubForm.ModeControl ? "控制中心打开" : "应用面板打开");
+            }
+            catch (Exception ex) { Log.Warn("hub", "打开失败 " + ex.Message); Toast("应用面板打开失败"); }
         }
 
         public static void OpenSettings()
@@ -1120,6 +1150,7 @@ namespace Liuli
             try { if (statsTimer != null) statsTimer.Stop(); } catch { }
             try { if (wallTimer != null) wallTimer.Stop(); } catch { }
             try { CloseExtraDocks(); } catch { }
+            try { if (Hub != null) Hub.Close(); } catch { }
             try { if (Dock != null) Dock.Close(); } catch { }
             try { if (Island != null) Island.Close(); } catch { }
             try { if (Collector != null) Collector.Close(); } catch { }

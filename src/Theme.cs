@@ -8,7 +8,7 @@ using System.Drawing.Text;
 
 namespace Liuli
 {
-    enum Glyph { Plus, Gear, Broom, Close, Chevron, Pin, Note, Todo, Folder, Code, Pulse, Clock, Copy, More, Check, Image, Video, Restore, Save, ArrowUp, ArrowDown, Dot }
+    enum Glyph { Plus, Gear, Broom, Close, Chevron, Pin, Note, Todo, Folder, Code, Pulse, Clock, Copy, More, Check, Image, Video, Restore, Save, ArrowUp, ArrowDown, Dot, Speaker, Wifi, Bluetooth, Sun }
 
     static class Theme
     {
@@ -401,6 +401,37 @@ namespace Liuli
                         break;
                     case Liuli.Glyph.Dot:
                         using (SolidBrush b = new SolidBrush(color)) g.FillEllipse(b, cx - u * 0.10f, cy - u * 0.10f, u * 0.20f, u * 0.20f);
+                        break;
+                    case Liuli.Glyph.Speaker:
+                        g.DrawLine(pen, cx - u * 0.20f, cy - u * 0.08f, cx - u * 0.10f, cy - u * 0.08f);
+                        g.DrawLine(pen, cx - u * 0.10f, cy - u * 0.08f, cx + u * 0.02f, cy - u * 0.18f);
+                        g.DrawLine(pen, cx + u * 0.02f, cy - u * 0.18f, cx + u * 0.02f, cy + u * 0.18f);
+                        g.DrawLine(pen, cx + u * 0.02f, cy + u * 0.18f, cx - u * 0.10f, cy + u * 0.08f);
+                        g.DrawLine(pen, cx - u * 0.10f, cy + u * 0.08f, cx - u * 0.20f, cy + u * 0.08f);
+                        g.DrawArc(pen, cx - u * 0.04f, cy - u * 0.13f, u * 0.24f, u * 0.26f, -55f, 110f);
+                        g.DrawArc(pen, cx + u * 0.01f, cy - u * 0.22f, u * 0.35f, u * 0.44f, -55f, 110f);
+                        break;
+                    case Liuli.Glyph.Wifi:
+                        g.DrawArc(pen, cx - u * 0.26f, cy - u * 0.16f, u * 0.52f, u * 0.42f, 225f, 90f);
+                        g.DrawArc(pen, cx - u * 0.17f, cy - u * 0.06f, u * 0.34f, u * 0.28f, 225f, 90f);
+                        using (SolidBrush b = new SolidBrush(color))
+                            g.FillEllipse(b, cx - u * 0.045f, cy + u * 0.10f, u * 0.09f, u * 0.09f);
+                        break;
+                    case Liuli.Glyph.Bluetooth:
+                        g.DrawLine(pen, cx, cy - u * 0.22f, cx, cy + u * 0.22f);
+                        g.DrawLine(pen, cx, cy - u * 0.22f, cx + u * 0.14f, cy - u * 0.10f);
+                        g.DrawLine(pen, cx + u * 0.14f, cy - u * 0.10f, cx - u * 0.12f, cy + u * 0.13f);
+                        g.DrawLine(pen, cx - u * 0.12f, cy - u * 0.13f, cx + u * 0.14f, cy + u * 0.10f);
+                        g.DrawLine(pen, cx + u * 0.14f, cy + u * 0.10f, cx, cy + u * 0.22f);
+                        break;
+                    case Liuli.Glyph.Sun:
+                        g.DrawEllipse(pen, cx - u * 0.11f, cy - u * 0.11f, u * 0.22f, u * 0.22f);
+                        for (int i = 0; i < 8; i++)
+                        {
+                            float ang = (float)(Math.PI / 4 * i);
+                            g.DrawLine(pen, cx + (float)Math.Cos(ang) * u * 0.16f, cy + (float)Math.Sin(ang) * u * 0.16f,
+                                cx + (float)Math.Cos(ang) * u * 0.25f, cy + (float)Math.Sin(ang) * u * 0.25f);
+                        }
                         break;
                 }
             }

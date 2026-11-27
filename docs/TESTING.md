@@ -1,5 +1,20 @@
 ﻿# 测试记录
 
+## v2.0 Phase 7 应用面板与控制中心（2026-11-27，Issue #78 / PR #79）
+
+- 环境：Windows 11 25H2，双屏 DISPLAY1 `0,0 2560×1440` 主屏、DISPLAY2 `-2560,0 2560×1440` 副屏，均 100% DPI。
+- 构建：`bin\Liuli.exe` 327.5 KB；C#5 无新增 error，只有历史 warning。
+- 应用目录：日志 `开始菜单入口 99 项`；首页 1/7 页，4×4 共 16 项，页脚“共 99 项”；搜索 `edge` 后 1/1 页、仅 Microsoft Edge。
+- 右键固定：Edge 条目右键，日志 `[apps] 右键固定 ...Microsoft Edge.lnk n=1`，`shell.json` `dockItems` 8→9。
+- 拖拽固定：搜索 `7-zip` 后从首项拖到屏幕底部唤出 Dock，日志 `[drop] OLE 进入 Dock，1 项`、`[drop] OLE 放下 Dock，1 项`，`dockItems` 8→9；松手后 Hub 自动收起。
+- 窗口位置：Hub `956,800 648×488`，底边 1288；Dock `992,1296 576×100`，两者间距 8px，无重叠。
+- 控制中心：音量 100%、非静音、网络“已连接”；点击音量卡片日志 `静音=True`，再点 `静音=False`；滚轮下滚 100→96、上滚回 100。
+- 降级：蓝牙 radio 与亮度 WMI 在本机不可用，对应卡片不出现；亮度失败日志只出现一次。
+- 收起：点击面板外部后 Hub 窗口从可见窗口列表消失；Esc 可关闭；Dock 第一枚快捷按钮打开应用面板、第二枚打开控制中心。
+- 测试配置：右键/拖拽测试前备份 `_scratch\shell-before-hub.json`（8 项），测试后恢复并重启，运行配置回到 8 项。
+- 截图：`docs/screens/v8/hub-apps.png`、`hub-search.png`、`hub-control.png`、`dock-hub-actions.png`。
+- 未验证：蓝牙/亮度在支持设备上的实际操作、125%/150% DPI、双屏不同 DPI、副屏唤出 Hub 的定位偏好、Dock 已满 24 项与跨屏拖拽。
+
 ## v2.0 Phase 7 多屏第一步（2026-11-27，Issue #76）
 
 - 环境：Windows 11 25H2，`Screen.AllScreens` 2 屏，DISPLAY1 `0,0 2560×1440` 主屏，DISPLAY2 `-2560,0 2560×1440` 副屏，均 100% DPI。

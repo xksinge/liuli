@@ -443,7 +443,7 @@ namespace Liuli
                         g.DrawLine(pen, sx, body.Y + Util.RoundI(12 * UiScale), sx, body.Bottom - Util.RoundI(12 * UiScale));
                 }
 
-                Glyph[] glyphs = { Glyph.Plus, Glyph.Broom, Glyph.Gear };
+                Glyph[] glyphs = { Glyph.Folder, Glyph.Pulse, Glyph.Gear };
                 float buttonScale = BounceScale();
                 for (int i = 0; i < 3; i++)
                 {
@@ -459,7 +459,7 @@ namespace Liuli
                 }
                 else if (!dragging && hoverBtn >= 0)
                 {
-                    string[] tips = { "新建面板", "桌面图标（M5）", "设置" };
+                    string[] tips = { "应用面板", "控制中心", "设置" };
                     PaintTag(g, tips[hoverBtn], btnRects[hoverBtn].X + btnRects[hoverBtn].Width / 2,
                         Util.RoundI(1 * UiScale), Util.RoundI(180 * UiScale));
                 }
@@ -714,8 +714,8 @@ namespace Liuli
             if (pb >= 0 && pb < btnRects.Length && btnRects[pb].Contains(e.Location))
             {
                 Pulse(-1, pb);
-                if (pb == 0) V2Shell.AddPanel();
-                else if (pb == 1) V2Shell.Toast("桌面图标管理将在 M5 提供");
+                if (pb == 0) V2Shell.OpenHub(HubForm.ModeApps);
+                else if (pb == 1) V2Shell.OpenHub(HubForm.ModeControl);
                 else V2Shell.OpenSettings(3);
                 return;
             }
