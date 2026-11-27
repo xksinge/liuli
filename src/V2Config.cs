@@ -170,6 +170,12 @@ namespace Liuli
             c.ActiveTheme = Name;
         }
     }
+    sealed class DockProfile
+    {
+        public string Screen = "";
+        public List<DockItem> Items = new List<DockItem>();
+    }
+
     sealed class DockItem
     {
         public string Kind = "app";       // system / app
@@ -357,6 +363,8 @@ namespace Liuli
         public List<CollectorItem> CollectorItems = new List<CollectorItem>();
 
         public List<DockItem> DockItems = new List<DockItem>();
+        public bool DockPerScreen = false;
+        public List<DockProfile> DockProfiles = new List<DockProfile>();
         public List<PanelConfig> Panels = new List<PanelConfig>();
 
         public static string FilePath { get { return Path.Combine(Paths.Data, "shell.json"); } }
@@ -438,32 +446,25 @@ namespace Liuli
                 CollectorState.Normalize(c);
 
                 object itemsObj = root.ContainsKey("dockItems") ? root["dockItems"] : null;
-                List<object> items = Json.Arr(itemsObj);
-                if (items != null)
+                List<DockItem> parsedItems = ReadDockItems(itemsObj, 16);
+                if (parsedItems != null) c.DockItems = parsedItems;
+                c.DockPerScreen = Json.Bool(root, "dockPerScreen", false);
+                List<object> profiles = Json.Arr(root.ContainsKey("dockProfiles") ? root["dockProfiles"] : null);
+                if (profiles != null)
                 {
-                    c.DockItems = new List<DockItem>();
-                    for (int i = 0; i < items.Count && c.DockItems.Count < 16; i++)
+                    c.DockProfiles = new List<DockProfile>();
+                    for (int i = 0; i < profiles.Count && c.DockProfiles.Count < 4; i++)
                     {
-                        Dictionary<string, object> d = Json.Obj(items[i]);
+                        Dictionary<string, object> d = Json.Obj(profiles[i]);
                         if (d == null) continue;
-                        string kind = Json.Str(d, "kind", "app");
-                        string id = Json.Str(d, "id", "");
-                        string path = Json.Str(d, "path", "");
-                        string label = Json.Str(d, "label", "");
-                        if (string.Equals(kind, "system", StringComparison.OrdinalIgnoreCase))
-                        {
-                            if (id.Length == 0) continue;
-                            DockItem it = new DockItem();
-                            it.Kind = "system"; it.Id = id; it.Label = label;
-                            c.DockItems.Add(it);
-                        }
-                        else
-                        {
-                            if (path.Length == 0) continue;
-                            DockItem it = new DockItem();
-                            it.Kind = "app"; it.Path = path; it.Label = label;
-                            c.DockItems.Add(it);
-                        }
+                        string screen = Json.Str(d, "screen", "");
+                        if (screen.Length == 0) continue;
+                        List<DockItem> list = ReadDockItems(d.ContainsKey("items") ? d["items"] : null, 16);
+                        if (list == null) continue;
+                        DockProfile p = new DockProfile();
+                        p.Screen = screen;
+                        p.Items = list;
+                        c.DockProfiles.Add(p);
                     }
                 }
 
@@ -565,6 +566,52 @@ namespace Liuli
             return "ms-calculator:";
         }
 
+        static List<DockItem> ReadDockItems(object obj, int max)
+        {
+            List<object> arr = Json.Arr(obj);
+            if (arr == null) return null;
+            List<DockItem> list = new List<DockItem>();
+            for (int i = 0; i < arr.Count && list.Count < max; i++)
+            {
+                Dictionary<string, object> d = Json.Obj(arr[i]);
+                if (d == null) continue;
+                string kind = Json.Str(d, "kind", "app");
+                string id = Json.Str(d, "id", "");
+                string path = Json.Str(d, "path", "");
+                string label = Json.Str(d, "label", "");
+                DockItem it = new DockItem();
+                if (string.Equals(kind, "system", StringComparison.OrdinalIgnoreCase))
+                {
+                    if (id.Length == 0) continue;
+                    it.Kind = "system"; it.Id = id; it.Label = label;
+                }
+                else
+                {
+                    if (path.Length == 0) continue;
+                    it.Kind = "app"; it.Path = path; it.Label = label;
+                }
+                list.Add(it);
+            }
+            return list;
+        }
+
+        static List<object> WriteDockItems(List<DockItem> items)
+        {
+            List<object> arr = new List<object>();
+            if (items == null) return arr;
+            for (int i = 0; i < items.Count; i++)
+            {
+                DockItem it = items[i];
+                if (it == null) continue;
+                Dictionary<string, object> d = new Dictionary<string, object>();
+                d["kind"] = it.Kind;
+                if (it.IsSystem) d["id"] = it.Id; else d["path"] = it.Path;
+                d["label"] = it.Label == null ? "" : it.Label;
+                arr.Add(d);
+            }
+            return arr;
+        }
+
         public void Save()
         {
             try
@@ -630,18 +677,19 @@ namespace Liuli
                 root["collectorGroup"] = CollectorGroup;
                 root["collectorItems"] = CollectorState.WriteItems(CollectorItems);
 
-                List<object> arr = new List<object>();
-                for (int i = 0; i < DockItems.Count; i++)
+                root["dockItems"] = WriteDockItems(DockItems);
+                root["dockPerScreen"] = DockPerScreen;
+                List<object> profileArr = new List<object>();
+                for (int i = 0; i < DockProfiles.Count; i++)
                 {
-                    DockItem it = DockItems[i];
-                    if (it == null) continue;
+                    DockProfile p = DockProfiles[i];
+                    if (p == null || p.Screen.Length == 0) continue;
                     Dictionary<string, object> d = new Dictionary<string, object>();
-                    d["kind"] = it.Kind;
-                    if (it.IsSystem) d["id"] = it.Id; else d["path"] = it.Path;
-                    d["label"] = it.Label == null ? "" : it.Label;
-                    arr.Add(d);
+                    d["screen"] = p.Screen;
+                    d["items"] = WriteDockItems(p.Items);
+                    profileArr.Add(d);
                 }
-                root["dockItems"] = arr;
+                root["dockProfiles"] = profileArr;
 
                 List<object> panelArr = new List<object>();
                 for (int i = 0; i < Panels.Count; i++)

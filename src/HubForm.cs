@@ -595,7 +595,7 @@ namespace Liuli
         void Pin(AppEntry it)
         {
             if (it == null) return;
-            int n = V2Shell.PinPaths(new string[] { it.Path });
+            int n = V2Shell.PinPaths(new string[] { it.Path }, Screen.FromPoint(Cursor.Position));
             if (n > 0) V2Shell.Toast("已固定到 Dock：" + it.Name);
             else V2Shell.Toast("未固定：Dock 已满或已存在");
             Log.Info("apps", "右键固定 " + it.Path + " n=" + n);
