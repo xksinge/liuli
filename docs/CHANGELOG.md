@@ -2,6 +2,31 @@
 
 遵循 Keep a Changelog；版本遵循 SemVer。
 
+## [Unreleased · v2.0 Phase 7 多屏第一步]
+
+### 新增
+
+- `displayMode` 配置（默认 `primary`），设置 Dock 页新增“多屏模式：仅主屏 / 所有屏”
+- `all` 时为每块非主屏创建独立 Dock，共享 Dock 图标配置；灵动岛仍在主屏
+
+### 修复
+
+- 每屏 Dock 只在自身屏幕底部热区唤出，避免鼠标在任一屏底部时所有 Dock 同时弹出
+- 显示器变化/分辨率变化后重建副屏 Dock，并重排 Dock、灵动岛、面板、收纳和设置
+- 面板与收纳按窗口所在屏工作区收回，缩屏或跨屏后不再留在屏外
+
+### 验证
+
+- `bin\Liuli.exe` 306.5 KB；C#5 无新增 error
+- 本机双屏：DISPLAY1 `0,0 2560×1440`、DISPLAY2 `-2560,0 2560×1440`；`all` 日志 `screens=2 extraDocks=1`
+- 鼠标主屏底部：主 Dock `y=1296`、副屏 `y=1444`；鼠标副屏底部：副屏 `y=1344`、主 Dock `y=1442`
+- 模拟 `WM_DISPLAYCHANGE` 后 `reflow screens=2 extraDocks=1`，进程不崩、副屏 Dock 重建一套
+- 切回“仅主屏”后副屏 Dock 关闭；截图 `settings-dock-multiscreen-primary.png`、`settings-dock-multiscreen-all.png`、`dock-two-screens.png`
+
+### 未验证
+
+- 真实拔插显示器、改分辨率；副屏任务栏自动隐藏/多实例；双屏不同 DPI；跨屏玻璃；每屏独立布局
+
 ## [Unreleased · v2.0 M6 文字大小四档]
 
 ### 新增

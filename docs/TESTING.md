@@ -1,5 +1,16 @@
 ﻿# 测试记录
 
+## v2.0 Phase 7 多屏第一步（2026-11-27，Issue #76）
+
+- 环境：Windows 11 25H2，`Screen.AllScreens` 2 屏，DISPLAY1 `0,0 2560×1440` 主屏，DISPLAY2 `-2560,0 2560×1440` 副屏，均 100% DPI。
+- 构建：`bin\Liuli.exe` 306.5 KB；C#5 无新增 error。
+- 设置：Dock 页显示“多屏模式：仅主屏 / 所有屏”，默认“仅主屏”；切“所有屏”后 `shell.json` 的 `displayMode=all`，日志 `screens=2 extraDocks=1`。
+- 副屏 Dock：出现在 DISPLAY2 底部居中，与主屏 Dock 同一套图标；鼠标在副屏底部时副屏 Dock `y=1344` 露出，主屏 Dock `y=1442` 保持收起。
+- 主屏 Dock：鼠标在主屏底部时主屏 Dock `y=1296` 露出，副屏 Dock `y=1444` 保持收起；截图 `dock-two-screens.png` 左屏有 Dock、右屏无 Dock。
+- 显示器变化：向 Liuli 窗口发送 `WM_DISPLAYCHANGE (0x007E)`，日志 `reflow screens=2 extraDocks=1`，副屏 Dock 重建一套，主 Dock、灵动岛、设置窗未崩。
+- 关闭副屏：切回“仅主屏”后 `displayMode=primary`，副屏 Dock 关闭，主屏 Dock 保留；截图 `settings-dock-multiscreen-primary.png`、`settings-dock-multiscreen-all.png`。
+- 未验证：真实拔插显示器 / 改分辨率、副屏任务栏自动隐藏与多实例、双屏不同 DPI、跨屏玻璃切片、每屏独立布局。
+
 ## v2.0 M6 Dock 动态避让任务栏（2026-11-27，Issue #72）
 
 | 项 | 结果 | 证据 |

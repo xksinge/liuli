@@ -86,7 +86,8 @@ namespace Liuli
             float ts = Theme.TextScale;
             int w = Util.RoundI(c.CollectorW * ts);
             int h = Util.RoundI(c.CollectorH * ts);
-            Rectangle work = Screen.PrimaryScreen.WorkingArea;
+            Screen target = Screen.FromPoint(new Point(c.CollectorX, c.CollectorY));
+            Rectangle work = target.WorkingArea;
             if (c.CollectorX < 0 || c.CollectorY < 0)
             {
                 c.CollectorX = work.Right - w - Util.RoundI(40 * UiScale);
@@ -94,8 +95,8 @@ namespace Liuli
             }
             if (c.CollectorX < work.Left) c.CollectorX = work.Left;
             if (c.CollectorY < work.Top) c.CollectorY = work.Top;
-            if (c.CollectorX > work.Right - 80) c.CollectorX = work.Right - 80;
-            if (c.CollectorY > work.Bottom - 60) c.CollectorY = work.Bottom - 60;
+            if (c.CollectorX + w > work.Right) c.CollectorX = work.Right - w;
+            if (c.CollectorY + h > work.Bottom) c.CollectorY = work.Bottom - h;
             ClientSize = new Size(w + margin * 2, h + margin * 2);
             Location = new Point(c.CollectorX - margin, c.CollectorY - margin);
             EnsureCanvas();

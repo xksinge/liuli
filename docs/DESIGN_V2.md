@@ -251,10 +251,12 @@ M1 实际命名：`V2Shell`、`ShellConfig`、`V2Window`、`DockForm`、`IslandF
 
 ## 10. 屏幕
 
-- 首版默认仅主屏；`screens.mode = primary`。
-- P1：`allDocks`（每屏 Dock + 主屏灵动岛）；每屏布局后置。
-- 多屏坐标用虚拟屏物理坐标；玻璃切片按 `Backdrop.Virtual` 偏移。
-- 热插拔：2 秒内重排，窗口收回主屏可见区。
+- `ShellConfig.DisplayMode` 默认 `primary`，可切 `all`；设置在 Dock 页“多屏模式：仅主屏 / 所有屏”。
+- 每个 `DockForm` 绑定一个 `Screen`：`screenBounds`、`workArea`、`primaryScreen` 在构造/`SetScreen` 时固定，底部基准、隐藏偏移、热区判定都用本屏坐标。主屏 Dock 仍由 `V2Shell.Dock` 持有，副屏放 `ExtraDocks`，图标配置共享；灵动岛固定在主屏。
+- 主屏 Dock 才避让主任务栏（`Shell_TrayWnd`）；副屏任务栏暂不避让。自动隐藏时只有本屏底部热区能唤出本屏 Dock，避免跨屏同时弹出。
+- 热插拔/分辨率变化：`V2Host` 收到 `WM_DISPLAYCHANGE` 后 `OnDisplayChanged()`，关闭并重建副屏 Dock，重排主 Dock、灵动岛、面板、收纳与设置；不用 `SystemEvents` 额外挂一遍，避免双触发。
+- 面板/收纳按窗口左上角 `Screen.FromPoint` 取所在屏工作区，先夹左/上、再夹右/下，实现跨屏或缩屏后的越界收回。
+- 坐标使用虚拟屏物理坐标；跨屏玻璃切片与每屏独立布局仍留 P1。
 
 ## 11. 迁移与回滚
 

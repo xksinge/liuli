@@ -311,6 +311,9 @@ namespace Liuli
         // 文字大小（TASK-062）：0 小 / 1 标准 / 2 大 / 3 特大。
         public int TextSize = 1;
 
+        // 多屏模式（TASK-070）：primary 仅主屏 / all 所有屏 Dock。
+        public string DisplayMode = "primary";
+
         // 开机自启（TASK-061）：只写当前用户 HKCU Run。
         public bool AutoStart = false;
 
@@ -386,6 +389,7 @@ namespace Liuli
                 c.Clock24 = Json.Bool(root, "clock24", true);
                 c.ClockSeconds = Json.Bool(root, "clockSeconds", false);
                 c.TextSize = Util.Clamp(Json.Int(root, "textSize", 1), 0, 3);
+                c.DisplayMode = NormalizeDisplayMode(Json.Str(root, "displayMode", "primary"));
                 c.AutoStart = Json.Bool(root, "autoStart", false);
                 c.TaskbarAutoHide = Json.Bool(root, "taskbarAutoHide", true);
                 c.TaskbarOriginalAutoHide = Json.Bool(root, "taskbarOriginalAutoHide", true);
@@ -585,6 +589,7 @@ namespace Liuli
                 root["clock24"] = Clock24;
                 root["clockSeconds"] = ClockSeconds;
                 root["textSize"] = Util.Clamp(TextSize, 0, 3);
+                root["displayMode"] = NormalizeDisplayMode(DisplayMode);
                 root["autoStart"] = AutoStart;
                 root["taskbarAutoHide"] = TaskbarAutoHide;
                 root["taskbarOriginalAutoHide"] = TaskbarOriginalAutoHide;
@@ -907,6 +912,12 @@ namespace Liuli
             if (p.Y < work.Top) p.Y = work.Top;
             if (p.X > work.Right - 80) p.X = work.Right - 80;
             if (p.Y > work.Bottom - 60) p.Y = work.Bottom - 60;
+        }
+
+        public static string NormalizeDisplayMode(string s)
+        {
+            string v = (s == null ? "" : s.Trim().ToLowerInvariant());
+            return v == "all" ? "all" : "primary";
         }
 
         public static string NormalizeAccentMode(string s)

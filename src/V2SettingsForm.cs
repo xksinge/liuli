@@ -347,6 +347,19 @@ namespace Liuli
                     Invalidate();
                 });
             y += Util.RoundI(92 * S);
+            AddSeg("多屏模式", "仅主屏只显示一套 Dock；所有屏为每块副屏各加一套 Dock，灵动岛仍在主屏", "displayMode", x, y, w,
+                new string[] { "仅主屏", "所有屏" },
+                delegate
+                {
+                    return string.Equals(V2Shell.Config.DisplayMode, "all", StringComparison.OrdinalIgnoreCase) ? 1 : 0;
+                },
+                delegate (int v)
+                {
+                    V2Shell.SetDisplayMode(v == 1 ? "all" : "primary");
+                    BuildPage(3);
+                    Invalidate();
+                });
+            y += Util.RoundI(92 * S);
             AddInfo("图标管理", "Dock 图标的拖动排序、移除和文件固定仍在 Dock 上操作；本页只调显示参数。", x, y, w);
         }
 
