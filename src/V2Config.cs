@@ -459,6 +459,10 @@ namespace Liuli
                         if (d == null) continue;
                         string screen = Json.Str(d, "screen", "");
                         if (screen.Length == 0) continue;
+                        bool dup = false;
+                        for (int k = 0; k < c.DockProfiles.Count; k++)
+                            if (string.Equals(c.DockProfiles[k].Screen, screen, StringComparison.OrdinalIgnoreCase)) { dup = true; break; }
+                        if (dup) continue;
                         List<DockItem> list = ReadDockItems(d.ContainsKey("items") ? d["items"] : null, 16);
                         if (list == null) continue;
                         DockProfile p = new DockProfile();
@@ -680,10 +684,17 @@ namespace Liuli
                 root["dockItems"] = WriteDockItems(DockItems);
                 root["dockPerScreen"] = DockPerScreen;
                 List<object> profileArr = new List<object>();
-                for (int i = 0; i < DockProfiles.Count; i++)
+                for (int i = 0; i < DockProfiles.Count && profileArr.Count < 4; i++)
                 {
                     DockProfile p = DockProfiles[i];
                     if (p == null || p.Screen.Length == 0) continue;
+                    bool dup = false;
+                    for (int k = 0; k < profileArr.Count; k++)
+                    {
+                        Dictionary<string, object> old = Json.Obj(profileArr[k]);
+                        if (old != null && string.Equals(Json.Str(old, "screen", ""), p.Screen, StringComparison.OrdinalIgnoreCase)) { dup = true; break; }
+                    }
+                    if (dup) continue;
                     Dictionary<string, object> d = new Dictionary<string, object>();
                     d["screen"] = p.Screen;
                     d["items"] = WriteDockItems(p.Items);
