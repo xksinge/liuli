@@ -101,6 +101,7 @@ M1 实际命名：`V2Shell`、`ShellConfig`、`V2Window`、`DockForm`、`IslandF
 - 交互：左键启动；拖入固定（COPY effect，不移动源文件）；右键取消固定；`P1` 拖拽排序。
 - 自动隐藏（M2）：`dockAutoHide` 默认关闭；全局 55ms 轮询鼠标，底部 6 逻辑像素热区唤出，离开约 650ms 收起；窗口向下滑出，170ms `1-(1-t)^3` ease-out，动画目标可变、可中途反向；隐藏位置以屏幕底边为准，任务栏露出时也能完全推出屏幕。任务栏常显时基础位置读 `WorkingArea`，已扣除任务栏高度；任务栏自动隐藏时 `WorkingArea` 为全屏，只有 `Taskbar.Revealed()` 检测到任务栏真正露出（顶部距屏幕底 ≥6px）才临时再减 `VisibleHeight`，缩回后回到底部（Issue #72）。
 - 尺寸预设（M2）：`dockPreset` 为 `small` / `standard` / `large`，整体缩放系数 0.86 / 1.0 / 1.14；缩放图标、间距、圆按钮、内边距、窗口与文字；切换后立即重排并持久化。
+- 位置（TASK-070g）：`dockAlign` 为 `left` / `center` / `right`，默认居中；横向贴 `WorkArea` 左右各留 8 逻辑像素。默认关闭 Dock 自动隐藏，常驻任务栏上方；任务栏自动隐藏露出时，Dock 基础位置等任务栏连续露出 300ms 才上移，任务栏在 Dock 横向范围外露出时不强行拉起 Dock，避免屏幕底边双向触发闪动。
 - 运行指示（M2）：每 2s 一次性枚举 `Process.GetProcesses()`，缓存目标进程名，不在绘制帧枚举；仅 `app` 项显示 accent 小圆点（约 4 逻辑像素），系统入口、URL 与 `.lnk` 暂不显示；检测到变化才重绘。
 - 拖拽排序（M2，P1）：左键移动超过 8px 进入排序；按指针 X 计算 0..N 插入槽，绘制 accent 竖线；松手后 `V2Shell.MoveDockItem` 调整 `dockItems` 并保存；移动不超过 4px 仍按点击启动。
 - 悬停放大（M2）：指针进入 Dock 项后 140ms cubic ease-out 放大到 1.08；按下 0.94 优先；拖拽时禁用；移出或拖拽开始立即恢复 1.0。

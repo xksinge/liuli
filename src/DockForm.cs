@@ -36,6 +36,8 @@ namespace Liuli
 
         bool autoRevealed = true;
         long awayAt;
+        bool taskbarUpStable;
+        long taskbarChangeAt;
         int slide;
         int slideFrom;
         int slideTo;
@@ -203,6 +205,8 @@ namespace Liuli
             screenBounds = target.Bounds;
             workArea = target.WorkingArea;
             targetScreen = target;
+            taskbarUpStable = Taskbar.AutoHide() && Taskbar.Revealed(target);
+            taskbarChangeAt = 0;
         }
 
         /// <summary>Dock 第 1 个动作按钮（收纳）的屏幕矩形；用于区分“点收纳按钮”和“点桌面”。</summary>
@@ -226,7 +230,7 @@ namespace Liuli
             Rectangle work = workArea;
             int gap = Util.RoundI(8 * UiScale);
             int bottom = work.Bottom;
-            if (Taskbar.AutoHide() && Taskbar.Revealed(targetScreen))
+            if (AutoHideEnabled() && taskbarUpStable)
             {
                 int taskbarH = Taskbar.VisibleHeight(targetScreen);
                 if (taskbarH > 0) bottom = screenBounds.Bottom - taskbarH;
@@ -245,12 +249,20 @@ namespace Liuli
             return Math.Max(1, Math.Max(Height, toBottom));
         }
 
+        int DockX()
+        {
+            int gap = Util.RoundI(8 * UiScale);
+            Rectangle work = workArea;
+            string align = V2Shell.Config == null ? "center" : ShellConfig.NormalizeDockAlign(V2Shell.Config.DockAlign);
+            if (align == "left") return work.X + gap;
+            if (align == "right") return work.Right - Width - gap;
+            return work.X + (work.Width - Width) / 2;
+        }
+
         public void ApplyPosition()
         {
             if (!IsHandleCreated) return;
-            Rectangle work = workArea;
-            int x = work.X + (work.Width - Width) / 2;
-            Location = new Point(x, BaseTopY() + slide);
+            Location = new Point(DockX(), BaseTopY() + slide);
             Native.KeepAtTop(Handle);
         }
 
@@ -272,14 +284,32 @@ namespace Liuli
         void TickPosition()
         {
             if (!IsHandleCreated) return;
+            UpdateTaskbarStable();
             if (!autoRevealed && (slideTimer == null || !slideTimer.Enabled)) slide = HiddenOffset();
-            Rectangle work = workArea;
-            Point target = new Point(work.X + (work.Width - Width) / 2, BaseTopY() + slide);
+            Point target = new Point(DockX(), BaseTopY() + slide);
             if (target != Location)
             {
                 Location = target;
                 Native.KeepAtTop(Handle);
                 Push();
+            }
+        }
+
+        /// <summary>任务栏自动隐藏露出/缩回会改变 Dock 基准高度；连续稳定 300ms 再跟随，避免 55ms 定时器跟着任务栏动画上下跳。</summary>
+        void UpdateTaskbarStable()
+        {
+            bool up = Taskbar.AutoHide() && Taskbar.Revealed(targetScreen);
+            if (up == taskbarUpStable)
+            {
+                taskbarChangeAt = 0;
+                return;
+            }
+            long now = Environment.TickCount;
+            if (taskbarChangeAt == 0) taskbarChangeAt = now;
+            else if (now - taskbarChangeAt >= 300)
+            {
+                taskbarUpStable = up;
+                taskbarChangeAt = 0;
             }
         }
 
@@ -293,6 +323,8 @@ namespace Liuli
         {
             if (!IsHandleCreated) return;
             awayAt = 0;
+            taskbarUpStable = Taskbar.AutoHide() && Taskbar.Revealed(targetScreen);
+            taskbarChangeAt = 0;
             if (!AutoHideEnabled()) { SlideTo(true); return; }
             // 切到自动隐藏时先显示，鼠标不在底部则 650ms 后收起。
             if (!autoRevealed) SlideTo(true);
@@ -314,10 +346,25 @@ namespace Liuli
                 return;
             }
 
+            // 任务栏自动隐藏被鼠标唤出时，Dock 保持显示并等任务栏稳定后上移；
+            // 否则两者在屏幕底边互相触发，Dock 会反复收起/弹出。任务栏在别处露出时不强行拉起 Dock。
             Point p = Cursor.Position;
+            bool taskbarUp = Taskbar.AutoHide() && Taskbar.Revealed(targetScreen);
+            if (taskbarUp)
+            {
+                Rectangle span = new Rectangle(Location.X, 0, Width, screenBounds.Height);
+                if (span.Contains(p))
+                {
+                    awayAt = 0;
+                    if (!autoRevealed) SlideTo(true);
+                    return;
+                }
+                if (!autoRevealed) return;
+            }
+
             Rectangle screenRect = screenBounds;
             int hot = Math.Max(3, Util.RoundI(6 * UiScale));
-            bool nearBottom = screenRect.Contains(p) && p.Y >= screenRect.Bottom - hot;
+            bool nearBottom = !taskbarUp && screenRect.Contains(p) && p.Y >= screenRect.Bottom - hot;
             bool inDock = Bounds.Contains(p);
             if (nearBottom || inDock)
             {

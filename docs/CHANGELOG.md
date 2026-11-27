@@ -2,6 +2,24 @@
 
 遵循 Keep a Changelog；版本遵循 SemVer。
 
+## [Unreleased · v2.0 Phase 7 Dock 常驻与位置设置]
+
+### 新增
+
+- Dock 默认关闭自动隐藏，常驻任务栏上方，不再触底弹出/离开收起；自动隐藏开关仍保留
+- 设置·Dock 页新增“Dock 位置”：靠左 / 居中 / 靠右，保存到 `dockAlign`
+
+### 修复
+
+- 任务栏露出/缩回加 300ms 稳定判断；任务栏在 Dock 横向范围外露出时不强行拉起 Dock，避免两者在屏幕底边互相触发闪动
+
+### 验证
+
+- `bin\Liuli.exe` 338 KB；C#5 无新增 error
+- 居中 `971,1344..1588,1444`；靠左 `8,1344..625,1444`；靠右 `1935,1344..2552,1444`
+- 设置页点击“靠左”后 `dockAlign=left`，Dock 即时移到 `8,1344..625,1444`
+- 截图 `settings-dock-position.png`
+
 ## [Unreleased · v2.0 Phase 7 Dock 收纳按钮切换]
 
 ### 新增
