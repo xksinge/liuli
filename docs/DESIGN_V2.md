@@ -219,6 +219,11 @@ M1 实际命名：`V2Shell`、`ShellConfig`、`V2Window`、`DockForm`、`IslandF
 - 约束：默认组合固定，不提供自定义键位编辑；冲突时不自动换用其它组合，需用户关闭占用方后点“重新注册”或重启 Liuli。
 - 验证：开启后 Run=`"E:\meihuaDesktop\bin\Liuli.exe"`，关闭后值不存在；把 exe+shell.json 复制到 `_scratch\move-test` 启动，Run 更新为临时路径；恢复主 exe 启动后 Run 回到主路径。
 - 限制：只支持当前用户；没有“启动时最小化/延迟启动”参数；多用户切换各自 HKCU 独立。
+- 系统页新增“日志诊断”：显示 `liuli.log` 当前大小、`liuli.log.1` 轮转大小和合计，说明 512 KB 轮转规则；异常写入仍带堆栈。
+- `Log.CurrentSize/RotatedSize/SizeText` 只读文件元信息，不打开写句柄；`Log.Diagnostic` 生成版本、DPI、日志路径/大小、配置路径与最近 16 行摘要，供“复制诊断摘要”直接粘贴反馈。
+- “打开日志目录”走 `Native.ShellOpenFolder(Paths.Logs)`；剪贴板失败时 Toast 提示改开目录，不阻塞。
+- 单文件轮转只保留一个 `.1`，不做按天归档或多份保留；日志写失败继续静默兜底。
+- 验证：系统页显示 118.8 KB / 0 B；复制摘要含完整字段和最近 16 行；进入 `logs` 目录；注入 581,641 B 后触发写入，当前日志变 52 B、`.1` 为 581,641 B，测试后已恢复原日志并删除 `.1`。
 
 ## 8. 配色
 
