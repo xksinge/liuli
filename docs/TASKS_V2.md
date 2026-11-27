@@ -178,7 +178,14 @@
   - 诊断：`--selftest` 输出屏幕/虚拟屏/任务栏实例；新增 `--taskbar-cycle` 隐藏并恢复全部任务栏。
   - 验证：构建 `bin\Liuli.exe` 329.5 KB；副屏任务栏 `-2560,1392..1440` 时副屏 Dock `-1568,1296..-992,1396`、主屏 Dock 1444 收起；反向主屏任务栏露出时主屏 Dock 1296、副屏 Dock 1444；`--taskbar-cycle` hide/show 均 `n=2`，两屏可见状态 False→True；跨屏面板拼接截图 `panel-seam.png` 无缝。
   - 未验证：双屏不同 DPI、真实拔插/改分辨率、任务栏左/右边缘、Explorer 重启后副任务栏重建。
-- [ ] **TASK-070** [REQ-093–096] 多屏模式完整：每屏自定义布局（P1；070a/070b 已完成，余 TASK-070c）
+- [x] **TASK-070c** [REQ-096] 每屏独立 Dock 图标布局（Issue #82 / PR #83，已合入 `0cc8cb7`）
+  - 配置：`ShellConfig` 新增 `dockPerScreen=false` 与 `dockProfiles[]`；profile 为 `{ screen: DeviceName, items: dockItem[] }`，最多 4 个、每个最多 16 项；抽出 `ReadDockItems/WriteDockItems` 复用读写。
+  - 选择：关闭开关时全部屏共享 `dockItems`；主屏始终共享；副屏第一次排序/移除/固定时深拷贝共享列表为该屏独立 profile，日志 `[dock] 建立副屏独立布局 \\.\DISPLAY2 n=8`。
+  - 操作落屏：`DockItemsFor(Screen)` 决定该屏列表；`PinPaths/RemoveDockItem/MoveDockItem` 增加 `Screen` 重载；Dock 拖入、右键移除、拖拽排序和 Hub 右键固定都传操作所在屏。
+  - 设置：Dock 页多屏模式之后新增“每屏独立布局”开关；关闭时清空 profiles，`ResetDock` 同步清理；`PinPaths` 成功后立即重排 Dock，修掉 Hub 固定后宽度不刷新。
+  - 验证：构建 `bin\Liuli.exe` 332 KB；副屏 Hub 固定 7-Zip 后共享 `dockItems=8`、`DISPLAY2` profile `items=9`，副屏 Dock `576→625`（`-1593,1442..-968,1542`），主屏 `992,1442..1568,1542` 不变；重启后 profile 与宽度保持；关闭开关 profiles=0，两块 Dock 立即回 8 项；截图 `dock-secondary-profile.png`、`settings-dock-per-screen.png`。
+  - 未验证：双屏不同 DPI、真实拔插/改分辨率、显示器改名/主副互换后 profile 归属；新固定 7-Zip 的 Dock 图标偏小（`.lnk` 源图标尺寸）另记。
+- [x] **TASK-070** [REQ-093–096] 多屏模式完整：每屏 Dock 定位、副屏任务栏避让、跨屏玻璃、每屏独立 Dock 图标布局（070a/070b/070c 均已完成）
 - [x] **TASK-071** [REQ-070/071] 应用面板、控制中心（Issue #78 / PR #79，已合入 `1c19d51`）
   - 实现：新增 `Apps.cs` 扫描用户/公共开始菜单 `.lnk`（递归 ≤3 层、最多 500 项，过滤卸载/帮助/readme/网站/Startup，名称去重排序，缓存 5 分钟）；新增 `ControlCenter.cs` 读 Core Audio 音量/静音、`NetworkInterface` 网络、`bthprops.cpl` 蓝牙、WMI 亮度，接口失败只记一次日志并隐藏对应卡片。
   - Hub：`HubForm` 为 620×460 玻璃面板，两个页签“应用 / 控制中心”；应用页 4×4 网格、16 项/页、搜索、分页、左键启动、右键固定、拖到 Dock 固定；控制页音量点击静音/滚轮 4% 步进、网络/蓝牙打开设置、亮度循环 25/50/75/100；仅控制页可见时 2 秒采样。

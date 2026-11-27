@@ -1,5 +1,19 @@
 ﻿# 测试记录
 
+## v2.0 Phase 7 每屏独立 Dock 图标布局（2026-11-27，Issue #82 / PR #83）
+
+- 环境：Windows 11 25H2，DISPLAY1 `0,0 2560×1440` 主屏、DISPLAY2 `-2560,0 2560×1440` 副屏，均 100% DPI；两块任务栏自动隐藏。
+- 构建：`bin\Liuli.exe` 332 KB；C#5 无新增 error，只有历史 warning。
+- 准备：备份 `_scratch\shell-before-profile.json`；`displayMode=all`、`dockPerScreen=true` 启动，日志 `screens=2 extraDocks=1`。
+- 建立 profile：在副屏 Dock 打开 Hub，搜索 `7-zip`，右键首项固定。日志 `[dock] 建立副屏独立布局 \\.\DISPLAY2 n=8`、`[apps] 右键固定 ...7-Zip File Manager.lnk n=1`。
+- 隔离：`shell.json` 共享 `dockItems=8`，`dockProfiles[0] screen=\\.\DISPLAY2 items=9`，tail `7-Zip File Manager`；主屏项数未变。
+- 几何：副屏 Dock `-1593,1442..-968,1542`（625×100，收起态），主屏 Dock `992,1442..1568,1542`（576×100）；副屏唤出后第 9 槽 hover 标签为 `7-Zip File Manager`。
+- 持久化：重启后 profile 仍 1 个、DISPLAY2 仍 9 项，副屏 Dock 仍 625 宽，主屏仍 576。
+- 开关：设置 Dock 页 toggle 关闭，`dockPerScreen=false`、profiles=0，日志 `[dock] 每屏独立布局=False profiles=0`，两块 Dock 都回 8 项；再开启为 `True profiles=0`。
+- 截图：`docs/screens/v8/dock-secondary-profile.png`、`settings-dock-per-screen.png`。
+- 测试后恢复 `shell-before-profile.json`（`displayMode=primary`、8 项、0 profiles）并重启。
+- 未验证：双屏不同 DPI、真实拔插/改分辨率、显示器改名/主副互换后的 profile 归属；7-Zip 图标在 Dock 内偏小，另记。
+
 ## v2.0 Phase 7 副屏任务栏与跨屏玻璃（2026-11-27，Issue #80 / PR #81）
 
 - 环境：Windows 11 25H2，DISPLAY1 `0,0 2560×1440` 主屏、DISPLAY2 `-2560,0 2560×1440` 副屏，均 100% DPI；两块任务栏均开自动隐藏。

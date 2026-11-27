@@ -2,6 +2,30 @@
 
 遵循 Keep a Changelog；版本遵循 SemVer。
 
+## [Unreleased · v2.0 Phase 7 每屏独立 Dock 图标布局]
+
+### 新增
+
+- 设置 Dock 页新增“每屏独立布局”开关，配置字段 `dockPerScreen`
+- `dockProfiles[]` 按 `Screen.DeviceName` 保存副屏 Dock 图标列表；副屏第一次排序/移除/固定时从共享 `dockItems` 深拷贝
+- Dock 拖入、右键移除、拖拽排序与 Hub 右键固定都落到操作所在屏
+
+### 修复
+
+- Hub 右键固定后 Dock 不重排：`PinPaths` 成功后立即 `RelayoutDocks()`，宽度与槽位即时更新
+
+### 验证
+
+- `bin\Liuli.exe` 332 KB；C#5 无新增 error
+- 副屏 Hub 固定 7-Zip：共享 `dockItems=8`、`DISPLAY2` profile `items=9`；副屏 Dock `576→625`（`-1593,1442..-968,1542`），主屏保持 `992,1442..1568,1542`
+- 重启后 profile 仍 9 项，副屏 Dock 仍 625 宽；关闭开关 profiles=0，两块 Dock 立即回 8 项
+- 截图 `dock-secondary-profile.png`、`settings-dock-per-screen.png`
+
+### 未验证
+
+- 双屏不同 DPI、真实拔插/改分辨率、显示器改名或主副互换后 profile 归属
+- 新固定 7-Zip 的 Dock 图标偏小，属 `.lnk` 源图标尺寸问题，未在本项处理
+
 ## [Unreleased · v2.0 Phase 7 副屏任务栏与跨屏玻璃]
 
 ### 新增
