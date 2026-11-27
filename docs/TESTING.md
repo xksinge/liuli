@@ -1,5 +1,16 @@
 ﻿# 测试记录
 
+## v2.0 Phase 7 灵动岛 SMTC 媒体显示与控制（2026-11-27，Issue #95 / PR #96）
+
+- 环境：Windows 11 25H2，DISPLAY1 2560×1440，100% DPI，`islandMedia=true`，任务栏自动隐藏。
+- 构建：`bin\Liuli.exe` 348.5 KB；新增 WinRT 引用后 C#5 无 error，仅历史 warning 与 `Media.cs` 三处 CS4014（fire-and-forget 控制调用）。
+- 无媒体：展开窗 `1078,6..1482,142`（404×136），媒体行隐藏，既有天气/统计/快捷动作不位移。
+- 模拟会话：用 `Windows.Media.Playback.MediaPlayer` 循环播放本地 8s WAV，SMTC 探针显示 `media-player.exe`；Liuli 展开窗变为 `1078,6..1482,182`（404×176），多出 40px 媒体行。
+- 媒体行：标题 `media-player`、进度条、右侧上一首/播放暂停/下一首；点中间按钮图标由 Pause 变 Play，播放状态由 SMTC `PlaybackStatus` 同步；点左右按钮不崩。
+- 无歌手时不再重复显示应用名。
+- 截图：`docs/screens/v8/island-media.png`、`docs/screens/v8/settings-island-media.png`。
+- 未验证：Spotify / 浏览器 / 网易云真实会话的标题+歌手、会话切换 1s 内、125%/150% DPI、Win10 1903 无 SMTC API 时的隐藏与日志。
+
 ## v2.0 Phase 7 Dock 距底部、自由拖动/锁定、收纳跟随与面板锁定（2026-11-27，Issue #93 / PR #94）
 
 - 环境：Windows 11 25H2，DISPLAY1 主屏 2560×1440，100% DPI，任务栏自动隐藏，`dockAutoHide=false`、`collectorOn=true`。

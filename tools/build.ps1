@@ -30,8 +30,12 @@ $args = @(
     '/nologo', '/target:winexe', '/optimize+', '/platform:anycpu', '/utf8output',
     "/out:$bin\Liuli.exe",
     '/r:System.dll', '/r:System.Drawing.dll', '/r:System.Windows.Forms.dll',
-    '/r:System.IO.Compression.dll', '/r:System.IO.Compression.FileSystem.dll', '/r:System.Management.dll'
+    '/r:System.IO.Compression.dll', '/r:System.IO.Compression.FileSystem.dll', '/r:System.Management.dll',
+    '/r:System.Runtime.dll', '/r:System.Runtime.WindowsRuntime.dll'
 ) + $list
+# WinRT 投影：SMTC（Windows.Media.Control）需要引用系统 WinMetadata。
+$winmd = Get-ChildItem 'C:\Windows\System32\WinMetadata' -Filter *.winmd -ErrorAction SilentlyContinue
+foreach ($m in $winmd) { $args += ('/r:' + $m.FullName) }
 $sw = [Diagnostics.Stopwatch]::StartNew()
 & $csc @args
 $code = $LASTEXITCODE

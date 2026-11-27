@@ -200,6 +200,7 @@ namespace Liuli
             bootAt = Environment.TickCount;
             Config = ShellConfig.Load();
             Theme.TextScale = Theme.TextScaleOf(Config.TextSize);
+            try { MediaService.Start(); } catch (Exception ex) { Log.Warn("media", "启动失败 " + ex.Message); }
             AutoStart.Apply(Config.AutoStart);
             Theme.BlurPct = Util.Clamp(Config.BlurPct, 10, 100);
             Theme.GlassPct = Util.Clamp(Config.GlassPct, 20, 140);
@@ -1337,6 +1338,15 @@ namespace Liuli
             RelayoutDocks();
             Toast(on ? "已开启每屏独立 Dock 布局" : "已恢复共享 Dock 布局，各屏布局仍保留");
             Log.Info("dock", "每屏独立布局=" + on + " profiles=" + Config.DockProfiles.Count + " kept=1");
+        }
+
+        public static void NotifyMediaChanged()
+        {
+            if (Host == null || !Host.IsHandleCreated) return;
+            UI(delegate
+            {
+                if (Island != null && Island.Visible) Island.RefreshMedia();
+            });
         }
 
         // ---------- 生命周期 / 工具 ----------
