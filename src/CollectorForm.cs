@@ -102,7 +102,7 @@ namespace Liuli
             Render();
         }
 
-        /// <summary>从 Dock 打开时，把收纳面板居中贴到该屏 Dock 上方；不改保存坐标。</summary>
+        /// <summary>从 Dock 打开时，把收纳面板居中贴到该屏 Dock 上方，并把该位置写回配置。</summary>
         public void AnchorToDock(Screen target)
         {
             if (!IsHandleCreated || target == null) return;
@@ -118,6 +118,7 @@ namespace Liuli
             ClientSize = new Size(w, h);
             Location = new Point(left, top);
             EnsureCanvas();
+            SaveBounds();
         }
 
         public void ApplyTextScale()

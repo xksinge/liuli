@@ -198,7 +198,13 @@
   - DPI：`V2Window` 处理 `WM_DPICHANGED`，120ms 合并后全局重排 Dock、灵动岛、收纳、Hub、设置和面板；收纳尺寸/保存改用 `UiScale`（DPI × 文字倍率），修复 125% → 150% → 100% 后尺寸漂移。
   - 验证：构建 `bin\Liuli.exe` 336 KB；主屏 Dock 4 按钮 617 宽，点收纳后窗口 `958,846..1602,1300`、底边距 Dock 8px；`all` 模式下点副屏收纳日志 `screen=\\.\DISPLAY2`，窗口移到 `-1602,846..-958,1300`；任务栏开关 hide `n=2 any=False`、恢复 `n=2 any=True`；残留 `taskbarFullHide=true` 启动日志 `W 上次完全隐藏未正常恢复` 且配置复位；截图 `dock-collector-button.png`、`collector-on-secondary-dock.png`、`settings-taskbar-full-hide.png`、`taskbar-full-hide-dock.png`。
   - 未验证：真机 125% / 150% / 100% 往返后的尺寸恢复（当前代码已处理 `WM_DPICHANGED`，需用户复测）；主副屏互换/双屏变单屏后的 profile 归属。
-- [x] **TASK-070** [REQ-093–096] 多屏模式完整：每屏 Dock 定位、副屏任务栏避让、跨屏玻璃、每屏独立 Dock 图标布局、收纳入口与任务栏完全隐藏（070a/070b/070c/070d/070e 均已完成）
+- [x] **TASK-070f** [REQ-097] Dock 收纳按钮切换、点外部收起与位置保持（Issue #89 / PR #90）
+  - 切换：`ToggleCollectorFromDock` 在收纳可见时直接 `HideCollector`，隐藏时才打开并锚定；点 Dock 按钮不会被外部点击判定提前收起。收起同时写 `collectorOn=false`，重启不自动弹回。
+  - 外部点击：Dock 55ms 定时器检测左键按下上升沿，`CloseCollectorIfOutside` 排除收纳窗口与 Dock 收纳按钮矩形；点桌面/其它窗口收起，点收纳内部不收起。
+  - 位置：启动、DPI 重排、设置开启不再强制重锚；从 Dock 打开时把锚定位置 `SaveBounds` 写回 `CollectorX/Y`，之后沿用，尊重用户拖动后的位置。
+  - 验证：构建 `bin\Liuli.exe` 336.5 KB；收纳可见时点 Dock 按钮日志 `收纳已收起`、窗口 `vis=False`、`collectorOn=false`；再点打开 `958,846..1602,1300`，`CollectorX/Y=970/858`，`collectorOn=true`；点桌面 `1000,500` 日志 `收纳已收起`；点收纳内部不收起；`displayMode=all` 下点副屏 Dock 按钮日志 `screen=\\.\DISPLAY2`、窗口 `-1602,846..-958,1300`，再点收起；把 `CollectorX/Y` 改为 `1625/735` 后启动窗口 `1613,723..2257,1177`，不再强制回 Dock 上方；截图 `collector-toggle-anchored.png`。
+  - 未验证：125%/150% DPI 下外部点击与位置保持。
+- [x] **TASK-070** [REQ-093–097] 多屏模式完整：每屏 Dock 定位、副屏任务栏避让、跨屏玻璃、每屏独立 Dock 图标布局、收纳入口与任务栏完全隐藏、收纳按钮切换与外部点击收起（070a/070b/070c/070d/070e/070f 均已完成）
 - [x] **TASK-071** [REQ-070/071] 应用面板、控制中心（Issue #78 / PR #79，已合入 `1c19d51`）
   - 实现：新增 `Apps.cs` 扫描用户/公共开始菜单 `.lnk`（递归 ≤3 层、最多 500 项，过滤卸载/帮助/readme/网站/Startup，名称去重排序，缓存 5 分钟）；新增 `ControlCenter.cs` 读 Core Audio 音量/静音、`NetworkInterface` 网络、`bthprops.cpl` 蓝牙、WMI 亮度，接口失败只记一次日志并隐藏对应卡片。
   - Hub：`HubForm` 为 620×460 玻璃面板，两个页签“应用 / 控制中心”；应用页 4×4 网格、16 项/页、搜索、分页、左键启动、右键固定、拖到 Dock 固定；控制页音量点击静音/滚轮 4% 步进、网络/蓝牙打开设置、亮度循环 25/50/75/100；仅控制页可见时 2 秒采样。

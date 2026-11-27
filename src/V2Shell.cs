@@ -237,7 +237,6 @@ namespace Liuli
             {
                 Collector = new CollectorForm();
                 Collector.Show();
-                Collector.AnchorToDock(CollectorHomeScreen());
             }
 
             statsTimer = new Timer();
@@ -406,7 +405,6 @@ namespace Liuli
             {
                 if (Collector == null) { Collector = new CollectorForm(); Collector.Show(); }
                 else { Collector.Show(); Collector.ApplyBounds(); }
-                Collector.AnchorToDock(CollectorHomeScreen());
             }
         }
 
@@ -755,10 +753,45 @@ namespace Liuli
             Log.Info("taskbar", "完全隐藏=" + on + " n=" + n + " any=" + Taskbar.AnyVisible());
         }
 
-        static Screen CollectorHomeScreen()
+        public static bool CollectorVisible()
         {
-            if (Config == null || Config.CollectorX < 0 || Config.CollectorY < 0) return Screen.PrimaryScreen;
-            return Screen.FromPoint(new Point(Config.CollectorX, Config.CollectorY));
+            return Collector != null && !Collector.IsDisposed && Collector.Visible;
+        }
+
+        public static void HideCollector()
+        {
+            if (!CollectorVisible()) return;
+            if (Config != null && Config.CollectorOn)
+            {
+                Config.CollectorOn = false;
+                Config.Save();
+            }
+            Collector.Hide();
+            Log.Info("collector", "收纳已收起");
+        }
+
+        /// <summary>点桌面/其它窗口时收起收纳；点 Dock 的收纳按钮本身不在这里处理，交给按钮切换。</summary>
+        public static void CloseCollectorIfOutside(Point screenPoint)
+        {
+            if (!CollectorVisible()) return;
+            if (Collector.Bounds.Contains(screenPoint)) return;
+            foreach (DockForm d in LiveDocks())
+            {
+                if (!d.Visible) continue;
+                Rectangle r = d.CollectorButtonScreenRect();
+                if (!r.IsEmpty && r.Contains(screenPoint)) return;
+            }
+            HideCollector();
+        }
+
+        public static void ToggleCollectorFromDock(Screen screen)
+        {
+            if (CollectorVisible())
+            {
+                HideCollector();
+                return;
+            }
+            OpenCollectorFromDock(screen);
         }
 
         public static void ToggleCollector()
@@ -777,7 +810,6 @@ namespace Liuli
             {
                 if (Collector == null) { Collector = new CollectorForm(); Collector.Show(); }
                 else { Collector.Show(); Collector.ApplyBounds(); }
-                Collector.AnchorToDock(CollectorHomeScreen());
                 if (allHidden && Collector != null) Collector.Hide();
                 CollectorState.Sync(true);
                 if (Collector != null) Collector.Render();
