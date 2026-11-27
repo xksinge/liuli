@@ -1,5 +1,15 @@
 ﻿# 测试记录
 
+## v2.0 Phase 7 Dock 常驻与位置设置（2026-11-27，Issue #91 / PR #92）
+
+- 环境：Windows 11 25H2，DISPLAY1 主屏 2560×1440，100% DPI，任务栏自动隐藏，`dockAutoHide=false`。
+- 构建：`bin\Liuli.exe` 338 KB；C#5 无新增 error，仅历史 warning。
+- 位置：设置 Dock 页“Dock 位置”三档；居中窗口 `971,1344..1588,1444`，靠左 `8,1344..625,1444`，靠右 `1935,1344..2552,1444`；点击“靠左”后 `shell.json` 中 `dockAlign=left`，Dock 即时移动。
+- 常驻：关闭自动隐藏后 Dock 始终显示；鼠标在任务栏附近不再触底唤出/离开收起。
+- 防闪：任务栏露出/缩回加 300ms 稳定判断；任务栏在 Dock 横向范围外露出时不强行拉起 Dock。
+- 截图：`docs/screens/v8/settings-dock-position.png`。
+- 未验证：125%/150% DPI 下的位置与截图比例。
+
 ## v2.0 Phase 7 Dock 收纳按钮切换与外部点击收起（2026-11-27，Issue #89 / PR #90）
 
 - 环境：Windows 11 25H2，DISPLAY1 主屏、DISPLAY2 副屏，100% DPI；先 `displayMode=all` 验证副屏 Dock，再恢复 `displayMode=primary`；`dockAutoHide=true` 复测切换和外部点击。

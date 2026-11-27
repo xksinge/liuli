@@ -58,6 +58,7 @@ namespace Liuli
         public bool DockOn = true;
         public bool DockAutoHide = false;
         public string DockPreset = "standard";
+        public string DockAlign = "center";      // left / center / right
         public bool IslandOn = true;
         public bool IslandWeather = true;
         public bool IslandStats = true;
@@ -102,6 +103,7 @@ namespace Liuli
             t.DockOn = c.DockOn;
             t.DockAutoHide = c.DockAutoHide;
             t.DockPreset = c.DockPreset;
+            t.DockAlign = c.DockAlign;
             t.IslandOn = c.IslandOn;
             t.IslandWeather = c.IslandWeather;
             t.IslandStats = c.IslandStats;
@@ -146,6 +148,7 @@ namespace Liuli
             c.DockOn = DockOn;
             c.DockAutoHide = DockAutoHide;
             c.DockPreset = DockPreset;
+            c.DockAlign = DockAlign;
             c.IslandOn = IslandOn;
             c.IslandWeather = IslandWeather;
             c.IslandStats = IslandStats;
@@ -301,6 +304,7 @@ namespace Liuli
         public bool DockOn = true;
         public bool DockAutoHide = false;
         public string DockPreset = "standard";   // small / standard / large
+        public string DockAlign = "center";      // left / center / right
         public bool IslandOn = true;
         public bool IslandWeather = true;
         public bool IslandStats = true;
@@ -386,6 +390,7 @@ namespace Liuli
                 string preset = Json.Str(root, "dockPreset", "standard");
                 c.DockPreset = (string.Equals(preset, "small", StringComparison.OrdinalIgnoreCase) ||
                     string.Equals(preset, "large", StringComparison.OrdinalIgnoreCase)) ? preset.ToLowerInvariant() : "standard";
+                c.DockAlign = NormalizeDockAlign(Json.Str(root, "dockAlign", "center"));
                 c.IslandOn = Json.Bool(root, "islandOn", true);
                 c.IslandWeather = Json.Bool(root, "islandWeather", true);
                 c.IslandStats = Json.Bool(root, "islandStats", true);
@@ -629,6 +634,7 @@ namespace Liuli
                 root["dockOn"] = DockOn;
                 root["dockAutoHide"] = DockAutoHide;
                 root["dockPreset"] = DockPreset;
+                root["dockAlign"] = DockAlign;
                 root["islandOn"] = IslandOn;
                 root["islandWeather"] = IslandWeather;
                 root["islandStats"] = IslandStats;
@@ -731,6 +737,7 @@ namespace Liuli
             d["dockOn"] = t.DockOn;
             d["dockAutoHide"] = t.DockAutoHide;
             d["dockPreset"] = t.DockPreset;
+            d["dockAlign"] = t.DockAlign;
             d["islandOn"] = t.IslandOn;
             d["islandWeather"] = t.IslandWeather;
             d["islandStats"] = t.IslandStats;
@@ -779,6 +786,7 @@ namespace Liuli
             t.DockOn = Json.Bool(d, "dockOn", true);
             t.DockAutoHide = Json.Bool(d, "dockAutoHide", false);
             t.DockPreset = Json.Str(d, "dockPreset", "standard");
+            t.DockAlign = Json.Str(d, "dockAlign", "center");
             t.IslandOn = Json.Bool(d, "islandOn", true);
             t.IslandWeather = Json.Bool(d, "islandWeather", true);
             t.IslandStats = Json.Bool(d, "islandStats", true);
@@ -854,6 +862,7 @@ namespace Liuli
                     !string.Equals(t.DockPreset, "large", StringComparison.OrdinalIgnoreCase))
                     t.DockPreset = "standard";
                 else t.DockPreset = t.DockPreset.ToLowerInvariant();
+                t.DockAlign = NormalizeDockAlign(t.DockAlign);
                 for (int j = 0; j < t.Panels.Count; j++)
                 {
                     PanelConfig p = t.Panels[j];
@@ -984,6 +993,13 @@ namespace Liuli
             string v = (s == null ? "" : s.Trim().ToLowerInvariant());
             if (v == "preset" || v == "custom") return v;
             return "auto";
+        }
+
+        public static string NormalizeDockAlign(string s)
+        {
+            string v = (s == null ? "" : s.Trim().ToLowerInvariant());
+            if (v == "left" || v == "right") return v;
+            return "center";
         }
 
         public static string NormalizeHexColor(string s, string fallback)

@@ -333,6 +333,21 @@ namespace Liuli
                 delegate { return V2Shell.Config.DockAutoHide ? 1 : 0; },
                 delegate (int v) { V2Shell.SetDockAutoHide(v == 1); });
             y += Util.RoundI(76 * S);
+            AddSeg("Dock 位置", "固定在任务栏上方，可选靠左、居中、靠右", "dockAlign", x, y, w, new string[] { "靠左", "居中", "靠右" },
+                delegate
+                {
+                    string a = ShellConfig.NormalizeDockAlign(V2Shell.Config.DockAlign);
+                    if (a == "left") return 0;
+                    if (a == "right") return 2;
+                    return 1;
+                },
+                delegate (int v)
+                {
+                    V2Shell.SetDockAlign(v == 0 ? "left" : (v == 2 ? "right" : "center"));
+                    BuildPage(3);
+                    Invalidate();
+                });
+            y += Util.RoundI(92 * S);
             AddSeg("Dock 尺寸", "整体缩放，小 / 标准 / 大", "dockPreset", x, y, w, new string[] { "小", "标准", "大" },
                 delegate
                 {
