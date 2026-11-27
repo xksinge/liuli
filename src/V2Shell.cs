@@ -983,17 +983,75 @@ namespace Liuli
         public static void ResetDock()
         {
             Config.DockItems = ShellConfig.DefaultDock();
+            Config.DockProfiles.Clear();
             Config.Save();
             if (Dock == null && Config.DockOn) { Dock = new DockForm(); Dock.Show(); OpenExtraDocks(); }
             else if (Dock != null) { Dock.RelayoutPublic(); OpenExtraDocks(); }
             Toast("Dock 已恢复默认组合");
         }
 
+        public static string DockScreenKey(Screen screen)
+        {
+            if (screen == null) return "";
+            return screen.DeviceName == null ? "" : screen.DeviceName;
+        }
+
+        static DockProfile FindDockProfile(string key)
+        {
+            if (Config == null || key.Length == 0) return null;
+            for (int i = 0; i < Config.DockProfiles.Count; i++)
+                if (Config.DockProfiles[i] != null && string.Equals(Config.DockProfiles[i].Screen, key, StringComparison.OrdinalIgnoreCase))
+                    return Config.DockProfiles[i];
+            return null;
+        }
+
+        static DockItem CloneDockItem(DockItem it)
+        {
+            if (it == null) return null;
+            DockItem copy = new DockItem();
+            copy.Kind = it.Kind;
+            copy.Id = it.Id;
+            copy.Path = it.Path;
+            copy.Label = it.Label;
+            return copy;
+        }
+
+        /// <summary>该屏当前使用的 Dock 列表：关闭“每屏独立”时全部共享 dockItems；主屏始终用共享列表。</summary>
+        public static List<DockItem> DockItemsFor(Screen screen)
+        {
+            if (Config == null) return new List<DockItem>();
+            if (!Config.DockPerScreen || screen == null || screen.Primary) return Config.DockItems;
+            DockProfile p = FindDockProfile(DockScreenKey(screen));
+            return p == null ? Config.DockItems : p.Items;
+        }
+
+        /// <summary>第一次在副屏排序/移除/固定时，把共享列表深拷贝成该屏的独立布局。</summary>
+        static List<DockItem> EnsureDockItems(Screen screen)
+        {
+            if (Config == null) return new List<DockItem>();
+            if (!Config.DockPerScreen || screen == null || screen.Primary) return Config.DockItems;
+            string key = DockScreenKey(screen);
+            DockProfile p = FindDockProfile(key);
+            if (p != null) return p.Items;
+            p = new DockProfile();
+            p.Screen = key;
+            for (int i = 0; i < Config.DockItems.Count; i++) p.Items.Add(CloneDockItem(Config.DockItems[i]));
+            Config.DockProfiles.Add(p);
+            Log.Info("dock", "建立副屏独立布局 " + key + " n=" + p.Items.Count);
+            return p.Items;
+        }
+
         public static int PinPaths(string[] files)
         {
+            return PinPaths(files, Screen.PrimaryScreen);
+        }
+
+        public static int PinPaths(string[] files, Screen screen)
+        {
             if (files == null || Config == null) return 0;
+            List<DockItem> target = EnsureDockItems(screen);
             int added = 0;
-            for (int i = 0; i < files.Length && Config.DockItems.Count < 16; i++)
+            for (int i = 0; i < files.Length && target.Count < 16; i++)
             {
                 string p = files[i];
                 if (p == null || p.Trim().Length == 0) continue;
@@ -1007,13 +1065,14 @@ namespace Liuli
                 item.Path = p;
                 item.Label = SafeLabel(p);
                 bool has = false;
-                for (int k = 0; k < Config.DockItems.Count; k++)
-                    if (Config.DockItems[k].SameAs(item)) { has = true; break; }
+                for (int k = 0; k < target.Count; k++)
+                    if (target[k].SameAs(item)) { has = true; break; }
                 if (has) continue;
-                Config.DockItems.Add(item);
+                target.Add(item);
                 added++;
             }
             if (added > 0) Config.Save();
+            if (added > 0) RelayoutDocks();
             return added;
         }
 
@@ -1030,8 +1089,15 @@ namespace Liuli
 
         public static void RemoveDockItem(int index)
         {
-            if (Config == null || index < 0 || index >= Config.DockItems.Count) return;
-            Config.DockItems.RemoveAt(index);
+            RemoveDockItem(index, Screen.PrimaryScreen);
+        }
+
+        public static void RemoveDockItem(int index, Screen screen)
+        {
+            if (Config == null) return;
+            List<DockItem> items = EnsureDockItems(screen);
+            if (index < 0 || index >= items.Count) return;
+            items.RemoveAt(index);
             Config.Save();
             Toast("已从 Dock 移除");
             RelayoutDocks();
@@ -1039,17 +1105,35 @@ namespace Liuli
 
         public static int MoveDockItem(int from, int before)
         {
-            if (Config == null || from < 0 || from >= Config.DockItems.Count) return 0;
+            return MoveDockItem(from, before, Screen.PrimaryScreen);
+        }
+
+        public static int MoveDockItem(int from, int before, Screen screen)
+        {
+            if (Config == null) return 0;
+            List<DockItem> items = EnsureDockItems(screen);
+            if (from < 0 || from >= items.Count) return 0;
             if (before < 0) before = 0;
-            if (before > Config.DockItems.Count) before = Config.DockItems.Count;
+            if (before > items.Count) before = items.Count;
             int target = before;
             if (target > from) target--;
             if (target == from) return 0;
-            DockItem item = Config.DockItems[from];
-            Config.DockItems.RemoveAt(from);
-            Config.DockItems.Insert(target, item);
+            DockItem item = items[from];
+            items.RemoveAt(from);
+            items.Insert(target, item);
             Config.Save();
             return 1;
+        }
+
+        public static void SetDockPerScreen(bool on)
+        {
+            if (Config == null) return;
+            Config.DockPerScreen = on;
+            if (!on) Config.DockProfiles.Clear();
+            Config.Save();
+            RelayoutDocks();
+            Toast(on ? "已开启每屏独立 Dock 布局" : "已恢复共享 Dock 布局");
+            Log.Info("dock", "每屏独立布局=" + on + " profiles=" + Config.DockProfiles.Count);
         }
 
         // ---------- 生命周期 / 工具 ----------

@@ -360,7 +360,16 @@ namespace Liuli
                     Invalidate();
                 });
             y += Util.RoundI(92 * S);
-            AddInfo("图标管理", "Dock 图标的拖动排序、移除和文件固定仍在 Dock 上操作；本页只调显示参数。", x, y, w);
+            AddToggle("每屏独立布局", "所有屏模式下，副屏第一次排序/移除/固定时复制共享布局并独立保存；关闭后全部回到共享列表", "dockPerScreen", x, y, w,
+                delegate { return V2Shell.Config.DockPerScreen ? 1 : 0; },
+                delegate (int v)
+                {
+                    V2Shell.SetDockPerScreen(v == 1);
+                    BuildPage(3);
+                    Invalidate();
+                });
+            y += Util.RoundI(58 * S);
+            AddInfo("图标管理", "Dock 图标的拖动排序、移除和文件固定仍在 Dock 上操作；开启每屏独立后，操作只改当前屏。", x, y, w);
         }
 
         void BuildIslandPage()

@@ -95,7 +95,7 @@ namespace Liuli
         List<DockItem> Items()
         {
             if (V2Shell.Config == null) return new List<DockItem>();
-            return V2Shell.Config.DockItems;
+            return V2Shell.DockItemsFor(targetScreen);
         }
 
         float PresetScale()
@@ -373,7 +373,7 @@ namespace Liuli
         void OnDrop(string[] files)
         {
             if (files == null || files.Length == 0) return;
-            int added = V2Shell.PinPaths(files);
+            int added = V2Shell.PinPaths(files, targetScreen);
             if (added > 0)
             {
                 V2Shell.Toast("已固定 " + added + " 项到 Dock");
@@ -653,7 +653,7 @@ namespace Liuli
                     if (!itemRects[i].Contains(e.Location)) continue;
                     int idx = i;
                     List<MenuForm.Item> menu = new List<MenuForm.Item>();
-                    menu.Add(new MenuForm.Item("从 Dock 移除", delegate { V2Shell.RemoveDockItem(idx); Relayout(); }, Glyph.Close, true));
+                    menu.Add(new MenuForm.Item("从 Dock 移除", delegate { V2Shell.RemoveDockItem(idx, targetScreen); Relayout(); }, Glyph.Close, true));
                     new MenuForm(menu, new Size(Util.RoundI(160 * UiScale), Util.RoundI(8 * UiScale))).ShowAt(PointToScreen(e.Location));
                     return;
                 }
@@ -690,7 +690,7 @@ namespace Liuli
                 dragTo = -1;
                 pressedItem = -1;
                 pressedBtn = -1;
-                if (from >= 0 && to >= 0 && V2Shell.MoveDockItem(from, to) > 0) Relayout();
+                if (from >= 0 && to >= 0 && V2Shell.MoveDockItem(from, to, targetScreen) > 0) Relayout();
                 Render();
                 return;
             }
