@@ -173,7 +173,12 @@
   - 越界收回：`PanelForm.ApplyBounds` / `CollectorForm.ApplyBounds` 改为 `Screen.FromPoint` 取窗口所在屏工作区，先夹左上再夹右下。
   - 验证：构建 `bin\Liuli.exe` 306.5 KB；本机 `AllScreens` 实为 2 屏（DISPLAY1 `0,0 2560×1440`、DISPLAY2 `-2560,0 2560×1440`）。`all` 后日志 `screens=2 extraDocks=1`，副屏 Dock 落在 DISPLAY2 底部居中，主屏 Dock 同时隐藏；鼠标只在主屏底部时主屏 Dock `y=1296`、副屏 `y=1444`，只在副屏底部时副屏 `y=1344`、主屏 `y=1442`。发送 `WM_DISPLAYCHANGE` 后日志 `reflow screens=2 extraDocks=1`，进程不崩、副屏 Dock 重建一套；切回“仅主屏”后副屏 Dock 关闭，截图 `settings-dock-multiscreen-primary.png`、`settings-dock-multiscreen-all.png`、`dock-two-screens.png`。
   - 未验证：真实拔插显示器 / 改分辨率（当前用 `WM_DISPLAYCHANGE` 消息模拟）；副屏任务栏自动隐藏与多实例（`Shell_SecondaryTrayWnd`）；双屏不同 DPI；跨屏玻璃切片；每屏独立布局。
-- [ ] **TASK-070** [REQ-093–096] 多屏模式完整：副屏任务栏多实例、跨屏玻璃、每屏布局（P1）
+- [x] **TASK-070b** [REQ-095/096] 副屏任务栏感知与跨屏玻璃连续（Issue #80 / PR #81，待合入）
+  - 实现：`Taskbar.Handles()` 枚举 `Shell_TrayWnd` + 全部 `Shell_SecondaryTrayWnd`，`Visible/VisibleHeight/Revealed` 增加 `Screen` 重载；`HideAll/ShowAll` 遍历全部实例。`DockForm` 保存 `targetScreen`，按本屏任务栏露出状态上移。多屏 `Wallpaper.Render` 强制 `DrawSpan` 连续虚拟屏，`Backdrop` 日志 `span=1 screens=2`。
+  - 诊断：`--selftest` 输出屏幕/虚拟屏/任务栏实例；新增 `--taskbar-cycle` 隐藏并恢复全部任务栏。
+  - 验证：构建 `bin\Liuli.exe` 329.5 KB；副屏任务栏 `-2560,1392..1440` 时副屏 Dock `-1568,1296..-992,1396`、主屏 Dock 1444 收起；反向主屏任务栏露出时主屏 Dock 1296、副屏 Dock 1444；`--taskbar-cycle` hide/show 均 `n=2`，两屏可见状态 False→True；跨屏面板拼接截图 `panel-seam.png` 无缝。
+  - 未验证：双屏不同 DPI、真实拔插/改分辨率、任务栏左/右边缘、Explorer 重启后副任务栏重建。
+- [ ] **TASK-070** [REQ-093–096] 多屏模式完整：每屏自定义布局（P1；070a/070b 已完成，余 TASK-070c）
 - [x] **TASK-071** [REQ-070/071] 应用面板、控制中心（Issue #78 / PR #79，已合入 `1c19d51`）
   - 实现：新增 `Apps.cs` 扫描用户/公共开始菜单 `.lnk`（递归 ≤3 层、最多 500 项，过滤卸载/帮助/readme/网站/Startup，名称去重排序，缓存 5 分钟）；新增 `ControlCenter.cs` 读 Core Audio 音量/静音、`NetworkInterface` 网络、`bthprops.cpl` 蓝牙、WMI 亮度，接口失败只记一次日志并隐藏对应卡片。
   - Hub：`HubForm` 为 620×460 玻璃面板，两个页签“应用 / 控制中心”；应用页 4×4 网格、16 项/页、搜索、分页、左键启动、右键固定、拖到 Dock 固定；控制页音量点击静音/滚轮 4% 步进、网络/蓝牙打开设置、亮度循环 25/50/75/100；仅控制页可见时 2 秒采样。

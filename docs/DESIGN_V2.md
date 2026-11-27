@@ -261,11 +261,13 @@ M1 实际命名：`V2Shell`、`ShellConfig`、`V2Window`、`DockForm`、`IslandF
 ## 10. 屏幕
 
 - `ShellConfig.DisplayMode` 默认 `primary`，可切 `all`；设置在 Dock 页“多屏模式：仅主屏 / 所有屏”。
-- 每个 `DockForm` 绑定一个 `Screen`：`screenBounds`、`workArea`、`primaryScreen` 在构造/`SetScreen` 时固定，底部基准、隐藏偏移、热区判定都用本屏坐标。主屏 Dock 仍由 `V2Shell.Dock` 持有，副屏放 `ExtraDocks`，图标配置共享；灵动岛固定在主屏。
-- 主屏 Dock 才避让主任务栏（`Shell_TrayWnd`）；副屏任务栏暂不避让。自动隐藏时只有本屏底部热区能唤出本屏 Dock，避免跨屏同时弹出。
-- 热插拔/分辨率变化：`V2Host` 收到 `WM_DISPLAYCHANGE` 后 `OnDisplayChanged()`，关闭并重建副屏 Dock，重排主 Dock、灵动岛、面板、收纳与设置；不用 `SystemEvents` 额外挂一遍，避免双触发。
+- 每个 `DockForm` 绑定一个 `Screen`：构造/`SetScreen` 时保存 `targetScreen`、`screenBounds`、`workArea`；底部基准、隐藏偏移、热区判定都用本屏坐标。主屏 Dock 仍由 `V2Shell.Dock` 持有，副屏放 `ExtraDocks`，图标配置共享；灵动岛固定在主屏。
+- `Taskbar.Handles()` 每次重新枚举顶层 `Shell_TrayWnd` + `Shell_SecondaryTrayWnd`，`HandleFor(Screen)` 按窗口中心落在哪块屏匹配；`Revealed/VisibleHeight` 按本屏判定。每块 Dock 只避让本屏任务栏：自动隐藏且本屏任务栏滑出时上移一个任务栏高度，主屏与副屏互不影响。
+- `Taskbar.HideAll/ShowAll` 遍历全部任务栏实例，供完全隐藏与退出恢复使用；`--taskbar-cycle` 是无界面诊断入口，会隐藏约 500ms 后恢复并打印每屏可见状态。光标停在屏幕边缘时 Explorer 会自动把任务栏弹回，诊断需先把光标移离边缘。
+- 热插拔/分辨率变化：`V2Host` 收到 `WM_DISPLAYCHANGE` 后 `OnDisplayChanged()`，关闭并重建副屏 Dock，重排主 Dock、灵动岛、面板、收纳与设置；不用 `SystemEvents` 额外挂一遍，避免双触发。重排日志带 `taskbars=` 实例 rect。
 - 面板/收纳按窗口左上角 `Screen.FromPoint` 取所在屏工作区，先夹左/上、再夹右/下，实现跨屏或缩屏后的越界收回。
-- 坐标使用虚拟屏物理坐标；跨屏玻璃切片与每屏独立布局仍留 P1。
+- 玻璃底始终按 `SystemInformation.VirtualScreen` 物理坐标建一张磨砂图，`Backdrop.Draw` 用窗口屏幕矩形切片；多屏时 `Wallpaper.Render` 强制 `DrawSpan`，保证跨屏纹理连续，单屏仍按系统“填充/居中/平铺”样式。`wall` 日志记录 `span=1/0 screens=N`。
+- 坐标使用虚拟屏物理坐标；每屏自定义 Dock 图标布局/面板位置仍留 TASK-070c。
 
 ## 11. 迁移与回滚
 
