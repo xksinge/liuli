@@ -871,6 +871,15 @@ namespace Liuli
             RelayoutDocks();
         }
 
+        public static void SetDockAlign(string align)
+        {
+            if (Config == null) return;
+            MarkThemeDirty();
+            Config.DockAlign = ShellConfig.NormalizeDockAlign(align);
+            Config.Save();
+            RelayoutDocks();
+        }
+
         public static void ApplyIslandSettings()
         {
             if (Config == null) return;
