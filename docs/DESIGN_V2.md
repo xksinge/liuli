@@ -234,6 +234,15 @@ M1 实际命名：`V2Shell`、`ShellConfig`、`V2Window`、`DockForm`、`IslandF
 - 设置标题栏放四枚胶囊，`V2Shell.SetTextSize` 改配置并立即调用 Dock/灵动岛/面板/收纳/设置的 `ApplyTextScale`；切换后 Toast，日志记 `textsize`。
 - 限制：这是整体 UI 缩放，不是只缩字体；1.3 档在 150% DPI + 小屏可能超过工作区，当前只保证 2560×1440@100%。超长文件名仍按收纳原规则换行/截断。
 
+### 7.11 应用面板与控制中心（TASK-071，Issue #78）
+
+- `Apps.cs` 只读扫描用户/公共开始菜单的 `.lnk`，递归最多 3 层、最多 500 项；过滤 uninstall/卸载/帮助/help/readme/website/网址/Startup 目录，按名称去重后按当前区域文化排序，结果缓存 5 分钟，避免每次打开都扫盘。不含 UWP/Store 与 `.url`。
+- `HubForm` 是单个 620×460 玻璃面板，阴影边距 14；标题行两个页签“应用 / 控制中心”，关闭按钮，应用页额外保留“＋ 新建面板”。定位为光标所在屏工作区水平居中、`work.Bottom - Height - 152*UiScale`，底边与 Dock 顶保持 8px；点击面板外失焦自动收起，Esc 关闭。
+- 应用页：4×4 网格、16 项/页；`CellRect` 由 `gridRect` 均分；条目由 `Icons.Draw` 取 Shell 图标；左键启动（`UseShellExecute`）后收起；右键 `V2Shell.PinPaths` 固定并 Toast；按住移动超过 8px 进入 `DoDragDrop(FileDrop)`，由 Dock 现有 OLE DropTarget 固定，返回 `Copy` 后自动收起。搜索为前缀内嵌匹配（不区分大小写），`Ctrl+A` 清空，支持 Backspace/Enter。
+- 控制页：`ControlCenter.Sample` 生成快照；只有控制页可见时启动 2 秒 `Timer`，应用页不采样。卡片按可用项动态排布：1 项全宽 158 高、2 项上下全宽、3 项上二下一、4 项 2×2，单卡最高 126，整组在内容区垂直居中。
+- 音量：Core Audio `IAudioEndpointVolume` 读 `GetMasterVolumeLevelScalar` / `GetMute`，点击切换 `SetMute`，滚轮每次 ±4%；接口初始化失败后不再重试，卡片隐藏。网络：`NetworkInterface.GetIsNetworkAvailable` 与 `OperationalStatus` 判定 Wi-Fi/以太网/已连接。蓝牙：`bthprops.cpl` 枚举 radio 并读名称，无 radio 隐藏。亮度：WMI `WmiMonitorBrightness` 首次读取并缓存，`WmiSetBrightness` 循环 25/50/75/100；失败只记一次日志后隐藏。全部为按需调用，不引入常驻服务、不提权。
+- 入口：Dock 与灵动岛的三个快捷动作改为 `Glyph.Folder` 应用面板、`Glyph.Pulse` 控制中心、`Glyph.Gear` 设置；托盘菜单和自绘菜新增“应用面板”“控制中心”。Hub 生命周期挂在 `V2Shell.Hub`，文字四档、显示器变化、`HideAll`、退出统一处理。
+
 ## 8. 配色
 
 - 当前实现（M5 第一刀）：`ShellConfig.ApplyTheme` 调 `ResolveAccent`，按 `accentMode` 选择 `Backdrop.Accent`（auto）、`Palette.Get` 六套预设（preset）或 `ParseHexColor` 自定义色（custom），最后统一写入 `Theme.Accent`；Dock、灵动岛、面板、设置窗全部只读 `Theme.Accent`。
