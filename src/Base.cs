@@ -117,6 +117,40 @@ namespace Liuli
             catch { }
         }
 
+        public static long CurrentSize()
+        {
+            try { return System.IO.File.Exists(FilePath) ? new FileInfo(FilePath).Length : 0; }
+            catch { return 0; }
+        }
+
+        public static long RotatedSize()
+        {
+            try { return System.IO.File.Exists(FilePath + ".1") ? new FileInfo(FilePath + ".1").Length : 0; }
+            catch { return 0; }
+        }
+
+        public static string SizeText(long bytes)
+        {
+            if (bytes < 1024) return bytes + " B";
+            if (bytes < 1024 * 1024) return string.Format("{0:0.0} KB", bytes / 1024.0);
+            return string.Format("{0:0.0} MB", bytes / (1024.0 * 1024.0));
+        }
+
+        public static string Diagnostic()
+        {
+            StringBuilder sb = new StringBuilder();
+            sb.AppendLine("Liuli 诊断摘要 " + DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));
+            sb.AppendLine("版本: " + V.Version);
+            try { sb.AppendLine("DPI: " + (V2Shell.Host != null ? Native.DpiOf(V2Shell.Host.Handle) : 96)); }
+            catch { sb.AppendLine("DPI: 未知"); }
+            sb.AppendLine("日志: " + FilePath);
+            sb.AppendLine("大小: " + SizeText(CurrentSize()) + " / 轮转: " + SizeText(RotatedSize()) + " / 合计: " + SizeText(CurrentSize() + RotatedSize()));
+            sb.AppendLine("配置: " + ShellConfig.FilePath);
+            sb.AppendLine("--- 最近 16 行 ---");
+            sb.AppendLine(Tail(16));
+            return sb.ToString();
+        }
+
         public static string Tail(int lines)
         {
             try

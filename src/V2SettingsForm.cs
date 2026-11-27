@@ -641,7 +641,22 @@ namespace Liuli
             AddButton("重新注册快捷键", "先注销再注册 Ctrl+Alt+L 显示/隐藏、Ctrl+Alt+G 打开设置", "hotkeyReset", x, y, w, false,
                 delegate { V2Shell.ResetHotkeys(); BuildPage(8); Invalidate(); });
             y += Util.RoundI(58 * S);
-            AddInfo("后续", "日志诊断（REQ-064）将在本页继续补齐。", x, y, w);
+            AddSection("日志诊断", x, y, w); y += Util.RoundI(26 * S);
+            AddInfo("日志文件", "路径：" + Log.FilePath +
+                "\n当前：" + Log.SizeText(Log.CurrentSize()) + " · 轮转：" + Log.SizeText(Log.RotatedSize()) +
+                "\n超过 512 KB 自动把旧日志移到 liuli.log.1；异常写入带堆栈。", x, y, w);
+            y += Util.RoundI(88 * S);
+            AddButton("打开日志目录", "在资源管理器中定位 bin\\data\\logs", "logDir", x, y, w, false,
+                delegate { Native.ShellOpenFolder(Paths.Logs); });
+            y += Util.RoundI(54 * S);
+            AddButton("复制诊断摘要", "版本、DPI、日志大小、配置路径与最近 16 行；可直接粘贴反馈", "logCopy", x, y, w, false,
+                delegate
+                {
+                    try { Clipboard.SetText(Log.Diagnostic()); V2Shell.Toast("诊断摘要已复制"); }
+                    catch { V2Shell.Toast("复制失败，请打开日志目录查看"); }
+                    BuildPage(8);
+                    Invalidate();
+                });
         }
 
         void BuildAboutPage()
