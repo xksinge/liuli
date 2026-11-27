@@ -1,5 +1,17 @@
 ﻿# 测试记录
 
+## v2.0 Phase 7 Dock 距底部、自由拖动/锁定、收纳跟随与面板锁定（2026-11-27，Issue #93 / PR #94）
+
+- 环境：Windows 11 25H2，DISPLAY1 主屏 2560×1440，100% DPI，任务栏自动隐藏，`dockAutoHide=false`、`collectorOn=true`。
+- 构建：`bin\Liuli.exe` 341.5 KB；C#5 无新增 error，仅历史 warning。
+- 默认居中 + 间距 8：Dock `971,1344..1588,1444`；收纳 `957,894..1601,1348`，玻璃底边 1336，距 Dock 顶 8px；启动即锚定，无需再点收纳按钮。
+- 距底部 40：改 `dockBottomGap=40` 重启，Dock `971,1312..1588,1412`，收纳 `957,862..1601,1316`，整体下移 32px。
+- 解锁拖动：设置关闭“锁定 Dock 位置”后，顶部 48×8 把手出现；从把手按下并拖到 `592,1180`，日志 `开始拖动 offset=308,20`、`拖动结束 592,1180`，`dockCustomX/Y=592/1180`；收纳同步 `578,730..1222,1182`，玻璃底边距 Dock 顶 8px。
+- 空白拖动：从 Dock 外侧 10px 边距按下也能进入拖动；锁定后把手消失，再次拖把手无响应。
+- 面板锁定：`panelsLocked=true` 时 `PanelForm.OnMouseDown` 直接返回、`OnMouseMove` 光标回默认；设置·面板页与右键菜单均可切换。当前无面板，面板实窗拖动未做真机回归。
+- 截图：`docs/screens/v8/dock-collector-above.png`、`docs/screens/v8/settings-dock-gap-lock.png`。
+- 未验证：125%/150% DPI 下拖动与收纳跟随、副屏自由拖动、面板实窗锁定拖动。
+
 ## v2.0 Phase 7 Dock 常驻与位置设置（2026-11-27，Issue #91 / PR #92）
 
 - 环境：Windows 11 25H2，DISPLAY1 主屏 2560×1440，100% DPI，任务栏自动隐藏，`dockAutoHide=false`。

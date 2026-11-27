@@ -125,6 +125,7 @@ namespace Liuli
                 return;
             }
             if (e.Button != MouseButtons.Left) return;
+            if (V2Shell.Config != null && V2Shell.Config.PanelsLocked) return;
             Rectangle body = Body();
             resizing = e.X >= body.Right - Util.RoundI(22 * UiScale) && e.Y >= body.Bottom - Util.RoundI(22 * UiScale);
             dragging = !resizing;
@@ -138,6 +139,11 @@ namespace Liuli
         {
             base.OnMouseMove(e);
             if (Cfg == null) return;
+            if (V2Shell.Config != null && V2Shell.Config.PanelsLocked)
+            {
+                Cursor = Cursors.Default;
+                return;
+            }
             if (!dragging && !resizing)
             {
                 Rectangle body = Body();
@@ -217,6 +223,8 @@ namespace Liuli
                 items.Add(new MenuForm.Item("显示秒：" + (seconds ? "开" : "关"), delegate { V2Shell.ToggleClockSeconds(); }, Glyph.Clock));
             }
             items.Add(new MenuForm.Item(Cfg.TopMostPanel ? "置底显示" : "置顶显示", delegate { ToggleTop(); }, Glyph.Pin));
+            bool locked = V2Shell.Config != null && V2Shell.Config.PanelsLocked;
+            items.Add(new MenuForm.Item(locked ? "解锁所有面板位置" : "锁定所有面板位置", delegate { V2Shell.SetPanelsLocked(!locked); }, Glyph.Pin));
             items.Add(new MenuForm.Item("新建面板", delegate { V2Shell.AddPanel(); }, Glyph.Plus));
             items.Add(new MenuForm.Item("删除此面板", delegate { V2Shell.RemovePanel(this); }, Glyph.Close, true));
             new MenuForm(items, new Size(Util.RoundI(210 * Theme.S), Util.RoundI(8 * Theme.S))).ShowAt(screen);

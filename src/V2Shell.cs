@@ -50,7 +50,11 @@ namespace Liuli
                 d.RefreshAutoHide();
             }
             if (Island != null && !Island.IsDisposed) Island.ApplyConfig();
-            if (Collector != null && !Collector.IsDisposed) Collector.ApplyTextScale();
+            if (Collector != null && !Collector.IsDisposed)
+            {
+                Collector.ApplyTextScale();
+                if (CollectorVisible()) Collector.AnchorToDock(Dock == null ? Screen.PrimaryScreen : Dock.TargetScreen);
+            }
             if (Hub != null && !Hub.IsDisposed) Hub.ApplyTextScale();
             if (Settings != null && !Settings.IsDisposed) Settings.ApplyTextScale();
             for (int i = 0; i < Panels.Count; i++) if (Panels[i] != null) Panels[i].ApplyTextScale();
@@ -237,6 +241,7 @@ namespace Liuli
             {
                 Collector = new CollectorForm();
                 Collector.Show();
+                Collector.AnchorToDock(Dock == null ? Screen.PrimaryScreen : Dock.TargetScreen);
             }
 
             statsTimer = new Timer();
@@ -758,6 +763,28 @@ namespace Liuli
             return Collector != null && !Collector.IsDisposed && Collector.Visible;
         }
 
+        public static Rectangle DockBoundsFor(Screen screen)
+        {
+            if (screen == null) screen = Screen.PrimaryScreen;
+            foreach (DockForm d in LiveDocks())
+            {
+                if (d == null || d.TargetScreen == null) continue;
+                if (string.Equals(d.TargetScreen.DeviceName, screen.DeviceName, StringComparison.OrdinalIgnoreCase))
+                    return d.Bounds;
+            }
+            return Rectangle.Empty;
+        }
+
+        public static void KeepCollectorAboveDock(Screen screen)
+        {
+            KeepCollectorAboveDock(screen, true);
+        }
+
+        public static void KeepCollectorAboveDock(Screen screen, bool save)
+        {
+            if (CollectorVisible()) Collector.AnchorToDock(screen == null ? Screen.PrimaryScreen : screen, save);
+        }
+
         public static void HideCollector()
         {
             if (!CollectorVisible()) return;
@@ -778,6 +805,7 @@ namespace Liuli
             foreach (DockForm d in LiveDocks())
             {
                 if (!d.Visible) continue;
+                if (d.Bounds.Contains(screenPoint)) return;
                 Rectangle r = d.CollectorButtonScreenRect();
                 if (!r.IsEmpty && r.Contains(screenPoint)) return;
             }
@@ -810,6 +838,7 @@ namespace Liuli
             {
                 if (Collector == null) { Collector = new CollectorForm(); Collector.Show(); }
                 else { Collector.Show(); Collector.ApplyBounds(); }
+                Collector.AnchorToDock(Dock == null ? Screen.PrimaryScreen : Dock.TargetScreen);
                 if (allHidden && Collector != null) Collector.Hide();
                 CollectorState.Sync(true);
                 if (Collector != null) Collector.Render();
@@ -878,6 +907,45 @@ namespace Liuli
             Config.DockAlign = ShellConfig.NormalizeDockAlign(align);
             Config.Save();
             RelayoutDocks();
+        }
+
+        public static void SetDockBottomGap(int gap)
+        {
+            if (Config == null) return;
+            Config.DockBottomGap = Util.Clamp(gap, 0, 200);
+            Config.DockCustomX = int.MinValue;
+            Config.DockCustomY = int.MinValue;
+            Config.DockAlign = "center";
+            Config.Save();
+            RelayoutDocks();
+        }
+
+        public static void SetDockLocked(bool locked)
+        {
+            if (Config == null) return;
+            Config.DockLocked = locked;
+            Config.Save();
+            Toast(locked ? "Dock 位置已锁定" : "Dock 位置已解锁，可直接拖动 Dock");
+        }
+
+        public static void ResetDockPosition()
+        {
+            if (Config == null) return;
+            Config.DockCustomX = int.MinValue;
+            Config.DockCustomY = int.MinValue;
+            Config.DockAlign = "center";
+            Config.DockLocked = true;
+            Config.Save();
+            RelayoutDocks();
+            Toast("Dock 已回到居中");
+        }
+
+        public static void SetPanelsLocked(bool locked)
+        {
+            if (Config == null) return;
+            Config.PanelsLocked = locked;
+            Config.Save();
+            Toast(locked ? "所有面板位置已锁定" : "所有面板位置已解锁");
         }
 
         public static void ApplyIslandSettings()

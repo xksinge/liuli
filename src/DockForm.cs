@@ -22,6 +22,8 @@ namespace Liuli
         int hoverBtn = -1;
         long hoverAt;
         bool dragging;
+        bool dockDrag;
+        Point dockDragOffset;
         int dragFrom = -1;
         int dragTo = -1;
         int pressedItem = -1;
@@ -47,6 +49,7 @@ namespace Liuli
         Rectangle body = Rectangle.Empty;
         List<Rectangle> itemRects = new List<Rectangle>();
         Rectangle[] btnRects = new Rectangle[4];
+        Rectangle dragHandleRect;
         Rectangle screenBounds;
         Rectangle workArea;
         Screen targetScreen;
@@ -193,11 +196,20 @@ namespace Liuli
             btnRects[3] = new Rectangle(right - btn, by, btn, btn);
 
             body = new Rectangle(margin, margin + tagH, bodyW, bodyH);
+            ShellConfig hcfg = V2Shell.Config;
+            dragHandleRect = hcfg == null || hcfg.DockLocked
+                ? Rectangle.Empty
+                : new Rectangle((Width - Util.RoundI(48 * UiScale)) / 2, margin + Util.RoundI(4 * UiScale), Util.RoundI(48 * UiScale), Util.RoundI(8 * UiScale));
             ClientSize = new Size(bodyW + margin * 2, bodyH + tagH + margin * 2);
             if (!autoRevealed) slide = HiddenOffset();
             EnsureCanvas();
             ApplyPosition();
             Render();
+        }
+
+        public Screen TargetScreen
+        {
+            get { return targetScreen; }
         }
 
         public void SetScreen(Screen target)
@@ -225,10 +237,12 @@ namespace Liuli
 
         int BaseTopY()
         {
+            ShellConfig cfg = V2Shell.Config;
+            if (cfg != null && cfg.DockCustomY != int.MinValue) return cfg.DockCustomY;
             // 任务栏常显时 WorkingArea 已扣除高度；自动隐藏时 WorkingArea 为全屏，
             // 需要等任务栏真正露出后再临时上移一个任务栏高度，避免 Dock(TopMost) 盖住任务栏。
             Rectangle work = workArea;
-            int gap = Util.RoundI(8 * UiScale);
+            int gap = Util.RoundI((cfg == null ? 8 : cfg.DockBottomGap) * UiScale);
             int bottom = work.Bottom;
             if (AutoHideEnabled() && taskbarUpStable)
             {
@@ -251,11 +265,9 @@ namespace Liuli
 
         int DockX()
         {
-            int gap = Util.RoundI(8 * UiScale);
+            ShellConfig cfg = V2Shell.Config;
+            if (cfg != null && cfg.DockCustomX != int.MinValue) return cfg.DockCustomX;
             Rectangle work = workArea;
-            string align = V2Shell.Config == null ? "center" : ShellConfig.NormalizeDockAlign(V2Shell.Config.DockAlign);
-            if (align == "left") return work.X + gap;
-            if (align == "right") return work.Right - Width - gap;
             return work.X + (work.Width - Width) / 2;
         }
 
@@ -455,6 +467,15 @@ namespace Liuli
                 g.Clear(Color.FromArgb(0));
 
                 PaintGlass(g, body, body.Height / 2);
+                if (!dragHandleRect.IsEmpty)
+                {
+                    using (SolidBrush hb = new SolidBrush(Color.FromArgb(120, Theme.Accent)))
+                    {
+                        int yy = dragHandleRect.Y + dragHandleRect.Height / 2;
+                        g.FillRectangle(hb, dragHandleRect.X + 12, yy - 1, dragHandleRect.Width - 24, 2);
+                        g.FillRectangle(hb, dragHandleRect.X + 18, yy + 3, dragHandleRect.Width - 36, 1);
+                    }
+                }
 
                 List<DockItem> items = Items();
                 for (int i = 0; i < itemRects.Count && i < items.Count; i++)
@@ -640,6 +661,27 @@ namespace Liuli
         protected override void OnMouseMove(MouseEventArgs e)
         {
             base.OnMouseMove(e);
+            if (dockDrag && e.Button == MouseButtons.Left)
+            {
+                Point cur = Cursor.Position;
+                int nx = cur.X - dockDragOffset.X;
+                int ny = cur.Y - dockDragOffset.Y;
+                if (nx < screenBounds.Left) nx = screenBounds.Left;
+                if (nx + Width > screenBounds.Right) nx = screenBounds.Right - Width;
+                if (ny < screenBounds.Top) ny = screenBounds.Top;
+                if (ny + Height > screenBounds.Bottom) ny = screenBounds.Bottom - Height;
+                ShellConfig cfg = V2Shell.Config;
+                if (cfg != null)
+                {
+                    cfg.DockCustomX = nx;
+                    cfg.DockCustomY = ny;
+                }
+                slide = 0;
+                Location = new Point(nx, ny);
+                Native.KeepAtTop(Handle);
+                if (V2Shell.CollectorVisible()) V2Shell.KeepCollectorAboveDock(targetScreen, false);
+                return;
+            }
             if (down && dragFrom >= 0 && e.Button == MouseButtons.Left)
             {
                 if (!dragging && (Math.Abs(e.X - downPoint.X) > 8 || Math.Abs(e.Y - downPoint.Y) > 8))
@@ -732,6 +774,16 @@ namespace Liuli
                 for (int i = 0; i < btnRects.Length; i++)
                     if (btnRects[i].Contains(e.Location)) { pressedBtn = i; break; }
                 if (pressedItem >= 0) dragFrom = pressedItem;
+                ShellConfig cfg = V2Shell.Config;
+                if (pressedItem < 0 && pressedBtn < 0 && cfg != null && !cfg.DockLocked)
+                {
+                    dockDrag = true;
+                    dockDragOffset = e.Location;
+                    Capture = true;
+                    Cursor = Cursors.SizeAll;
+                    Log.Info("dock", "开始拖动 offset=" + e.Location.X + "," + e.Location.Y);
+                    return;
+                }
                 if (pressedItem >= 0 || pressedBtn >= 0) Render();
             }
         }
@@ -739,6 +791,23 @@ namespace Liuli
         protected override void OnMouseUp(MouseEventArgs e)
         {
             base.OnMouseUp(e);
+            if (dockDrag)
+            {
+                dockDrag = false;
+                down = false;
+                pressedItem = -1;
+                pressedBtn = -1;
+                Capture = false;
+                Cursor = Cursors.Default;
+                if (V2Shell.Config != null)
+                {
+                    V2Shell.Config.DockAutoHide = false;
+                    V2Shell.Config.Save();
+                }
+                if (V2Shell.CollectorVisible()) V2Shell.KeepCollectorAboveDock(targetScreen);
+                Log.Info("dock", "拖动结束 " + Location.X + "," + Location.Y);
+                return;
+            }
             if (!down || e.Button != MouseButtons.Left) return;
             down = false;
             if (dragging)

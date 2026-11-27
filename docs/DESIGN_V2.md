@@ -97,11 +97,11 @@ M1 实际命名：`V2Shell`、`ShellConfig`、`V2Window`、`DockForm`、`IslandF
 
 - 默认组合：系统入口（此电脑、回收站、用户文件夹）+ 自带应用（资源管理器、设置、Edge、记事本、计算器）；缺失跳过。
 - 布局：系统入口段 → 分隔线 → 固定应用段 → 右侧四个快捷动作（桌面收纳 / 应用面板 / 控制中心 / 设置），M1 不预留弹性空白。
-- 收纳入口（TASK-070e/070f）：Dock 第 1 个动作按钮为 `Glyph.Tray`；点击调用 `V2Shell.ToggleCollectorFromDock(Screen)`：收纳未显示时在该 Dock 所在屏打开，`CollectorForm.AnchorToDock` 按屏宽居中、放在 Dock 顶上方 8px，并把位置写回 `CollectorX/Y`；已显示时直接收起。Dock 55ms 定时器用左键上升沿 + `CloseCollectorIfOutside` 判断点桌面/其它位置收起，排除收纳窗口与收纳按钮自身；收起同时写 `collectorOn=false`，重启不自动弹出；启动、DPI 重排、设置开启不再强制重锚，尊重用户拖动后的位置。
+- 收纳入口（TASK-070e/070f/070h）：Dock 第 1 个动作按钮为 `Glyph.Tray`；点击调用 `V2Shell.ToggleCollectorFromDock(Screen)`：收纳未显示时在该 Dock 所在屏打开，`CollectorForm.AnchorToDock` 读取该屏 Dock 的实际 `Bounds`，水平中心对齐、玻璃底边贴 Dock 顶 8px，并把位置写回 `CollectorX/Y`；已显示时直接收起。启动、DPI 重排、设置开启、Dock 拖动都会调用同一锚定方法，收纳不存在“先出现在旧位置、再跳到 Dock 上方”的状态；收起同时写 `collectorOn=false`，重启不自动弹出。Dock 55ms 定时器用左键上升沿 + `CloseCollectorIfOutside` 判断点桌面/其它位置收起，排除收纳窗口与整块 Dock；点 Dock 空白或图标不会误收起。
 - 交互：左键启动；拖入固定（COPY effect，不移动源文件）；右键取消固定；`P1` 拖拽排序。
 - 自动隐藏（M2）：`dockAutoHide` 默认关闭；全局 55ms 轮询鼠标，底部 6 逻辑像素热区唤出，离开约 650ms 收起；窗口向下滑出，170ms `1-(1-t)^3` ease-out，动画目标可变、可中途反向；隐藏位置以屏幕底边为准，任务栏露出时也能完全推出屏幕。任务栏常显时基础位置读 `WorkingArea`，已扣除任务栏高度；任务栏自动隐藏时 `WorkingArea` 为全屏，只有 `Taskbar.Revealed()` 检测到任务栏真正露出（顶部距屏幕底 ≥6px）才临时再减 `VisibleHeight`，缩回后回到底部（Issue #72）。
 - 尺寸预设（M2）：`dockPreset` 为 `small` / `standard` / `large`，整体缩放系数 0.86 / 1.0 / 1.14；缩放图标、间距、圆按钮、内边距、窗口与文字；切换后立即重排并持久化。
-- 位置（TASK-070g）：`dockAlign` 为 `left` / `center` / `right`，默认居中；横向贴 `WorkArea` 左右各留 8 逻辑像素。默认关闭 Dock 自动隐藏，常驻任务栏上方；任务栏自动隐藏露出时，Dock 基础位置等任务栏连续露出 300ms 才上移，任务栏在 Dock 横向范围外露出时不强行拉起 Dock，避免屏幕底边双向触发闪动。
+- 位置（TASK-070g/070h）：横向默认居中；`dockBottomGap`（默认 8，0–160px）决定 Dock 玻璃底边到 `WorkArea` 底边/任务栏的距离。`dockLocked` 默认开；解锁后 Dock 顶部绘制 48×8 拖动把手，按住把手或窗口空白处拖动，实时写 `dockCustomX/Y`，松手保存一次；“Dock 回到居中”把两个坐标重置为 `int.MinValue` 并恢复居中。旧 `dockAlign` 只在读取时兼容，不再提供左/右档。默认关闭 Dock 自动隐藏，常驻任务栏上方；任务栏自动隐藏露出时，Dock 基础位置等任务栏连续露出 300ms 才上移，任务栏在 Dock 横向范围外露出时不强行拉起 Dock，避免屏幕底边双向触发闪动。
 - 运行指示（M2）：每 2s 一次性枚举 `Process.GetProcesses()`，缓存目标进程名，不在绘制帧枚举；仅 `app` 项显示 accent 小圆点（约 4 逻辑像素），系统入口、URL 与 `.lnk` 暂不显示；检测到变化才重绘。
 - 拖拽排序（M2，P1）：左键移动超过 8px 进入排序；按指针 X 计算 0..N 插入槽，绘制 accent 竖线；松手后 `V2Shell.MoveDockItem` 调整 `dockItems` 并保存；移动不超过 4px 仍按点击启动。
 - 悬停放大（M2）：指针进入 Dock 项后 140ms cubic ease-out 放大到 1.08；按下 0.94 优先；拖拽时禁用；移出或拖拽开始立即恢复 1.0。
@@ -138,7 +138,7 @@ M1 实际命名：`V2Shell`、`ShellConfig`、`V2Window`、`DockForm`、`IslandF
 
 ### 7.3 M4 玻璃面板（REQ-030/031，P0）
 
-- `PanelForm : V2Window`，窗口四周 12 逻辑像素阴影边距；玻璃主体用 `PaintGlass` + `Theme.Radius`，不另造材质参数。
+- `PanelForm : V2Window`，窗口四周 12 逻辑像素阴影边距；玻璃主体用 `PaintGlass` + `Theme.Radius`，不另造材质参数。默认按住主体拖动、右下角缩放；`panelsLocked=true` 时 `OnMouseDown` 与 `OnMouseMove` 直接返回，拖动和缩放都禁用，设置·面板页与右键菜单都可切换。
 - 配置 `panels[]`：`id`、`content`（`empty` / `clock` / `weather` / `stats`）、`x/y/w/h`（body 屏幕坐标与尺寸）、`topMost`；最多 6 个，W 220–720、H 120–520，越界收回当前工作区。
 - 交互：按住玻璃主体拖动；右下角 22px 热区缩放；右键菜单切换内容、置顶/置底、新建、删除。拖动/缩放/切换后立即写 `shell.json`。
 - 点击穿透：`WM_NCHITTEST` 在 body 外返回 `HTTRANSPARENT`、body 内返回 `HTCLIENT`，透明阴影不挡桌面图标。
@@ -193,7 +193,7 @@ M1 实际命名：`V2Shell`、`ShellConfig`、`V2Window`、`DockForm`、`IslandF
 - 数据模型：`ShellConfig` 新增 `collectorOn` / `collectorAutoScan` / `collectorX/Y/W/H` / `collectorGroup` / `collectorItems[]`；`CollectorItem` 保存 `path/name/group/hidden/manual/folder`，`path` 永远指向原文件或文件夹，没有“收纳目录/移动后路径”。
 - 同步：`CollectorState.Sync` 扫描用户桌面 + 公共桌面，按路径合并；新文件用 `Icons.GroupOf` 按扩展名/文件夹/`groups.txt` 分组；文件消失只移除入口，不删除磁盘文件。手动拖入的桌面外入口标记 `manual`，原件在就保留。
 - 刷新：面板内 `Timer(2000)` 在 UI 线程轮询，满足“新/删/改 5 秒内可见”；不引入 `FileSystemWatcher` 跨线程回 UI 的复杂度。默认开启，可在收纳页关闭。
-- 面板：`CollectorForm` 是独立分层窗口，620×430，可拖标题、可拖右下角缩放；顶部分组标签（全部/应用/文件夹/文档/图片/影音/压缩包/代码/其他），网格每页 18 项，滚轮翻页；双击入口打开原路径，右键可移出（只隐藏入口）或在资源管理器中显示。
+- 面板：`CollectorForm` 是独立分层窗口，620×430，窗口位置固定由 Dock 锚定，**标题区不可拖动**；右下角仍可缩放；顶部分组标签（全部/应用/文件夹/文档/图片/影音/压缩包/代码/其他），网格每页 18 项，滚轮翻页；双击入口打开原路径，右键可移出（只隐藏入口）或在资源管理器中显示。
 - 分组：面板内拖动超过 8px 进入换组模式，松手只改 `CollectorItem.Group`，不产生文件移动；当前分组、面板位置/尺寸写回 `shell.json`。
 - 安全拖出：入口拖出面板边界时提供 `DataFormats.FileDrop`，允许效果只给 `DragDropEffects.Copy`；资源管理器默认复制，绝不默认移动原件。
 - 原生图标：收纳开启时配合桌面页“隐藏全部桌面图标”（运行期 `ShowWindow`）；面板 2 秒 tick 检测 Explorer 重启后原生图标是否重现并再次隐藏，不写系统“显示桌面图标”注册表偏好。

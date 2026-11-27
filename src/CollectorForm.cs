@@ -105,6 +105,11 @@ namespace Liuli
         /// <summary>从 Dock 打开时，把收纳面板居中贴到该屏 Dock 上方，并把该位置写回配置。</summary>
         public void AnchorToDock(Screen target)
         {
+            AnchorToDock(target, true);
+        }
+
+        public void AnchorToDock(Screen target, bool save)
+        {
             if (!IsHandleCreated || target == null) return;
             UiScale = DpiUiScale();
             margin = Util.RoundI(12 * UiScale);
@@ -112,13 +117,18 @@ namespace Liuli
             int w = Util.RoundI(c.CollectorW * UiScale) + margin * 2;
             int h = Util.RoundI(c.CollectorH * UiScale) + margin * 2;
             Rectangle b = target.Bounds;
-            int left = b.Left + (b.Width - w) / 2;
-            int top = b.Bottom - Util.RoundI(152 * UiScale) - h + margin;
+            Rectangle dock = V2Shell.DockBoundsFor(target);
+            int centerX = dock.IsEmpty ? b.Left + b.Width / 2 : dock.Left + dock.Width / 2;
+            int dockTop = dock.IsEmpty ? b.Bottom - Util.RoundI(152 * UiScale) : dock.Top;
+            int left = centerX - w / 2;
+            int top = dockTop - Util.RoundI(8 * UiScale) - h + margin;
+            if (left < b.Left) left = b.Left;
+            if (left + w > b.Right) left = b.Right - w;
             if (top < b.Top) top = b.Top;
             ClientSize = new Size(w, h);
             Location = new Point(left, top);
             EnsureCanvas();
-            SaveBounds();
+            if (save) SaveBounds();
         }
 
         public void ApplyTextScale()
@@ -410,10 +420,8 @@ namespace Liuli
             }
             if (headerR.Contains(e.Location))
             {
-                windowDrag = true;
-                dragOffset = e.Location;
-                Capture = true;
-                Cursor = Cursors.SizeAll;
+                // 收纳固定贴在 Dock 上方，不允许拖动窗口；标题区只作为空白拖拽区吞掉事件。
+                Cursor = Cursors.Default;
                 return;
             }
             if (prevR.Contains(e.Location) && PageCount() > 1)
