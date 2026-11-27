@@ -1033,6 +1033,11 @@ namespace Liuli
             string key = DockScreenKey(screen);
             DockProfile p = FindDockProfile(key);
             if (p != null) return p.Items;
+            if (Config.DockProfiles.Count >= 4)
+            {
+                Log.Warn("dock", "每屏布局已达 4 个上限，忽略新屏 " + key);
+                return null;
+            }
             p = new DockProfile();
             p.Screen = key;
             for (int i = 0; i < Config.DockItems.Count; i++) p.Items.Add(CloneDockItem(Config.DockItems[i]));
@@ -1050,6 +1055,7 @@ namespace Liuli
         {
             if (files == null || Config == null) return 0;
             List<DockItem> target = EnsureDockItems(screen);
+            if (target == null) return 0;
             int added = 0;
             for (int i = 0; i < files.Length && target.Count < 16; i++)
             {
@@ -1096,6 +1102,7 @@ namespace Liuli
         {
             if (Config == null) return;
             List<DockItem> items = EnsureDockItems(screen);
+            if (items == null) return;
             if (index < 0 || index >= items.Count) return;
             items.RemoveAt(index);
             Config.Save();
@@ -1112,6 +1119,7 @@ namespace Liuli
         {
             if (Config == null) return 0;
             List<DockItem> items = EnsureDockItems(screen);
+            if (items == null) return 0;
             if (from < 0 || from >= items.Count) return 0;
             if (before < 0) before = 0;
             if (before > items.Count) before = items.Count;
@@ -1129,11 +1137,10 @@ namespace Liuli
         {
             if (Config == null) return;
             Config.DockPerScreen = on;
-            if (!on) Config.DockProfiles.Clear();
             Config.Save();
             RelayoutDocks();
-            Toast(on ? "已开启每屏独立 Dock 布局" : "已恢复共享 Dock 布局");
-            Log.Info("dock", "每屏独立布局=" + on + " profiles=" + Config.DockProfiles.Count);
+            Toast(on ? "已开启每屏独立 Dock 布局" : "已恢复共享 Dock 布局，各屏布局仍保留");
+            Log.Info("dock", "每屏独立布局=" + on + " profiles=" + Config.DockProfiles.Count + " kept=1");
         }
 
         // ---------- 生命周期 / 工具 ----------

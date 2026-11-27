@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.IO;
+using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
@@ -178,11 +179,69 @@ namespace Liuli
             catch { return "0"; }
         }
 
+        /// <summary>解析 .lnk 目标；失败返回空，不影响原路径图标回退。</summary>
+        static string ResolveShortcut(string path)
+        {
+            object shell = null;
+            object link = null;
+            try
+            {
+                Type shellType = Type.GetTypeFromProgID("WScript.Shell");
+                if (shellType == null) return "";
+                shell = Activator.CreateInstance(shellType);
+                link = shellType.InvokeMember("CreateShortcut", BindingFlags.InvokeMethod, null, shell, new object[] { path });
+                if (link == null) return "";
+                object target = link.GetType().InvokeMember("TargetPath", BindingFlags.GetProperty, null, link, null);
+                string s = target as string;
+                return s == null ? "" : s.Trim();
+            }
+            catch { return ""; }
+            finally
+            {
+                if (link != null) try { Marshal.ReleaseComObject(link); } catch { }
+                if (shell != null) try { Marshal.ReleaseComObject(shell); } catch { }
+            }
+        }
+
+        /// <summary>大图标位图常把 16/32px 内容放在 256px 透明画布中央；裁到不透明内容，避免 Dock 里只剩一个小点。</summary>
+        static Rectangle IconContent(Bitmap src)
+        {
+            int w = src.Width, h = src.Height;
+            int step = w >= 192 ? 4 : (w > 64 ? 2 : 1);
+            int minX = w, minY = h, maxX = -1, maxY = -1;
+            for (int y = 0; y < h; y += step)
+            {
+                for (int x = 0; x < w; x += step)
+                {
+                    Color c = src.GetPixel(x, y);
+                    if (c.A <= 16) continue;
+                    if (x < minX) minX = x;
+                    if (y < minY) minY = y;
+                    if (x > maxX) maxX = x;
+                    if (y > maxY) maxY = y;
+                }
+            }
+            if (maxX < minX || maxY < minY) return new Rectangle(0, 0, w, h);
+            int pad = step + 2;
+            minX = Math.Max(0, minX - pad); minY = Math.Max(0, minY - pad);
+            maxX = Math.Min(w - 1, maxX + pad); maxY = Math.Min(h - 1, maxY + pad);
+            Rectangle r = new Rectangle(minX, minY, maxX - minX + 1, maxY - minY + 1);
+            if (r.Width > w * 3 / 4 || r.Height > h * 3 / 4) return new Rectangle(0, 0, w, h);
+            return r;
+        }
+
         static Bitmap Load(string path, int size)
         {
             IntPtr hIcon = IntPtr.Zero;
             try
             {
+                if (path.EndsWith(".lnk", StringComparison.OrdinalIgnoreCase) && File.Exists(path))
+                {
+                    string target = ResolveShortcut(path);
+                    if (target.Length > 0 && !string.Equals(target, path, StringComparison.OrdinalIgnoreCase)
+                        && (File.Exists(target) || Directory.Exists(target)))
+                        return Load(target, size);
+                }
                 if (size >= 64) hIcon = LoadJumbo(path);
                 if (hIcon == IntPtr.Zero)
                 {
@@ -206,7 +265,8 @@ namespace Liuli
                     {
                         g.Clear(Color.Transparent);
                         g.InterpolationMode = InterpolationMode.HighQualityBicubic;
-                        g.DrawImage(src, new Rectangle(0, 0, size, size));
+                        Rectangle srcRect = IconContent(src);
+                        g.DrawImage(src, new Rectangle(0, 0, size, size), srcRect, GraphicsUnit.Pixel);
                     }
                     src.Dispose();
                     return dst;
