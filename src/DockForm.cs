@@ -45,9 +45,15 @@ namespace Liuli
         Rectangle body = Rectangle.Empty;
         List<Rectangle> itemRects = new List<Rectangle>();
         Rectangle[] btnRects = new Rectangle[3];
+        Rectangle screenBounds;
+        Rectangle workArea;
+        bool primaryScreen;
 
-        public DockForm()
+        public DockForm() : this(Screen.PrimaryScreen) { }
+
+        public DockForm(Screen target)
         {
+            SetScreen(target);
             Relayout();
             positionTimer = new Timer();
             positionTimer.Interval = 320;
@@ -191,17 +197,31 @@ namespace Liuli
             Render();
         }
 
+        public void SetScreen(Screen target)
+        {
+            screenBounds = target.Bounds;
+            workArea = target.WorkingArea;
+            primaryScreen = target.Primary;
+        }
+
+        public void RelayoutForScreen(Screen target)
+        {
+            SetScreen(target);
+            Relayout();
+            ApplyPosition();
+        }
+
         int BaseTopY()
         {
             // 任务栏常显时 WorkingArea 已扣除高度；自动隐藏时 WorkingArea 为全屏，
             // 需要等任务栏真正露出后再临时上移一个任务栏高度，避免 Dock(TopMost) 盖住任务栏。
-            Rectangle work = Screen.PrimaryScreen.WorkingArea;
+            Rectangle work = workArea;
             int gap = Util.RoundI(8 * UiScale);
             int bottom = work.Bottom;
-            if (Taskbar.AutoHide() && Taskbar.Revealed())
+            if (primaryScreen && Taskbar.AutoHide() && Taskbar.Revealed())
             {
                 int taskbarH = Taskbar.VisibleHeight();
-                if (taskbarH > 0) bottom = Screen.PrimaryScreen.Bounds.Bottom - taskbarH;
+                if (taskbarH > 0) bottom = screenBounds.Bottom - taskbarH;
             }
             int bodyBottom = bottom - gap;
             int y = bodyBottom - body.Bottom;
@@ -213,14 +233,14 @@ namespace Liuli
         {
             // 以屏幕底边为准，保证任务栏露出时也能把整个窗口推出去。
             int baseY = BaseTopY();
-            int toBottom = Screen.PrimaryScreen.Bounds.Bottom + 2 - baseY;
+            int toBottom = screenBounds.Bottom + 2 - baseY;
             return Math.Max(1, Math.Max(Height, toBottom));
         }
 
         public void ApplyPosition()
         {
             if (!IsHandleCreated) return;
-            Rectangle work = Screen.PrimaryScreen.WorkingArea;
+            Rectangle work = workArea;
             int x = work.X + (work.Width - Width) / 2;
             Location = new Point(x, BaseTopY() + slide);
             Native.KeepAtTop(Handle);
@@ -245,7 +265,7 @@ namespace Liuli
         {
             if (!IsHandleCreated) return;
             if (!autoRevealed && (slideTimer == null || !slideTimer.Enabled)) slide = HiddenOffset();
-            Rectangle work = Screen.PrimaryScreen.WorkingArea;
+            Rectangle work = workArea;
             Point target = new Point(work.X + (work.Width - Width) / 2, BaseTopY() + slide);
             if (target != Location)
             {
@@ -282,9 +302,9 @@ namespace Liuli
             }
 
             Point p = Cursor.Position;
-            Rectangle screen = Screen.PrimaryScreen.Bounds;
+            Rectangle screenRect = screenBounds;
             int hot = Math.Max(3, Util.RoundI(6 * UiScale));
-            bool nearBottom = p.Y >= screen.Bottom - hot;
+            bool nearBottom = screenRect.Contains(p) && p.Y >= screenRect.Bottom - hot;
             bool inDock = Bounds.Contains(p);
             if (nearBottom || inDock)
             {

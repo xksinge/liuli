@@ -20,6 +20,7 @@ namespace Liuli
         public static DockForm Dock;
         public static IslandForm Island;
         public static CollectorForm Collector;
+        public static readonly List<DockForm> ExtraDocks = new List<DockForm>();
         public static readonly List<PanelForm> Panels = new List<PanelForm>();
         public static V2Host Host;
         public static bool HotkeyToggleOk;
@@ -57,13 +58,90 @@ namespace Liuli
             Config.TextSize = size;
             Theme.TextScale = Theme.TextScaleOf(size);
             Config.Save();
-            if (Dock != null) Dock.RelayoutPublic();
+            RelayoutDocks();
             if (Island != null) Island.ApplyConfig();
             for (int i = 0; i < Panels.Count; i++) if (Panels[i] != null) Panels[i].ApplyTextScale();
             if (Collector != null) Collector.ApplyTextScale();
             if (Settings != null && !Settings.IsDisposed) Settings.ApplyTextScale();
             Toast("文字大小：" + TextSizeStatus());
             Log.Info("textsize", TextSizeStatus());
+        }
+
+        public static IEnumerable<DockForm> LiveDocks()
+        {
+            if (Dock != null) yield return Dock;
+            for (int i = 0; i < ExtraDocks.Count; i++) if (ExtraDocks[i] != null) yield return ExtraDocks[i];
+        }
+
+        public static void OpenExtraDocks()
+        {
+            CloseExtraDocks();
+            if (Config == null || !Config.DockOn) return;
+            if (!string.Equals(Config.DisplayMode, "all", StringComparison.OrdinalIgnoreCase)) return;
+            Screen[] screens = Screen.AllScreens;
+            for (int i = 0; i < screens.Length; i++)
+            {
+                if (screens[i].Primary) continue;
+                try
+                {
+                    DockForm d = new DockForm(screens[i]);
+                    d.Show();
+                    ExtraDocks.Add(d);
+                }
+                catch (Exception ex) { Log.Warn("dock", "副屏 Dock 创建失败 " + ex.Message); }
+            }
+            Log.Info("display", "screens=" + screens.Length + " extraDocks=" + ExtraDocks.Count);
+        }
+
+        public static void CloseExtraDocks()
+        {
+            for (int i = 0; i < ExtraDocks.Count; i++)
+            {
+                try { if (ExtraDocks[i] != null) { ExtraDocks[i].Hide(); ExtraDocks[i].Close(); } }
+                catch { }
+            }
+            ExtraDocks.Clear();
+        }
+
+        public static void SetDisplayMode(string mode)
+        {
+            if (Config == null) return;
+            Config.DisplayMode = ShellConfig.NormalizeDisplayMode(mode);
+            Config.Save();
+            if (Dock != null) { Dock.Show(); Dock.RelayoutPublic(); }
+            OpenExtraDocks();
+            Toast(Config.DisplayMode == "all" ? "多屏模式：所有屏 Dock" : "多屏模式：仅主屏");
+        }
+
+        static void ShowAllDocks()
+        {
+            if (Dock != null) { Dock.Show(); Dock.RelayoutPublic(); Dock.RefreshAutoHide(); }
+            for (int i = 0; i < ExtraDocks.Count; i++) if (ExtraDocks[i] != null) { ExtraDocks[i].Show(); ExtraDocks[i].RelayoutPublic(); ExtraDocks[i].RefreshAutoHide(); }
+        }
+
+        static void HideAllDocks()
+        {
+            for (int i = 0; i < ExtraDocks.Count; i++) if (ExtraDocks[i] != null) ExtraDocks[i].Hide();
+        }
+
+        static void RelayoutDocks()
+        {
+            for (int i = 0; i < ExtraDocks.Count; i++) if (ExtraDocks[i] != null) ExtraDocks[i].RelayoutPublic();
+            if (Dock != null) Dock.RelayoutPublic();
+        }
+
+        public static void OnDisplayChanged()
+        {
+            if (Config == null) return;
+            Screen primary = Screen.PrimaryScreen;
+            if (Dock != null && primary != null) Dock.RelayoutForScreen(primary);
+            OpenExtraDocks();
+            if (Island != null) { Island.ApplyConfig(); Island.ApplyPosition(); }
+            for (int i = 0; i < Panels.Count; i++) if (Panels[i] != null) Panels[i].ApplyTextScale();
+            if (Collector != null) Collector.ApplyTextScale();
+            if (Settings != null && !Settings.IsDisposed) Settings.ApplyTextScale();
+            Toast("显示器变化，桌面层已重新排布");
+            Log.Info("display", "reflow screens=" + Screen.AllScreens.Length);
         }
 
         public static WeatherService Weather;
@@ -108,6 +186,7 @@ namespace Liuli
             {
                 Dock = new DockForm();
                 Dock.Show();
+                OpenExtraDocks();
             }
             if (Config.IslandOn)
             {
@@ -132,7 +211,7 @@ namespace Liuli
             {
                 Stats = SysStats.Sample();
                 if (Island != null && Island.Visible) Island.RefreshIsland();
-                if (Dock != null && Dock.Visible) Dock.TickPositionPublic();
+                foreach (DockForm d in LiveDocks()) if (d.Visible) d.TickPositionPublic();
             };
             statsTimer.Start();
 
@@ -144,7 +223,7 @@ namespace Liuli
                 {
                     if (!Backdrop.Tick()) return;
                     Config.ApplyTheme();
-                    if (Dock != null) { Dock.RelayoutPublic(); }
+                    RelayoutDocks();
                     if (Island != null) Island.RefreshIsland();
                     Log.Info("wall", "壁纸变化，外壳配色已更新");
                 }
@@ -259,11 +338,7 @@ namespace Liuli
         public static void ShowAll()
         {
             allHidden = false;
-            if (Config != null && Config.DockOn)
-            {
-                if (Dock == null) { Dock = new DockForm(); Dock.Show(); }
-                else { Dock.Show(); Dock.RelayoutPublic(); Dock.RefreshAutoHide(); }
-            }
+            if (Config != null && Config.DockOn) ShowAllDocks();
             if (Config != null && Config.IslandOn)
             {
                 if (Island == null) { Island = new IslandForm(); Island.Show(); }
@@ -286,6 +361,7 @@ namespace Liuli
         {
             allHidden = true;
             if (Dock != null) Dock.Hide();
+            HideAllDocks();
             if (Island != null) Island.Hide();
             if (Collector != null) Collector.Hide();
             for (int i = 0; i < Panels.Count; i++)
@@ -297,7 +373,7 @@ namespace Liuli
             if (Config == null) return;
             Config.DockAutoHide = !Config.DockAutoHide;
             Config.Save();
-            if (Dock != null) Dock.RefreshAutoHide();
+            foreach (DockForm d in LiveDocks()) d.RefreshAutoHide();
             Toast(Config.DockAutoHide ? "Dock 已设为自动隐藏，鼠标触底唤出" : "Dock 已设为常显");
         }
 
@@ -316,7 +392,7 @@ namespace Liuli
             else if (string.Equals(Config.DockPreset, "large", StringComparison.OrdinalIgnoreCase)) next = "small";
             Config.DockPreset = next;
             Config.Save();
-            if (Dock != null) Dock.RelayoutPublic();
+            RelayoutDocks();
             Toast("Dock 尺寸：" + DockPresetLabel(next));
         }
 
@@ -553,7 +629,7 @@ namespace Liuli
                 // 重烘会更新壁纸明暗与自动强调色，必须再应用一次 Theme token。
                 Config.ApplyTheme();
             }
-            if (Dock != null) { Dock.RelayoutPublic(); Dock.Render(); }
+            foreach (DockForm d in LiveDocks()) { d.RelayoutPublic(); d.Render(); }
             if (Island != null) Island.RefreshIsland();
             RefreshPanels();
             if (Collector != null) Collector.Render();
@@ -569,10 +645,12 @@ namespace Liuli
             {
                 if (Dock == null) { Dock = new DockForm(); Dock.Show(); }
                 else { Dock.Show(); Dock.RelayoutPublic(); Dock.RefreshAutoHide(); }
-                if (allHidden && Dock != null) Dock.Hide();
+                OpenExtraDocks();
+                if (allHidden) HideAllDocks();
             }
             else if (Dock != null)
             {
+                CloseExtraDocks();
                 Dock.Hide();
                 Dock.Close();
                 Dock = null;
@@ -585,7 +663,7 @@ namespace Liuli
             MarkThemeDirty();
             Config.DockAutoHide = on;
             Config.Save();
-            if (Dock != null) Dock.RefreshAutoHide();
+            foreach (DockForm d in LiveDocks()) d.RefreshAutoHide();
         }
 
         public static void ToggleCollector()
@@ -640,7 +718,7 @@ namespace Liuli
             Config.DockPreset = string.Equals(preset, "small", StringComparison.OrdinalIgnoreCase) ? "small" :
                 (string.Equals(preset, "large", StringComparison.OrdinalIgnoreCase) ? "large" : "standard");
             Config.Save();
-            if (Dock != null) Dock.RelayoutPublic();
+            RelayoutDocks();
         }
 
         public static void ApplyIslandSettings()
@@ -808,10 +886,12 @@ namespace Liuli
             {
                 if (Dock == null) { Dock = new DockForm(); Dock.Show(); }
                 else { Dock.Show(); Dock.RelayoutPublic(); Dock.RefreshAutoHide(); }
-                if (allHidden && Dock != null) Dock.Hide();
+                OpenExtraDocks();
+                if (allHidden) HideAllDocks();
             }
             else if (Dock != null)
             {
+                try { CloseExtraDocks(); } catch { }
                 try { Dock.Close(); } catch { }
                 Dock = null;
             }
@@ -840,7 +920,7 @@ namespace Liuli
             {
                 Config.TaskbarAutoHide = on;
                 Config.Save();
-                if (Dock != null) Dock.TickPositionPublic();
+                foreach (DockForm d in LiveDocks()) d.TickPositionPublic();
                 Toast(on ? "任务栏已设为自动隐藏" : "任务栏已恢复常显");
             }
             else Toast("任务栏设置失败，请检查系统权限");
@@ -851,7 +931,7 @@ namespace Liuli
             bool target = Config != null ? Config.TaskbarOriginalAutoHide : true;
             bool ok = Taskbar.SetAutoHide(target);
             if (Config != null) { Config.TaskbarAutoHide = target; Config.Save(); }
-            if (ok && Dock != null) Dock.TickPositionPublic();
+            if (ok) foreach (DockForm d in LiveDocks()) d.TickPositionPublic();
             Toast(ok ? (target ? "任务栏已恢复为自动隐藏" : "任务栏已恢复为常显") : "任务栏设置失败");
         }
 
@@ -861,7 +941,7 @@ namespace Liuli
             {
                 Backdrop.Rebuild();
                 Config.ApplyTheme();
-                if (Dock != null) Dock.RelayoutPublic();
+                RelayoutDocks();
                 if (Island != null) Island.RefreshIsland();
                 RefreshPanels();
                 Toast("已按当前壁纸重新取色");
@@ -873,8 +953,8 @@ namespace Liuli
         {
             Config.DockItems = ShellConfig.DefaultDock();
             Config.Save();
-            if (Dock == null && Config.DockOn) { Dock = new DockForm(); Dock.Show(); }
-            else if (Dock != null) Dock.RelayoutPublic();
+            if (Dock == null && Config.DockOn) { Dock = new DockForm(); Dock.Show(); OpenExtraDocks(); }
+            else if (Dock != null) { Dock.RelayoutPublic(); OpenExtraDocks(); }
             Toast("Dock 已恢复默认组合");
         }
 
@@ -923,7 +1003,7 @@ namespace Liuli
             Config.DockItems.RemoveAt(index);
             Config.Save();
             Toast("已从 Dock 移除");
-            if (Dock != null) Dock.RelayoutPublic();
+            RelayoutDocks();
         }
 
         public static int MoveDockItem(int from, int before)
@@ -1039,6 +1119,7 @@ namespace Liuli
             try { if (tray != null) { tray.Visible = false; tray.Dispose(); tray = null; } } catch { }
             try { if (statsTimer != null) statsTimer.Stop(); } catch { }
             try { if (wallTimer != null) wallTimer.Stop(); } catch { }
+            try { CloseExtraDocks(); } catch { }
             try { if (Dock != null) Dock.Close(); } catch { }
             try { if (Island != null) Island.Close(); } catch { }
             try { if (Collector != null) Collector.Close(); } catch { }
@@ -1057,14 +1138,7 @@ namespace Liuli
 
         public static void DisplayChanged()
         {
-            UI(delegate
-            {
-                if (Dock != null) Dock.ApplyPosition();
-                if (Island != null) Island.ApplyPosition();
-                if (Collector != null) Collector.ApplyBounds();
-                for (int i = 0; i < Panels.Count; i++)
-                    if (Panels[i] != null) Panels[i].ApplyBounds();
-            });
+            UI(delegate { OnDisplayChanged(); });
         }
     }
 

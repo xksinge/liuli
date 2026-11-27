@@ -53,11 +53,14 @@ namespace Liuli
             Cfg.H = Util.Clamp(Cfg.H, 120, 520);
             int w = Util.RoundI(Cfg.W * ts);
             int h = Util.RoundI(Cfg.H * ts);
-            Rectangle work = Screen.PrimaryScreen.WorkingArea;
+            Screen target = Screen.FromPoint(new Point(Cfg.X, Cfg.Y));
+            Rectangle work = target.WorkingArea;
             if (w > work.Width - 40) { w = Math.Max(220, work.Width - 40); Cfg.W = Util.RoundI(w / ts); }
             if (h > work.Height - 60) { h = Math.Max(120, work.Height - 60); Cfg.H = Util.RoundI(h / ts); }
             int x = Cfg.X;
             int y = Cfg.Y;
+            if (x < work.Left) x = work.Left;
+            if (y < work.Top) y = work.Top;
             if (x + w > work.Right) x = work.Right - w;
             if (y + h > work.Bottom) y = work.Bottom - h;
             ClientSize = new Size(w + margin * 2, h + margin * 2);

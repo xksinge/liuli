@@ -167,7 +167,13 @@
 
 ## Phase 7 · 多屏与 P1
 
-- [ ] **TASK-070** [REQ-093–096] 多屏模式、每屏 Dock、任务栏多实例、跨屏玻璃
+- [x] **TASK-070a** [REQ-093–095] 多屏模式第一步：每屏 Dock 与显示器变化重排（Issue #76 / PR #77）
+  - 实现：`ShellConfig.DisplayMode` 读写 `displayMode`，收敛为 `primary/all`；`DockForm` 改为按 `Screen` 构造，新增 `SetScreen` / `RelayoutForScreen`，所有底部基准、热区、隐藏偏移按所在屏计算；`V2Shell` 新增 `ExtraDocks`、`LiveDocks/OpenExtraDocks/CloseExtraDocks/RelayoutDocks/HideAllDocks`；`all` 时为每块非主屏各建一套 Dock，共享图标配置，灵动岛仍在主屏；设置 Dock 页新增“多屏模式：仅主屏 / 所有屏”。
+  - 重排：`V2Host` 收到 `WM_DISPLAYCHANGE (0x007E)` 后走 `OnDisplayChanged()`，重建副屏 Dock、重排主 Dock、灵动岛、面板、收纳和设置；副屏 Dock 只在本屏底部热区唤出，避免一块屏触发全部 Dock。
+  - 越界收回：`PanelForm.ApplyBounds` / `CollectorForm.ApplyBounds` 改为 `Screen.FromPoint` 取窗口所在屏工作区，先夹左上再夹右下。
+  - 验证：构建 `bin\Liuli.exe` 306.5 KB；本机 `AllScreens` 实为 2 屏（DISPLAY1 `0,0 2560×1440`、DISPLAY2 `-2560,0 2560×1440`）。`all` 后日志 `screens=2 extraDocks=1`，副屏 Dock 落在 DISPLAY2 底部居中，主屏 Dock 同时隐藏；鼠标只在主屏底部时主屏 Dock `y=1296`、副屏 `y=1444`，只在副屏底部时副屏 `y=1344`、主屏 `y=1442`。发送 `WM_DISPLAYCHANGE` 后日志 `reflow screens=2 extraDocks=1`，进程不崩、副屏 Dock 重建一套；切回“仅主屏”后副屏 Dock 关闭，截图 `settings-dock-multiscreen-primary.png`、`settings-dock-multiscreen-all.png`、`dock-two-screens.png`。
+  - 未验证：真实拔插显示器 / 改分辨率（当前用 `WM_DISPLAYCHANGE` 消息模拟）；副屏任务栏自动隐藏与多实例（`Shell_SecondaryTrayWnd`）；双屏不同 DPI；跨屏玻璃切片；每屏独立布局。
+- [ ] **TASK-070** [REQ-093–096] 多屏模式完整：副屏任务栏多实例、跨屏玻璃、每屏布局（P1）
 - [ ] **TASK-071** [REQ-070/071] 应用面板、控制中心（P1）
 
 ## Phase 8 · 发布
