@@ -25,7 +25,7 @@
 - 系统页：设置第 10 页提供开机自启开关，写当前用户 `HKCU\Software\Microsoft\Windows\CurrentVersion\Run\Liuli`；移动 exe 后下次启动自动修正路径，关闭即删除；不写 HKLM、不需要管理员权限。
 - 系统页显示 `Ctrl+Alt+L` / `Ctrl+Alt+G` 的实际注册状态；组合被占用时显示“失败”，可点“重新注册快捷键”重试，日志记录 `hotkey toggle/settings` 结果。
 - 系统页日志诊断：显示当前日志和 `.1` 轮转大小，可打开日志目录或复制含版本、DPI、路径和最近 16 行的诊断摘要；日志超过 512 KB 自动轮转。
-- 任务栏自动隐藏可切换、可恢复；Dock 检测任务栏露出时整体上移，避免挡住唤出热区。
+- 任务栏自动隐藏可切换、可恢复；Dock 用 55ms 定时检测任务栏是否真正露出，露出时整体上移任务栏高度，缩回后回到底部，避免遮挡任务栏或抢任务栏唤出热区。
 - 托盘与热键：`Ctrl+Alt+L` 显示/隐藏外壳，`Ctrl+Alt+G` 打开设置。
 - 无界面自检：`Liuli.exe --selftest` 读取配置、任务栏状态并探测 256px 图标，不启动窗口。
 
@@ -48,6 +48,10 @@
 ![快捷键状态](docs/screens/v8/settings-hotkeys.png)
 
 ![日志诊断](docs/screens/v8/settings-logs.png)
+
+- Dock 与任务栏同时露出时的避让效果（测试时临时关闭 Dock 自动隐藏）。
+
+![Dock 避让任务栏](docs/screens/v8/dock-above-taskbar.png)
 
 尚未进入的能力：媒体/通知（P1，按需求矩阵留到 M7）、导入推荐配置（M4 的 P1 余项）、设置的分模块余项（M6）、多屏（Phase 7）；M2 仍待验 125% DPI、外部文件拖入 Dock、2s 枚举 CPU 长时占用。
 

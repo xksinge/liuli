@@ -2,6 +2,23 @@
 
 遵循 Keep a Changelog；版本遵循 SemVer。
 
+## [Unreleased · v2.0 M6 Dock 任务栏避让]
+
+### 修复
+
+- 任务栏自动隐藏时，Dock 不再固定贴屏幕底部挡住唤出的任务栏；`Taskbar.Revealed()` 区分“只剩 2px 边缘”和“真正露出”，露出时 Dock 上移任务栏高度，缩回后回底
+- `TickAutoHide` 每 55ms 顺带 `TickPosition`，比原 320ms 定位更快让位
+- 切换/恢复任务栏自动隐藏后立即刷新 Dock 位置
+
+### 验证
+
+- `bin\Liuli.exe` 300 KB；任务栏露出 top=1392、高 48，Dock 窗口 1296..1396、玻璃主体底边 1384，距任务栏顶 8px
+- 关闭 Dock 自动隐藏后截图 `docs/screens/v8/dock-above-taskbar.png` 确认 Dock 与任务栏同时可见且不重叠
+
+### 未验证
+
+- 任务栏缩回后的回底连续实测、连续扫底、任务栏换边、125% DPI
+
 ## [Unreleased · v2.0 M6 日志诊断]
 
 ### 新增
