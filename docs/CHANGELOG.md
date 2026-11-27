@@ -2,6 +2,29 @@
 
 遵循 Keep a Changelog；版本遵循 SemVer。
 
+## [Unreleased · v2.0 M6 文字大小四档]
+
+### 新增
+
+- 设置标题栏常驻“文字 小/标准/大/特大”四档（0.9 / 1.0 / 1.15 / 1.3），任意页可切换，写入 `shell.json` 的 `textSize`
+- `Theme.TextScale` 统一倍率；Dock、灵动岛、面板、收纳、设置同步等比缩放，切换后即时重排，不重启
+
+### 变更
+
+- 面板与收纳 body 按文字档缩放，拖拽/缩放时把物理尺寸换算回逻辑配置，避免重启后二次放大
+- 设置窗口尺寸随档位变化：0.9 810×648、1.0 900×720、1.3 1170×936
+
+### 验证
+
+- `bin\Liuli.exe` 302 KB；C#5 无新增 error
+- 0.9 / 1.0 / 1.3 设置窗实测；收纳 580×409 / 644×454 / 838×591；Dock 1.3 754×131，玻璃主体底边 1382，任务栏顶 1392
+- 重启保持 `textSize=3`；切回标准后 `textSize=1`
+- 截图 `docs/screens/v8/settings-text-standard.png`、`settings-text-large.png`、`collector-text-large.png`、`dock-text-large.png`
+
+### 未验证
+
+- 125%/150% DPI 真机、1.15 档截图、多屏、面板实窗（当前 `panels=[]`）、0.9 档极长文件名换行
+
 ## [Unreleased · v2.0 M6 Dock 任务栏避让]
 
 ### 修复

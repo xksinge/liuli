@@ -83,20 +83,29 @@ namespace Liuli
             ShellConfig c = V2Shell.Config;
             c.CollectorW = Util.Clamp(c.CollectorW, 420, 900);
             c.CollectorH = Util.Clamp(c.CollectorH, 300, 720);
+            float ts = Theme.TextScale;
+            int w = Util.RoundI(c.CollectorW * ts);
+            int h = Util.RoundI(c.CollectorH * ts);
             Rectangle work = Screen.PrimaryScreen.WorkingArea;
             if (c.CollectorX < 0 || c.CollectorY < 0)
             {
-                c.CollectorX = work.Right - c.CollectorW - Util.RoundI(40 * UiScale);
+                c.CollectorX = work.Right - w - Util.RoundI(40 * UiScale);
                 c.CollectorY = work.Top + Util.RoundI(96 * UiScale);
             }
             if (c.CollectorX < work.Left) c.CollectorX = work.Left;
             if (c.CollectorY < work.Top) c.CollectorY = work.Top;
             if (c.CollectorX > work.Right - 80) c.CollectorX = work.Right - 80;
             if (c.CollectorY > work.Bottom - 60) c.CollectorY = work.Bottom - 60;
-            ClientSize = new Size(c.CollectorW + margin * 2, c.CollectorH + margin * 2);
+            ClientSize = new Size(w + margin * 2, h + margin * 2);
             Location = new Point(c.CollectorX - margin, c.CollectorY - margin);
             EnsureCanvas();
             Render();
+        }
+
+        public void ApplyTextScale()
+        {
+            UiScale = DpiUiScale();
+            ApplyBounds();
         }
 
         public void ApplyConfig()
@@ -110,8 +119,8 @@ namespace Liuli
             int m = margin > 0 ? margin : Util.RoundI(12 * UiScale);
             V2Shell.Config.CollectorX = Location.X + m;
             V2Shell.Config.CollectorY = Location.Y + m;
-            V2Shell.Config.CollectorW = ClientSize.Width - m * 2;
-            V2Shell.Config.CollectorH = ClientSize.Height - m * 2;
+            V2Shell.Config.CollectorW = Util.RoundI((ClientSize.Width - m * 2) / Theme.TextScale);
+            V2Shell.Config.CollectorH = Util.RoundI((ClientSize.Height - m * 2) / Theme.TextScale);
             V2Shell.Config.Save();
         }
 

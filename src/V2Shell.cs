@@ -39,6 +39,33 @@ namespace Liuli
             return ok;
         }
 
+        public static int TextSizeIndex()
+        {
+            return Config == null ? 1 : Util.Clamp(Config.TextSize, 0, 3);
+        }
+
+        public static string TextSizeStatus()
+        {
+            int i = TextSizeIndex();
+            return Theme.TextScaleName(i) + " · " + (int)(Theme.TextScaleOf(i) * 100) + "%";
+        }
+
+        public static void SetTextSize(int size)
+        {
+            if (Config == null) return;
+            size = Util.Clamp(size, 0, 3);
+            Config.TextSize = size;
+            Theme.TextScale = Theme.TextScaleOf(size);
+            Config.Save();
+            if (Dock != null) Dock.RelayoutPublic();
+            if (Island != null) Island.ApplyConfig();
+            for (int i = 0; i < Panels.Count; i++) if (Panels[i] != null) Panels[i].ApplyTextScale();
+            if (Collector != null) Collector.ApplyTextScale();
+            if (Settings != null && !Settings.IsDisposed) Settings.ApplyTextScale();
+            Toast("文字大小：" + TextSizeStatus());
+            Log.Info("textsize", TextSizeStatus());
+        }
+
         public static WeatherService Weather;
         public static StatsNow Stats = new StatsNow();
         public static int ActivateMessage;
@@ -56,6 +83,7 @@ namespace Liuli
         {
             bootAt = Environment.TickCount;
             Config = ShellConfig.Load();
+            Theme.TextScale = Theme.TextScaleOf(Config.TextSize);
             AutoStart.Apply(Config.AutoStart);
             Theme.BlurPct = Util.Clamp(Config.BlurPct, 10, 100);
             Theme.GlassPct = Util.Clamp(Config.GlassPct, 20, 140);

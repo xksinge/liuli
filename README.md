@@ -1,6 +1,6 @@
 ﻿# Liuli 琉璃
 
-> **v2.0 重构进行中。** 产品基线已确认为 GlassBoard 功能对齐（Dock + 顶部灵动岛 + 玻璃面板 + 桌面组件），见 [docs/REQUIREMENTS.md](docs/REQUIREMENTS.md)。M1 已实现底部 Dock、顶部灵动岛、任务栏自动隐藏与 `shell.json` 独立配置；M2 已补 Dock 自动隐藏、三档尺寸、运行指示、拖拽排序与悬停放大，并通过 PR #49 合入 `main`；M3 已补灵动岛尺寸/偏移/动画/内容开关配置，并通过 PR #51 合入 `main`；M4 玻璃面板已通过 PR #53 合入 `main`；REQ-032 主题快照与 v2 集中设置面板在 Issue #54 完成，已通过 PR #55 合入（`0dc1a6a`）。M5 桌面图标（REQ-080–082/Issue #61）已通过 PR #62 合入；TASK-054 桌面收纳单面板（Issue #16）已完成并真机验收，已通过 PR #63 合入（`dc2ef27`）；TASK-050 时钟/天气/系统组件（Issue #64）已通过 PR #65 合入（`5a1b1a2`）；M6 开机自启（Issue #66）已通过 PR #67 合入（`812661f`）；TASK-063 热键状态/重置（Issue #68）已通过 PR #69 合入（`ea378c0`）；TASK-064 日志诊断（Issue #70）已通过 PR #71 合入（`9851d21`）；TASK-065 Dock 任务栏避让（Issue #72）已通过 PR #73 合入（`8b00fb2`）。v1.5.0 的“看板 + 文件收纳”功能整体封存，保留代码与用户数据，不再默认创建窗口。
+> **v2.0 重构进行中。** 产品基线已确认为 GlassBoard 功能对齐（Dock + 顶部灵动岛 + 玻璃面板 + 桌面组件），见 [docs/REQUIREMENTS.md](docs/REQUIREMENTS.md)。M1 已实现底部 Dock、顶部灵动岛、任务栏自动隐藏与 `shell.json` 独立配置；M2 已补 Dock 自动隐藏、三档尺寸、运行指示、拖拽排序与悬停放大，并通过 PR #49 合入 `main`；M3 已补灵动岛尺寸/偏移/动画/内容开关配置，并通过 PR #51 合入 `main`；M4 玻璃面板已通过 PR #53 合入 `main`；REQ-032 主题快照与 v2 集中设置面板在 Issue #54 完成，已通过 PR #55 合入（`0dc1a6a`）。M5 桌面图标（REQ-080–082/Issue #61）已通过 PR #62 合入；TASK-054 桌面收纳单面板（Issue #16）已完成并真机验收，已通过 PR #63 合入（`dc2ef27`）；TASK-050 时钟/天气/系统组件（Issue #64）已通过 PR #65 合入（`5a1b1a2`）；M6 开机自启（Issue #66）已通过 PR #67 合入（`812661f`）；TASK-063 热键状态/重置（Issue #68）已通过 PR #69 合入（`ea378c0`）；TASK-064 日志诊断（Issue #70）已通过 PR #71 合入（`9851d21`）；TASK-065 Dock 任务栏避让（Issue #72）已通过 PR #73 合入（`8b00fb2`）。TASK-062 文字四档（Issue #74）已完成，待 PR #75 合入。v1.5.0 的“看板 + 文件收纳”功能整体封存，保留代码与用户数据，不再默认创建窗口。
 
 ## v2.0 M1–M5 当前能力
 
@@ -25,6 +25,7 @@
 - 系统页：设置第 10 页提供开机自启开关，写当前用户 `HKCU\Software\Microsoft\Windows\CurrentVersion\Run\Liuli`；移动 exe 后下次启动自动修正路径，关闭即删除；不写 HKLM、不需要管理员权限。
 - 系统页显示 `Ctrl+Alt+L` / `Ctrl+Alt+G` 的实际注册状态；组合被占用时显示“失败”，可点“重新注册快捷键”重试，日志记录 `hotkey toggle/settings` 结果。
 - 系统页日志诊断：显示当前日志和 `.1` 轮转大小，可打开日志目录或复制含版本、DPI、路径和最近 16 行的诊断摘要；日志超过 512 KB 自动轮转。
+- 文字大小：设置标题栏常驻“小 / 标准 / 大 / 特大”四档（0.9 / 1.0 / 1.15 / 1.3），切换后 Dock、灵动岛、面板、收纳、设置即时等比缩放并持久化；0.9 档正文最小按 8px 绘制。
 - 任务栏自动隐藏可切换、可恢复；Dock 用 55ms 定时检测任务栏是否真正露出，露出时整体上移任务栏高度，缩回后回到底部，避免遮挡任务栏或抢任务栏唤出热区。
 - 托盘与热键：`Ctrl+Alt+L` 显示/隐藏外壳，`Ctrl+Alt+G` 打开设置。
 - 无界面自检：`Liuli.exe --selftest` 读取配置、任务栏状态并探测 256px 图标，不启动窗口。
@@ -48,6 +49,12 @@
 ![快捷键状态](docs/screens/v8/settings-hotkeys.png)
 
 ![日志诊断](docs/screens/v8/settings-logs.png)
+
+- 文字特大（1.3 档）设置页与收纳面板，标题栏四档切换。
+
+![文字特大设置页](docs/screens/v8/settings-text-large.png)
+
+![文字特大收纳](docs/screens/v8/collector-text-large.png)
 
 - Dock 与任务栏同时露出时的避让效果（测试时临时关闭 Dock 自动隐藏）。
 

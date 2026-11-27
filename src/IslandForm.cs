@@ -129,6 +129,7 @@ namespace Liuli
         public void ApplyConfig()
         {
             if (!IsHandleCreated) return;
+            UiScale = DpiUiScale();
             expandingSize = false;
             if (animTimer != null) animTimer.Stop();
             ClientSize = expanded ? ExpandedSize() : CollapsedSize();

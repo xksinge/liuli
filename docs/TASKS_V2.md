@@ -140,13 +140,17 @@
 ## Phase 6 · M6 设置与系统
 
 - [ ] **TASK-060** [REQ-060] `SettingsV2` 分模块页面
-  - M4 已完成主题/面板/Dock/灵动岛/关于五页与统一入口，M5 加入配色、壁纸、桌面、收纳四页，M6 加入系统页后为十页；快捷键配置、日志诊断等 M6 项仍待补。
+  - M4 已完成主题/面板/Dock/灵动岛/关于五页与统一入口，M5 加入配色、壁纸、桌面、收纳四页，M6 加入系统页后为十页；快捷键、日志诊断、文字四档已补，剩“系统页拆独立页/自定义键位”未定。
 - [x] **TASK-061** [REQ-061] 开机自启（Issue #66 / PR #67，已合入 `812661f`）
   - 实现：设置第 10 页“系统”（索引 8）；`ShellConfig.AutoStart` 读写 `autoStart`；`AutoStart` 只写 `HKCU\Software\Microsoft\Windows\CurrentVersion\Run\Liuli`，值带引号指向当前 exe；`V2Shell.Boot` 每次按配置写入/删除，移动 exe 后下次启动自动修正。
   - 验证：构建 `bin\Liuli.exe` 297 KB；系统页开关开启后 Run=`"E:\meihuaDesktop\bin\Liuli.exe"`，关闭后值不存在；把 exe+shell.json 复制到 `_scratch\move-test` 启动，Run 更新为临时路径；恢复主 exe 后 Run 回到主路径；`--selftest` 输出 `autoStart=False run=`；截图 `docs/screens/v8/settings-system.png`。
   - 未验证：Windows 重启后的实际自启行为、非管理员受限账户、多用户切换、杀软拦截。
 
-- [ ] **TASK-062** [REQ-062/092] HiDPI + 文字四档
+- [x] **TASK-062** [REQ-062/092] HiDPI + 文字四档（Issue #74 / PR #75，已合入 `待填`）
+  - 实现：`ShellConfig.TextSize` 读写 `textSize`（0 小 / 1 标准 / 2 大 / 3 特大），对应 0.9 / 1.0 / 1.15 / 1.3；`Theme.TextScale` 统一倍率，`V2Window.DpiUiScale`、设置 `S`、面板/收纳 body、Dock/灵动岛一起缩放，避免只放大字体导致固定行高裁切。
+  - 入口：设置标题栏常驻“文字 小/标准/大/特大”四枚胶囊，任意页可切换；`V2Shell.SetTextSize` 写入配置并即时重排 Dock、灵动岛、面板、收纳和设置，Toast + 日志 `textsize`。
+  - 验证：构建 `bin\Liuli.exe` 302 KB；0.9 设置 810×648、1.0 900×720、1.3 1170×936；收纳 0.9 580×409、1.0 644×454、1.3 838×591；Dock 1.3 窗口 754×131、玻璃主体底边 1382，任务栏顶 1392，仍留 10px；重启保持 `textSize=3`，切回标准后 `textSize=1`；截图 `settings-text-standard.png`、`settings-text-large.png`、`collector-text-large.png`、`dock-text-large.png`。
+  - 未验证：125%/150% DPI 真机、1.15 档截图、多屏、面板实窗截图（当前 `panels=[]`）、0.9 档最小字号 8px 后的极长文件名换行。
 - [x] **TASK-063** [REQ-063] 热键查看与重置（Issue #68 / PR #69，已合入 `ea378c0`）
   - 实现：系统页新增“快捷键”区，显示 Ctrl+Alt+L 显示/隐藏、Ctrl+Alt+G 打开设置的注册状态；新增“重新注册快捷键”，先 `UnregisterHotKey` 再注册默认组合，结果写日志并刷新页面。
   - 验证：构建 `bin\Liuli.exe` 298 KB；Ctrl+Alt+G 可正常打开设置，系统页显示“已注册”；Ctrl+Alt+L 在当前环境被其它进程占用，显示“失败”且启动日志为 `toggle=fail settings=ok`；点击重新注册后日志再次记录同样状态，页面不崩、无裁切；截图 `docs/screens/v8/settings-hotkeys.png`。
