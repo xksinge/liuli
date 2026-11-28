@@ -716,6 +716,16 @@ namespace Liuli
             if (Collector != null) Collector.Render();
         }
 
+        /// <summary>推荐配置导入后整体刷新：外观、Dock、灵动岛、面板一次到位。</summary>
+        public static void ApplyRecommendedLayout()
+        {
+            if (Config == null) return;
+            ApplyVisualSettings(true);
+            ApplyIslandSettings();
+            RebuildPanels();
+            if (Settings != null && !Settings.IsDisposed) Settings.ReloadPage();
+        }
+
         public static void SetDockOn(bool on)
         {
             if (Config == null) return;
@@ -1104,8 +1114,8 @@ namespace Liuli
             {
                 PanelForm pf = new PanelForm(Config.Panels[i]);
                 Panels.Add(pf);
-                pf.Show();
-                if (allHidden) pf.Hide();
+                if (allHidden || (Settings != null && !Settings.IsDisposed)) pf.Hide();
+                else pf.Show();
             }
         }
 

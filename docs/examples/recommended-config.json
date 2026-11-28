@@ -1,0 +1,40 @@
+{
+  "version": 2,
+  "name": "清透居中",
+  "description": "玻璃更通透、Dock 居中、灵动岛保留媒体与通知；面板两枚。",
+  "theme": {
+    "mode": "auto",
+    "accent": "#7EB2FF",
+    "glassPct": 100,
+    "blurPct": 62,
+    "radius": 20
+  },
+  "dock": {
+    "preset": "standard",
+    "autoHide": false,
+    "align": "center",
+    "bottomGap": 8,
+    "locked": true,
+    "items": [
+      { "kind": "system", "id": "thispc" },
+      { "kind": "system", "id": "userfiles" },
+      { "kind": "system", "id": "recycle" }
+    ]
+  },
+  "island": {
+    "on": true,
+    "width": 380,
+    "height": 112,
+    "top": 6,
+    "animMs": 180,
+    "weather": true,
+    "stats": true,
+    "quick": true,
+    "media": true,
+    "notify": true
+  },
+  "panels": [
+    { "content": "clock", "x": 80, "y": 180, "w": 340, "h": 200, "topMost": true },
+    { "content": "stats", "x": 1180, "y": 180, "w": 340, "h": 200, "topMost": true }
+  ]
+}

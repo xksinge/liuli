@@ -168,6 +168,18 @@ M1 实际命名：`V2Shell`、`ShellConfig`、`V2Window`、`DockForm`、`IslandF
 - 状态刷新：设置页内的主题库“当前”徽标由 `ActiveTheme` 驱动；滑杆/开关改完后 180ms 重建页面，避免徽标停留旧值，同时避开命名输入与拖动过程。
 - 键盘：`Esc` 关闭，`←/→` 切页；命名框内 Enter 保存、Esc 取消。
 
+### 7.4.1 推荐配置导入（REQ-033，Issue #99）
+
+- 入口：设置·主题页左侧“导入推荐配置”，`OpenFileDialog` 只筛 JSON；成功后 Toast + MessageBox 显示配置名、应用字段数与备份文件名。
+- Schema：根 `version`（1–3，可选）/ `name`（1–24 字）/ `description`（≤120 字）/ `theme` / `dock` / `island` / `panels`；根、各段与数组元素都拒绝未知字段。
+  - `theme`：`mode`（auto/dark/light）、`accent`（#RRGGBB，等价于自定义色）、`accentMode`（auto/preset/custom）、`accentPreset`（0–5）、`glassPct`（20–140）、`blurPct`（10–100）、`radius`（10–30）。
+  - `dock`：`preset`（small/standard/large）、`autoHide`、`align`（left/center/right）、`bottomGap`（0–160）、`locked`、`items[]`（≤16，系统入口仅 thispc/recycle/userfiles/network/controlpanel；app 必须有非空 path）。
+  - `island`：`on`、`width`（360–520）、`height`（100–180）、`top`（0–80）、`animMs`（0–400）、`weather`/`stats`/`quick`/`media`/`notify` 布尔。
+  - `panels[]`：≤6，`id`（可选，段内唯一）、`content`（empty/clock/weather/stats）、`x/y`（−10000–10000）、`w`（220–720）、`h`（120–520）、`topMost`。
+- 原子性：先把整份 JSON 解析到 staging 字典并收集全部错误；只有 `errors.Count==0` 才备份 `shell.json` 到 `data\backups\shell-yyyyMMdd-HHmmss-fff.json`，再写 `ShellConfig`、`NormalizeIsland/Panels`、`Save`，最后 `ApplyRecommendedLayout` 统一刷新外观、Dock、灵动岛与面板。
+- 失败：文件不存在/超 1 MB/根不是对象/坏字段都返回错误串，由设置页 MessageBox 原样展示；不备份、不改 `ShellConfig`、不重建窗口。
+- 限制：不导入壁纸路径，避免改系统壁纸后无法回滚；不导入主题快照库；`dock.items` 的 app 路径只校验格式，不要求目标文件在本机存在（推荐配置可跨机器分享）。
+
 ### 7.5 壁纸页（REQ-050–052，Issue #59）
 
 - 配置：`ShellConfig.WallpaperDim` 0–80、`WallpaperOrig` / `WallpaperOrigStyle` / `WallpaperOrigTile`；Load clamp，Save 落盘，`RestoreVisualDefaults` 只重置压暗、不清原壁纸记录。

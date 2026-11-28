@@ -216,6 +216,9 @@ namespace Liuli
             AddButton("保存当前主题", "把面板布局、Dock/灵动岛参数、壁纸与配色存为命名快照", "saveTheme", x, y, w, false,
                 delegate { StartNameEdit(); });
             y += Util.RoundI(62 * S);
+            AddButton("导入推荐配置", "选择 JSON，全量校验通过后先备份 shell.json 再整单应用", "importConfig", x, y, w, false,
+                delegate { ImportRecommendedConfig(); });
+            y += Util.RoundI(62 * S);
             AddButton("恢复外观默认", "只重置玻璃、磨砂、圆角与明暗，不动面板布局", "defaultTheme", x, y, w, false,
                 delegate { V2Shell.RestoreVisualDefaults(); BuildPage(0); Invalidate(); });
             y += Util.RoundI(54 * S);
@@ -1191,6 +1194,35 @@ namespace Liuli
         Rectangle SliderTrack(Ctl c)
         {
             return new Rectangle(c.R.X, c.R.Bottom - Util.RoundI(12 * S), c.R.Width, Util.RoundI(5 * S));
+        }
+
+        // ---------- 推荐配置导入 ----------
+        void ImportRecommendedConfig()
+        {
+            using (OpenFileDialog dlg = new OpenFileDialog())
+            {
+                dlg.Title = "导入推荐配置";
+                dlg.Filter = "Liuli 推荐配置 (*.json)|*.json|所有文件 (*.*)|*.*";
+                dlg.CheckFileExists = true;
+                dlg.Multiselect = false;
+                if (dlg.ShowDialog(this) != DialogResult.OK) return;
+                Cursor old = Cursor;
+                Cursor = Cursors.WaitCursor;
+                ImportResult r = RecommendedConfig.Import(dlg.FileName);
+                Cursor = old;
+                if (!r.Ok)
+                {
+                    MessageBox.Show(this, "导入失败，当前配置未改变：\n\n" + r.Error,
+                        "推荐配置导入", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    return;
+                }
+                V2Shell.Toast("已导入推荐配置：" + r.Name);
+                string backup = string.IsNullOrEmpty(r.Backup) ? "未生成备份（原文件不存在）" : Path.GetFileName(r.Backup);
+                MessageBox.Show(this, "已导入：" + r.Name + "\n应用字段：" + r.Fields + " 项\n备份：" + backup,
+                    "推荐配置导入", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                ReloadPage();
+                Invalidate();
+            }
         }
 
         // ---------- 主题命名 ----------

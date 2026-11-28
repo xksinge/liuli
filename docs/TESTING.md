@@ -1,5 +1,15 @@
 ﻿# 测试记录
 
+## v2.0 Phase 7 导入推荐配置（2026-11-28，Issue #99）
+
+- 环境：Windows 11 25H2，DISPLAY1 2560×1440，100% DPI；当前配置 `dockPreset=large`、`islandWidth=380`、`panels=0`、`accent=auto`。
+- 构建：`bin\Liuli.exe` 368 KB（376,832 B）；C#5 无新增 error，仅历史 warning。
+- 合法导入：`docs/examples/recommended-config.json` 从设置页选入，提示“已导入：清透居中 / 应用字段：26 项 / 备份 shell-20261128-215630-959.json”；`bin\data\backups\` 出现 17,507 B 备份。
+- 字段覆盖：另用测试 JSON（light、玻璃 120/75/26、Dock 大/自动隐藏/右对齐/20px/未锁定/2 项、灵动岛 420×128/top14/240ms/内容三关、weather 面板）导入，`--selftest` 读回全部新值，备份 17,228 B；说明 theme/dock/island/panels 四段均落到 `shell.json`。
+- 非法导入：含未知字段、`mode=night`、`glassPct=999`、`radius="20"`、`align=diagonal`、系统入口 `bogus`、`width=999`、`notify="yes"`、`content=video` 的 JSON，弹出 9 条字段路径错误；再次 `--selftest`，`dockPreset/islandWidth/panels/accent` 与导入前一致，`backups` 仍为 2 个（失败未产生备份）。
+- 截图：`docs/screens/v8/settings-import-config.png`（成功 + 备份名）、`settings-import-error.png`（9 条字段错误）。
+- 未验证：导入时目标壁纸路径不存在（当前 Schema 不含壁纸）、`dock.items` app 路径不存在时的启动失败提示、125%/150% DPI、面板重建后拖动/置顶全流程、导入与设置页同时关闭的时序。
+
 ## v2.0 Phase 7 灵动岛通知摘要（2026-11-28，Issue #97 / PR #98）
 
 - 环境：Windows 11 25H2，DISPLAY1 2560×1440，100% DPI，`islandNotify=true`；通知库为当前用户真实 `wpndatabase.db`（15 条 toast，其中 10 条未过期、按内容去重后 3 条）。
