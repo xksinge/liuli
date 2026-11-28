@@ -2,6 +2,23 @@
 
 遵循 Keep a Changelog；版本遵循 SemVer。
 
+## [Unreleased · v2.0 Phase 7 导入推荐配置（Issue #99）]
+
+### 新增
+
+- 新增 `src/RecommendedConfig.cs`：严格解析 GlassBoard 风格 JSON 的 `theme` / `dock` / `island` / `panels` 四段；未知字段、类型错误、枚举白名单、数值范围、系统入口 ID、数组上限先全量收集，全部通过才应用
+- 导入前自动把当前 `shell.json` 复制到 `bin\data\backups\shell-yyyyMMdd-HHmmss-fff.json`；备份失败直接取消导入
+- 设置·主题页新增“导入推荐配置”，选择 JSON 后成功显示配置名、应用字段数与备份文件名；失败按字段路径列出原因，当前配置与窗口状态不变
+- 新增示例 `docs/examples/recommended-config.json`（清透居中：玻璃 100/62/20、Dock 居中 8px、灵动岛媒体+通知、两枚面板）
+
+### 变更
+
+- `ApplyRecommendedLayout` 统一刷新外观、Dock、灵动岛与面板；面板重建时若设置窗仍打开则保持隐藏，关闭设置后再统一显示
+
+### 验证
+
+- 构建 `bin\Liuli.exe` 368 KB；合法配置 26 字段一次应用，生成 17,507 B 备份；非法配置 9 条错误整单拒绝，`shell.json` 的 `dockPreset/islandWidth/panels/accent` 前后不变
+
 ## [Unreleased · v2.0 Phase 7 灵动岛通知摘要（Issue #97 / PR #98）]
 
 ### 新增
