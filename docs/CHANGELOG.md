@@ -2,6 +2,31 @@
 
 遵循 Keep a Changelog；版本遵循 SemVer。
 
+## [Unreleased · v2.0 Phase 7 灵动岛通知摘要（Issue #97 / PR #98）]
+
+### 新增
+
+- 新增 `Notification.cs`：后台 MTA 线程 2s 只读当前用户 `%LOCALAPPDATA%\Microsoft\Windows\Notifications\wpndatabase.db`，取 `Notification` 表 `Type='toast'` 最新记录，关联 `NotificationHandler.PrimaryId` 得到应用名；只解析 payload 的 `<text>` 节点，不读取图片、附件或 launch 参数
+- 展开态新增通知行：应用名、未读数量（“还有 N 条”）、标题与正文；右侧 × 忽略当前条，扫帚清除岛内全部摘要；通知行在媒体行下方，各占 40px，无通知或关闭开关时不占高度
+- 收起态有通知时右侧显示 `通知 · 标题`；媒体存在时仍优先显示 `♪ 标题`
+- 同应用 + 同标题 + 同正文按一条处理，系统重复写入的 toast 副本不会反复出现；忽略只在本次运行内生效，清除水位写入 `shell.json` 的 `notificationClearedAt`，重启后不再翻出已清除旧通知
+- 设置·灵动岛页“内容开关”改为两列，新增“通知摘要”开关（`islandNotify`，默认开）；`ThemeSnapshot` 保存/恢复 `islandMedia` 与 `islandNotify`
+
+### 变更
+
+- 灵动岛高度计算改为媒体/通知各自 +40px；`RefreshMedia` / `RefreshNotifications` 共用尺寸过渡，通知出现或清除时按 `islandAnimMs` 伸缩
+- 通知正文做空白折叠、标题 80 字/正文 120 字截断；坏 XML 跳过该条，通知库缺失或 SQLite 不可用时仅记 warning，不阻塞启动
+
+### 验证
+
+- `bin\Liuli.exe` 357 KB；C#5 无新增 error，仅历史 warning
+- 真实通知库 3 条：展开窗 `1078,6..1482,182`，显示 WorkBuddy“任务已完成 / 解析抖音视频内容”与“还有 2 条”；无通知库时展开窗 `1078,6..1482,142`
+- 点 × 后 `可见摘要=2`，下一条“内存检测测试结果”接替；点扫帚后岛内摘要清零、窗口收回 136 高，`notificationClearedAt` 写回 `shell.json`
+- 媒体 + 通知并存：展开窗 `1078,6..1482,222`，媒体行与通知行不重叠
+- 空库、坏 XML 假库：空库不显示通知行；坏 XML 被跳过，合法条目正常显示
+- 截图：`docs/screens/v8/island-notify.png`、`settings-island-notify.png`、`island-notify-media.png`
+- 未验证：系统通知中心与岛内“清除”联动（当前只清岛内摘要，不删除系统通知记录）、125%/150% DPI、真实新 toast 2 秒内到达、通知图片/进度条类富 toast
+
 ## [Unreleased · v2.0 Phase 7 灵动岛 SMTC 媒体显示与控制]
 
 ### 新增
@@ -910,5 +935,6 @@
 - 视频壁纸依赖 Media Feature Pack，缺组件环境未验证（#1）
 - 设置项与编辑交互未全量真机回归（#2）
 - Win10 1903 / 多 DPI 未验证（#4）
+
 
 

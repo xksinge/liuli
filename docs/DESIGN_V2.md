@@ -124,7 +124,7 @@ M1 实际命名：`V2Shell`、`ShellConfig`、`V2Window`、`DockForm`、`IslandF
 - `islandTop`：顶部偏移，0–80，默认 6。
 - `islandAnimMs`：展开/收起时长，0–400，默认 180；`0` 为立即切换。
 - 收起尺寸派生：宽 `round(width * 0.63)` 夹 200–320，高 `round(height * 0.36)` 夹 34–54；窗口再加左右/上下各 12 逻辑像素阴影边距。
-- 内容开关：沿用 `islandWeather`、`islandStats`，新增 `islandQuick` 与 `islandMedia`；关闭后不绘制对应区域。
+- 内容开关：沿用 `islandWeather`、`islandStats`，新增 `islandQuick`、`islandMedia` 与 `islandNotify`；关闭后不绘制对应区域。
 - 动画：16ms 定时器按 `1-(1-t)^3` 插值窗口宽高并重新居中；过渡期间按目标状态绘制，尺寸变化由窗口裁剪呈现。配置为 0 时跳过定时器。
 - 设置入口：灵动岛主菜单新增“灵动岛设置”，子菜单按档位循环宽度/高度/偏移/动画，并切换内容开关；每次改动 `ApplyConfig()` + `Save()`，提供“恢复默认”。
 - 菜单项统一在 `MouseUp` 触发（按下只记录行号），子菜单由 140ms 定时器在父菜单关闭后打开，避免父菜单的按下/抬起事件命中刚出现的子菜单。
@@ -133,7 +133,7 @@ M1 实际命名：`V2Shell`、`ShellConfig`、`V2Window`、`DockForm`、`IslandF
 ### 7.2 P1（M7，不在 M3 验收）
 
 - SMTC 媒体标题/艺术家/进度与播放控制（REQ-023，TASK-030/Issue #95）：新增 `Media.cs`，后台 MTA 线程 0.9s 轮询 `GlobalSystemMediaTransportControlsSessionManager.GetCurrentSession()`，读取 `TryGetMediaPropertiesAsync` 的标题/艺术家与 `GetPlaybackInfo/GetTimelineProperties` 的播放状态/进度；仅当元数据或播放状态变化时通过 `V2Shell.NotifyMediaChanged()` 回 UI 线程。展开态有媒体时高度加 40px，新增媒体行：标题、歌手（空则应用名）、进度条与三键控制；无媒体时不占行高。收起态媒体存在时右侧显示 `♪ 标题`。`islandMedia` 默认开，设置·灵动岛页可关。
-- Windows 通知摘要与忽略/清除（REQ-024，未实现）。
+- Windows 通知摘要与忽略/清除（REQ-024，TASK-031/Issue #97）：新增 `Notification.cs`，后台 MTA 线程每 2s 以只读方式打开当前用户通知库 `%LOCALAPPDATA%\Microsoft\Windows\Notifications\wpndatabase.db`，查询 `Notification.Type='toast'` 最新行，取 `Payload` 的 `<text>` 节点与 `NotificationHandler.PrimaryId` 的应用名；不读图片、附件、launch 参数。按“应用 + 标题 + 正文”去重，避免系统时间线重复写入的副本反复出现。展开态通知行放在媒体行下方，各 +40px；显示应用名、`还有 N 条`、标题/正文，右侧 × 忽略当前条、扫帚清除岛内摘要；无通知或 `islandNotify=false` 时整行隐藏。忽略只在本进程内生效；清除把最新到达时间作为水位写入 `shell.json` 的 `notificationClearedAt`（字符串保存，避免 JSON double 丢 FILETIME 精度），重启不翻旧通知。通知库/`winsqlite3.dll` 不可用、坏 XML 只记 warning 并跳过，不阻塞外壳启动。当前“清除”只清灵动岛摘要，不删除系统通知中心记录；真要做系统级清除需另外评估 Windows 通知 API 权限。
 - M3 验收只覆盖 REQ-020–022、025。
 
 ### 7.3 M4 玻璃面板（REQ-030/031，P0）

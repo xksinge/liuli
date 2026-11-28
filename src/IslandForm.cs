@@ -14,8 +14,10 @@ namespace Liuli
         bool expanded;
         int hoverBtn = -1;
         int hoverMedia = -1;
+        int hoverNotify = -1;
         int pressedBtn = -1;
         int pressedMedia = -1;
+        int pressedNotify = -1;
         int bounceBtn = -1;
         bool pressedBody;
         long bounceAt;
@@ -67,7 +69,9 @@ namespace Liuli
         Size ExpandedSize()
         {
             int m = Util.RoundI(12 * UiScale);
-            int extra = MediaActive() ? Util.RoundI(40 * UiScale) : 0;
+            int extra = 0;
+            if (MediaActive()) extra += Util.RoundI(40 * UiScale);
+            if (NotifyActive()) extra += Util.RoundI(40 * UiScale);
             return new Size(Util.RoundI(IslandWidthCfg() * UiScale) + m * 2,
                 Util.RoundI(IslandHeightCfg() * UiScale) + extra + m * 2);
         }
@@ -75,6 +79,31 @@ namespace Liuli
         static bool MediaActive()
         {
             return (V2Shell.Config == null || V2Shell.Config.IslandMedia) && MediaService.Now.Has;
+        }
+
+        static bool NotifyActive()
+        {
+            return (V2Shell.Config == null || V2Shell.Config.IslandNotify) && NotificationService.Now.Has;
+        }
+
+        int NotifyTop()
+        {
+            Rectangle body = CurrentBody();
+            int y = body.Y + Util.RoundI(66 * UiScale);
+            if (MediaActive()) y += Util.RoundI(40 * UiScale);
+            return y;
+        }
+
+        Rectangle[] NotifyButtons()
+        {
+            Rectangle body = CurrentBody();
+            int bs = Util.RoundI(24 * UiScale), gap = Util.RoundI(5 * UiScale);
+            int right = body.Right - Util.RoundI(20 * UiScale);
+            int y = NotifyTop() + Util.RoundI(8 * UiScale);
+            return new Rectangle[] {
+                new Rectangle(right - bs * 2 - gap, y, bs, bs),
+                new Rectangle(right - bs, y, bs, bs)
+            };
         }
 
         Rectangle[] MediaButtons()
@@ -164,10 +193,15 @@ namespace Liuli
             if (expanded == on) return;
             expanded = on;
             Size target = expanded ? ExpandedSize() : CollapsedSize();
-            int dur = IslandAnimCfg();
+            ResizeTo(target, IslandAnimCfg());
+        }
+
+        void ResizeTo(Size target, int dur)
+        {
             if (dur <= 0 || !IsHandleCreated)
             {
                 expandingSize = false;
+                if (animTimer != null) animTimer.Stop();
                 ClientSize = target;
                 EnsureCanvas();
                 ApplyPosition();
@@ -207,7 +241,7 @@ namespace Liuli
                 {
                     long now = Environment.TickCount;
                     if (leaveAt == 0) leaveAt = now;
-                    else if (now - leaveAt > 900) { leaveAt = 0; SetExpanded(false); }
+                    else if (now - leaveAt > 900) { leaveAt = 0; hoverNotify = -1; SetExpanded(false); }
                     return;
                 }
                 leaveAt = 0;
@@ -220,8 +254,17 @@ namespace Liuli
                     Rectangle[] ms = MediaButtons();
                     for (int i = 0; i < ms.Length; i++) if (ms[i].Contains(p)) { hm = i; break; }
                 }
-                if (hb != hoverBtn || hm != hoverMedia) { hoverBtn = hb; hoverMedia = hm; Render(); }
-                Cursor = hb >= 0 || hm >= 0 ? Cursors.Hand : Cursors.Default;
+                int hn = -1;
+                if (NotifyActive())
+                {
+                    Rectangle[] ns = NotifyButtons();
+                    for (int i = 0; i < ns.Length; i++) if (ns[i].Contains(p)) { hn = i; break; }
+                }
+                if (hb != hoverBtn || hm != hoverMedia || hn != hoverNotify)
+                {
+                    hoverBtn = hb; hoverMedia = hm; hoverNotify = hn; Render();
+                }
+                Cursor = hb >= 0 || hm >= 0 || hn >= 0 ? Cursors.Hand : Cursors.Default;
             }
             else
             {
@@ -230,6 +273,7 @@ namespace Liuli
                 {
                     hoverBtn = -1;
                     hoverMedia = -1;
+                    hoverNotify = -1;
                     SetExpanded(true);
                 }
                 Cursor = Cursors.Default;
@@ -243,17 +287,27 @@ namespace Liuli
 
         public void RefreshMedia()
         {
+            RefreshExtra(true);
+        }
+
+        public void RefreshNotifications()
+        {
+            RefreshExtra(true);
+        }
+
+        void RefreshExtra(bool animate)
+        {
             if (!IsHandleCreated) return;
             UiScale = DpiUiScale();
-            if (expanded)
+            if (!expanded)
             {
-                expandingSize = false;
-                if (animTimer != null) animTimer.Stop();
-                ClientSize = ExpandedSize();
-                EnsureCanvas();
-                ApplyPosition();
+                Render();
+                return;
             }
-            Render();
+            Size target = ExpandedSize();
+            if (target.Width != Width || target.Height != Height)
+                ResizeTo(target, animate ? IslandAnimCfg() : 0);
+            else Render();
         }
 
         /// <summary>离屏预览用：强制展开并重排。</summary>
@@ -386,6 +440,7 @@ namespace Liuli
                 g.DrawLine(pen, dx, body.Y + Util.RoundI(10 * UiScale), dx, body.Bottom - Util.RoundI(10 * UiScale));
 
             string info = showWx && wx.Has ? (wx.Temp + "° " + wx.Cond) : ("CPU " + (int)V2Shell.Stats.Cpu + "%");
+            if (NotifyActive()) info = "通知 · " + NotificationService.Now.Title;
             if (MediaActive()) info = "♪ " + MediaService.Now.Title;
             Rectangle ir = new Rectangle(dx + Util.RoundI(10 * UiScale), body.Y,
                 body.Width - (dx - body.X) - Util.RoundI(16 * UiScale), body.Height);
@@ -431,6 +486,7 @@ namespace Liuli
                     body.Right - Util.RoundI(20 * UiScale), body.Y + Util.RoundI(62 * UiScale));
 
             if (MediaActive()) PaintMedia(g, body);
+            if (NotifyActive()) PaintNotification(g, body);
 
             int y = body.Bottom - Util.RoundI(40 * UiScale);
             if (showStats)
@@ -490,6 +546,30 @@ namespace Liuli
                 PaintIconButton(g, bs[i], gl[i], hoverMedia == i, pressedMedia == i, 1f);
         }
 
+        void PaintNotification(Graphics g, Rectangle body)
+        {
+            NotifyNow n = NotificationService.Now;
+            Rectangle[] bs = NotifyButtons();
+            int tx = body.X + Util.RoundI(20 * UiScale);
+            int ty = NotifyTop();
+            int tw = bs[0].X - tx - Util.RoundI(10 * UiScale);
+            if (tw < Util.RoundI(80 * UiScale)) tw = Util.RoundI(80 * UiScale);
+
+            string label = n.App;
+            if (n.Count > 1) label += " · 还有 " + (n.Count - 1) + " 条";
+            Rectangle appR = new Rectangle(tx, ty, tw, Util.RoundI(13 * UiScale));
+            Theme.TextMiddle(g, label, Theme.Font(9.5f, FontStyle.Regular, UiScale), Theme.TextSub, appR, StringAlignment.Near);
+
+            string text = n.Title;
+            if (n.Body.Length > 0) text += "  " + n.Body;
+            Rectangle mainR = new Rectangle(tx, ty + Util.RoundI(13 * UiScale), tw, Util.RoundI(22 * UiScale));
+            Theme.TextMiddle(g, text, Theme.Font(11.5f, FontStyle.Bold, UiScale), Theme.TextMain, mainR, StringAlignment.Near);
+
+            Glyph[] gl = { Glyph.Close, Glyph.Broom };
+            for (int i = 0; i < 2; i++)
+                PaintIconButton(g, bs[i], gl[i], hoverNotify == i, pressedNotify == i, 1f);
+        }
+
         void Stat(Graphics g, int x, int y, string label, string text, float pct)
         {
             Rectangle lr = new Rectangle(x, y, Util.RoundI(74 * UiScale), Util.RoundI(14 * UiScale));
@@ -521,6 +601,7 @@ namespace Liuli
             pressedBody = true;
             pressedBtn = -1;
             pressedMedia = -1;
+            pressedNotify = -1;
             if (expanded && IslandQuickCfg())
             {
                 Rectangle[] rs = QuickButtons();
@@ -541,6 +622,16 @@ namespace Liuli
                     break;
                 }
             }
+            if (expanded && pressedBtn < 0 && pressedMedia < 0 && NotifyActive())
+            {
+                Rectangle[] ns = NotifyButtons();
+                for (int i = 0; i < ns.Length; i++)
+                {
+                    if (!ns[i].Contains(e.Location)) continue;
+                    pressedNotify = i;
+                    break;
+                }
+            }
             Render();
         }
 
@@ -550,11 +641,26 @@ namespace Liuli
             if (e.Button != MouseButtons.Left) return;
             int pb = pressedBtn;
             int pm = pressedMedia;
+            int pn = pressedNotify;
             bool bodyPressed = pressedBody;
             pressedBtn = -1;
             pressedMedia = -1;
+            pressedNotify = -1;
             pressedBody = false;
-            if (!bodyPressed && pb < 0 && pm < 0) return;
+            if (!bodyPressed && pb < 0 && pm < 0 && pn < 0) return;
+            if (pn >= 0)
+            {
+                Rectangle[] ns = NotifyButtons();
+                if (pn < ns.Length && ns[pn].Contains(e.Location))
+                {
+                    if (pn == 0) NotificationService.IgnoreCurrent();
+                    else V2Shell.ClearNotifications();
+                    Render();
+                    return;
+                }
+                Render();
+                return;
+            }
             if (pm >= 0)
             {
                 Rectangle[] ms = MediaButtons();
@@ -596,6 +702,7 @@ namespace Liuli
             base.OnMouseLeave(e);
             hoverBtn = -1;
             hoverMedia = -1;
+            hoverNotify = -1;
             if (!expanded) leaveAt = 0;
         }
 

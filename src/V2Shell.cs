@@ -201,6 +201,7 @@ namespace Liuli
             Config = ShellConfig.Load();
             Theme.TextScale = Theme.TextScaleOf(Config.TextSize);
             try { MediaService.Start(); } catch (Exception ex) { Log.Warn("media", "启动失败 " + ex.Message); }
+            try { NotificationService.Start(Config.NotificationClearedAt); } catch (Exception ex) { Log.Warn("notify", "启动失败 " + ex.Message); }
             AutoStart.Apply(Config.AutoStart);
             Theme.BlurPct = Util.Clamp(Config.BlurPct, 10, 100);
             Theme.GlassPct = Util.Clamp(Config.GlassPct, 20, 140);
@@ -1347,6 +1348,26 @@ namespace Liuli
             {
                 if (Island != null && Island.Visible) Island.RefreshMedia();
             });
+        }
+
+        public static void NotifyNotificationsChanged()
+        {
+            if (Host == null || !Host.IsHandleCreated) return;
+            UI(delegate
+            {
+                if (Island != null && Island.Visible) Island.RefreshNotifications();
+            });
+        }
+
+        public static void ClearNotifications()
+        {
+            try { NotificationService.ClearAll(); } catch (Exception ex) { Log.Warn("notify", "清除失败 " + ex.Message); }
+            if (Config != null)
+            {
+                Config.NotificationClearedAt = NotificationService.ClearedAt;
+                Config.Save();
+            }
+            Log.Info("notify", "岛内通知摘要已清除，水位=" + NotificationService.ClearedAt);
         }
 
         // ---------- 生命周期 / 工具 ----------
