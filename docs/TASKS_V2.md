@@ -98,7 +98,7 @@
   - 构建：`build.ps1` 引用 `System.Runtime.WindowsRuntime.dll` 与系统 `WinMetadata/*.winmd`；SMTC 不可用时后台线程记 warning，窗口不崩。
   - 验证：本地 `MediaPlayer` 播放 8s WAV 循环，展开窗 404×176（无媒体 404×136）；点暂停图标由 Pause 变 Play，播放状态同步；点上一首/下一首不崩；截图 `island-media.png`、`settings-island-media.png`。
   - 未验证：Spotify/浏览器真实会话标题+歌手、会话 1s 内切换、125%/150% DPI、Win10 1903 无 SMTC 情形。
-- [x] **TASK-031** [REQ-024] 通知摘要（P1，M7，Issue #97）
+- [x] **TASK-031** [REQ-024] 通知摘要（P1，M7，Issue #97 / PR #98）
   - 实现：新增 `Notification.cs`，后台 MTA 线程 2s 只读 `%LOCALAPPDATA%\Microsoft\Windows\Notifications\wpndatabase.db`；`Notification.Type='toast'` 按 `ArrivalTime` 取最新，关联 `NotificationHandler.PrimaryId` 得应用名；只解析 payload `<text>`，不读图片/附件/launch。按“应用+标题+正文”去重。
   - 灵动岛：展开态通知行在媒体行下方，各 +40px；显示应用名、`还有 N 条`、标题/正文，右侧 × 忽略当前条、扫帚清除岛内摘要；收起态显示 `通知 · 标题`；无通知/`islandNotify=false` 时整行与额外高度都不出现；尺寸变化按 `islandAnimMs` 过渡。
   - 配置：`islandNotify` 默认开；清除水位 `notificationClearedAt` 字符串写 `shell.json`，重启不翻旧通知；`ThemeSnapshot` 补存 `islandMedia`/`islandNotify`；设置·灵动岛页内容开关改两列以容纳五项。
@@ -249,5 +249,6 @@
 证据：docs/screens/v2/m1-dock.png、日志时间戳
 未验证：...
 ```
+
 
 

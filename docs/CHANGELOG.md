@@ -2,7 +2,7 @@
 
 遵循 Keep a Changelog；版本遵循 SemVer。
 
-## [Unreleased · v2.0 Phase 7 灵动岛通知摘要]
+## [Unreleased · v2.0 Phase 7 灵动岛通知摘要（Issue #97 / PR #98）]
 
 ### 新增
 
@@ -935,5 +935,6 @@
 - 视频壁纸依赖 Media Feature Pack，缺组件环境未验证（#1）
 - 设置项与编辑交互未全量真机回归（#2）
 - Win10 1903 / 多 DPI 未验证（#4）
+
 
 
