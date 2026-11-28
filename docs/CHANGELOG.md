@@ -2,7 +2,7 @@
 
 遵循 Keep a Changelog；版本遵循 SemVer。
 
-## [Unreleased · v2.0 Phase 7 导入推荐配置（Issue #99）]
+## [Unreleased · v2.0 Phase 7 导入推荐配置（Issue #99 / PR #100）]
 
 ### 新增
 

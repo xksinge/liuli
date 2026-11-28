@@ -1,6 +1,6 @@
 ﻿# 测试记录
 
-## v2.0 Phase 7 导入推荐配置（2026-11-28，Issue #99）
+## v2.0 Phase 7 导入推荐配置（2026-11-28，Issue #99 / PR #100）
 
 - 环境：Windows 11 25H2，DISPLAY1 2560×1440，100% DPI；当前配置 `dockPreset=large`、`islandWidth=380`、`panels=0`、`accent=auto`。
 - 构建：`bin\Liuli.exe` 368 KB（376,832 B）；C#5 无新增 error，仅历史 warning。
