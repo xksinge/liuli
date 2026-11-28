@@ -115,7 +115,7 @@
   - 实现：`ThemeSnapshot` 快照（Dock / 灵动岛 / 玻璃 / 明暗 / 壁纸 / 面板深拷贝）；`Themes[]` + `activeTheme`；最多 6 个、同名覆盖、超限淘汰最早、二次确认删除；加载恢复壁纸与整套外壳。
   - 设置面板：新增 `V2SettingsForm` 900×720 五页（主题/面板/Dock/灵动岛/关于），M5 扩展配色/壁纸/桌面/收纳、M6 加入系统后为十页；主题库加载/覆盖/删除、滑杆松手保存、磨砂松手重烘、180ms 状态刷新；Dock/灵动岛齿轮、托盘、热键统一入口。
   - 验证：构建 `bin\Liuli.exe` 259 KB；主题保存/加载/删除、覆盖、7 个主题触发 6 上限淘汰、面板 6 上限、Dock/灵动岛显隐、上下文入口、坏配置收敛均已记录；截图 `docs/screens/v5/`。
-- [x] **TASK-042** [REQ-033] 导入推荐配置（P1，Issue #99）
+- [x] **TASK-042** [REQ-033] 导入推荐配置（P1，Issue #99 / PR #100，已合入 `4762eb4`）
   - 实现：`RecommendedConfig.cs` 严格解析 `theme` / `dock` / `island` / `panels` 四段；未知字段、类型错误、枚举越界、数值越界、系统入口白名单、数组上限全部先收集，整单拒绝。
   - 通过后才把当前 `shell.json` 复制到 `bin\data\backups\shell-*.json`，再一次性写入配置、保存并刷新外观 / Dock / 灵动岛 / 面板；失败路径不备份、不改配置、不重建窗口。
   - 设置·主题页新增“导入推荐配置”，`OpenFileDialog` 选 JSON；成功提示配置名、字段数与备份文件名，失败按字段路径列出原因。示例见 `docs/examples/recommended-config.json`。
