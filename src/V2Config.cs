@@ -64,6 +64,7 @@ namespace Liuli
         public bool IslandStats = true;
         public bool IslandQuick = true;
         public bool IslandMedia = true;
+        public bool IslandNotify = true;
         public int IslandWidth = 380;
         public int IslandHeight = 112;
         public int IslandTop = 6;
@@ -110,6 +111,7 @@ namespace Liuli
             t.IslandStats = c.IslandStats;
             t.IslandQuick = c.IslandQuick;
             t.IslandMedia = c.IslandMedia;
+            t.IslandNotify = c.IslandNotify;
             t.IslandWidth = c.IslandWidth;
             t.IslandHeight = c.IslandHeight;
             t.IslandTop = c.IslandTop;
@@ -156,6 +158,7 @@ namespace Liuli
             c.IslandStats = IslandStats;
             c.IslandQuick = IslandQuick;
             c.IslandMedia = IslandMedia;
+            c.IslandNotify = IslandNotify;
             c.IslandWidth = IslandWidth;
             c.IslandHeight = IslandHeight;
             c.IslandTop = IslandTop;
@@ -318,10 +321,12 @@ namespace Liuli
         public bool IslandStats = true;
         public bool IslandQuick = true;
         public bool IslandMedia = true;
+        public bool IslandNotify = true;
         public int IslandWidth = 380;       // 展开态 body 宽度
         public int IslandHeight = 112;      // 展开态 body 高度
         public int IslandTop = 6;           // 顶部偏移
         public int IslandAnimMs = 180;      // 展开/收起时长
+        public long NotificationClearedAt = 0; // 通知摘要清除水位（FILETIME）
 
         // 桌面组件（TASK-050）：时钟格式全局生效，天气/系统刷新频率由内容决定。
         public bool Clock24 = true;
@@ -410,6 +415,11 @@ namespace Liuli
                 c.IslandStats = Json.Bool(root, "islandStats", true);
                 c.IslandQuick = Json.Bool(root, "islandQuick", true);
                 c.IslandMedia = Json.Bool(root, "islandMedia", true);
+                c.IslandNotify = Json.Bool(root, "islandNotify", true);
+                string clearTicks = Json.Str(root, "notificationClearedAt", "");
+                long parsedTicks = 0;
+                if (clearTicks.Length > 0) long.TryParse(clearTicks, out parsedTicks);
+                c.NotificationClearedAt = parsedTicks > 0 ? parsedTicks : 0;
                 c.IslandWidth = Util.Clamp(Json.Int(root, "islandWidth", 380), 360, 520);
                 c.IslandHeight = Util.Clamp(Json.Int(root, "islandHeight", 112), 100, 180);
                 c.IslandTop = Util.Clamp(Json.Int(root, "islandTop", 6), 0, 80);
@@ -660,6 +670,8 @@ namespace Liuli
                 root["islandStats"] = IslandStats;
                 root["islandQuick"] = IslandQuick;
                 root["islandMedia"] = IslandMedia;
+                root["islandNotify"] = IslandNotify;
+                root["notificationClearedAt"] = NotificationClearedAt.ToString();
                 root["islandWidth"] = IslandWidth;
                 root["islandHeight"] = IslandHeight;
                 root["islandTop"] = IslandTop;
@@ -763,6 +775,8 @@ namespace Liuli
             d["islandWeather"] = t.IslandWeather;
             d["islandStats"] = t.IslandStats;
             d["islandQuick"] = t.IslandQuick;
+            d["islandMedia"] = t.IslandMedia;
+            d["islandNotify"] = t.IslandNotify;
             d["islandWidth"] = t.IslandWidth;
             d["islandHeight"] = t.IslandHeight;
             d["islandTop"] = t.IslandTop;
@@ -812,6 +826,8 @@ namespace Liuli
             t.IslandWeather = Json.Bool(d, "islandWeather", true);
             t.IslandStats = Json.Bool(d, "islandStats", true);
             t.IslandQuick = Json.Bool(d, "islandQuick", true);
+            t.IslandMedia = Json.Bool(d, "islandMedia", true);
+            t.IslandNotify = Json.Bool(d, "islandNotify", true);
             t.IslandWidth = Json.Int(d, "islandWidth", 380);
             t.IslandHeight = Json.Int(d, "islandHeight", 112);
             t.IslandTop = Json.Int(d, "islandTop", 6);

@@ -430,17 +430,21 @@ namespace Liuli
                 delegate (int v) { V2Shell.Config.IslandAnimMs = v; IslandPreview(); });
             y += Util.RoundI(60 * S);
             AddSection("内容开关", x, y, w); y += Util.RoundI(24 * S);
-            AddToggle("天气", "收起态右侧显示天气，展开态显示详情", "islandWeather", x, y, w,
+            int cgap = Util.RoundI(18 * S);
+            int cw = (w - cgap) / 2;
+            AddToggle("天气", "收起态显示天气，展开显示详情", "islandWeather", x, y, cw,
                 delegate { return V2Shell.Config.IslandWeather ? 1 : 0; },
                 delegate (int v) { V2Shell.Config.IslandWeather = v == 1; V2Shell.MarkThemeDirty(); V2Shell.Config.Save(); IslandPreview(); });
-            y += Util.RoundI(54 * S);
-            AddToggle("系统读数", "展开态底部 CPU / 内存 / 磁盘", "islandStats", x, y, w,
+            AddToggle("系统读数", "展开态底部 CPU / 内存 / 磁盘", "islandStats", x + cw + cgap, y, cw,
                 delegate { return V2Shell.Config.IslandStats ? 1 : 0; },
                 delegate (int v) { V2Shell.Config.IslandStats = v == 1; V2Shell.MarkThemeDirty(); V2Shell.Config.Save(); IslandPreview(); });
             y += Util.RoundI(54 * S);
-            AddToggle("媒体信息", "展开态显示系统当前媒体标题/歌手/进度，可播放暂停与切歌；无会话时自动隐藏", "islandMedia", x, y, w,
+            AddToggle("媒体信息", "标题/歌手/进度与切歌控制", "islandMedia", x, y, cw,
                 delegate { return V2Shell.Config.IslandMedia ? 1 : 0; },
                 delegate (int v) { V2Shell.Config.IslandMedia = v == 1; V2Shell.MarkThemeDirty(); V2Shell.Config.Save(); IslandPreview(); });
+            AddToggle("通知摘要", "最新系统通知，可忽略或清除", "islandNotify", x + cw + cgap, y, cw,
+                delegate { return V2Shell.Config.IslandNotify ? 1 : 0; },
+                delegate (int v) { V2Shell.Config.IslandNotify = v == 1; V2Shell.MarkThemeDirty(); V2Shell.Config.Save(); IslandPreview(); });
             y += Util.RoundI(54 * S);
             AddToggle("快捷动作", "展开态右下三个小按钮", "islandQuick", x, y, w,
                 delegate { return V2Shell.Config.IslandQuick ? 1 : 0; },
